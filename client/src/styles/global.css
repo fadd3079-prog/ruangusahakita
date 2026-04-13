@@ -1,0 +1,81 @@
+@import './tokens.css';
+@import './utilities.css';
+@import './components.css';
+
+:root {
+  font-family: var(--ruk-font-family-base);
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--ruk-color-text);
+  background-color: var(--ruk-color-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background-color: var(--ruk-color-bg);
+  color: var(--ruk-color-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--ruk-color-text);
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+a {
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+main {
+  min-height: 60vh;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(15, 139, 141, 0.28);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767.98px) {
+  h1,
+  .h1 {
+    font-size: 1.75rem;
+  }
+
+  h2,
+  .h2 {
+    font-size: 1.375rem;
+  }
+
+  .lead {
+    font-size: 1rem;
+  }
+}

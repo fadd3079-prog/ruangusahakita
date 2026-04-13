@@ -1,0 +1,43 @@
+:root {
+  --ruk-color-primary: #0f8b8d;
+  --ruk-color-primary-hover: #0b6d6f;
+  --ruk-color-secondary: #1f2937;
+  --ruk-color-bg: #f8fafc;
+  --ruk-color-surface: #ffffff;
+  --ruk-color-surface-soft: #f4f7fb;
+  --ruk-color-accent-teal: #eef6f6;
+  --ruk-color-accent-blue: #f4f7fb;
+  --ruk-color-border: #e5e7eb;
+  --ruk-color-text: #1f2937;
+  --ruk-color-text-muted: #6b7280;
+  --ruk-color-success: #16a34a;
+  --ruk-color-warning: #f59e0b;
+  --ruk-color-danger: #dc2626;
+  --ruk-color-info: #0284c7;
+
+  --ruk-radius-sm: 6px;
+  --ruk-radius-md: 8px;
+  --ruk-radius-lg: 8px;
+
+  --ruk-shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
+  --ruk-shadow-md: 0 14px 30px rgba(15, 23, 42, 0.1);
+
+  --ruk-space-1: 4px;
+  --ruk-space-2: 8px;
+  --ruk-space-3: 12px;
+  --ruk-space-4: 16px;
+  --ruk-space-5: 24px;
+  --ruk-space-6: 32px;
+  --ruk-space-7: 48px;
+  --ruk-space-8: 64px;
+
+  --ruk-font-family-base: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ruk-font-size-display: 48px;
+  --ruk-font-size-h1: 36px;
+  --ruk-font-size-h2: 28px;
+  --ruk-font-size-h3: 22px;
+  --ruk-font-size-body-lg: 18px;
+  --ruk-font-size-body: 16px;
+  --ruk-font-size-body-sm: 14px;
+  --ruk-font-size-caption: 12px;
+}
