@@ -1,81 +1,122 @@
-@import './tokens.css';
-@import './utilities.css';
-@import './components.css';
+@import "tailwindcss";
 
-:root {
-  font-family: var(--ruk-font-family-base);
-  line-height: 1.55;
-  font-weight: 400;
-  color: var(--ruk-color-text);
-  background-color: var(--ruk-color-bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --color-ruk-navy: #0c2949;
+  --color-ruk-emerald: #167163;
+  --color-ruk-white: #ffffff;
+  --color-ruk-ash: #efefef;
+
+  --color-ruk-primary: #167163;
+  --color-ruk-primary-hover: #105c51;
+  --color-ruk-secondary: #0c2949;
+  --color-ruk-deep: #071f37;
+  --color-ruk-teal-deep: #0d4f52;
+  --color-ruk-price: #f0441f;
+  --color-ruk-bg: #efefef;
+  --color-ruk-surface: #ffffff;
+  --color-ruk-surface-soft: #f7f7f5;
+  --color-ruk-accent-teal: #e6f1ee;
+  --color-ruk-accent-blue: #e8edf1;
+  --color-ruk-border: #d8dcd9;
+  --color-ruk-text: #0c2949;
+  --color-ruk-muted: #526577;
+  --color-ruk-success: #167163;
+  --color-ruk-warning: #b7791f;
+  --color-ruk-danger: #b42318;
+  --color-ruk-info: #0c2949;
+
+  --radius-ruk-sm: 6px;
+  --radius-ruk-md: 8px;
+  --radius-ruk-lg: 8px;
+
+  --shadow-ruk-sm: 0 10px 28px rgba(12, 41, 73, 0.08);
+  --shadow-ruk-md: 0 22px 60px rgba(12, 41, 73, 0.14);
+  --shadow-ruk-market: 18px 16px 44px -26px rgba(0, 0, 0, 0.34);
 }
 
-* {
-  box-sizing: border-box;
-}
+@layer base {
+  :root {
+    color: var(--color-ruk-text);
+    background-color: var(--color-ruk-bg);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-synthesis: none;
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+  }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  background-color: var(--ruk-color-bg);
-  color: var(--ruk-color-text);
-}
+  * {
+    box-sizing: border-box;
+  }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: var(--ruk-color-text);
-  line-height: 1.25;
-  letter-spacing: 0;
-}
+  html {
+    scroll-behavior: smooth;
+  }
 
-p {
-  margin-bottom: 1rem;
-}
+  body {
+    @apply m-0 min-w-[320px] bg-slate-50 text-slate-800;
+    font-family: "Inter", sans-serif;
+  }
 
-a {
-  text-decoration: none;
-}
-
-img {
-  max-width: 100%;
-}
-
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-main {
-  min-height: 60vh;
-}
-
-:focus-visible {
-  outline: 3px solid rgba(15, 139, 141, 0.28);
-  outline-offset: 2px;
-}
-
-@media (max-width: 767.98px) {
   h1,
-  .h1 {
-    font-size: 1.75rem;
-  }
-
   h2,
-  .h2 {
-    font-size: 1.375rem;
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-ruk-navy tracking-normal;
+    line-height: 1.16;
   }
 
-  .lead {
-    font-size: 1rem;
+  h1,
+  h2 {
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    @apply mb-4;
+  }
+
+  a {
+    @apply text-ruk-primary no-underline transition-colors hover:text-teal-700;
+  }
+
+  img {
+    @apply max-w-full;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  main {
+    min-height: 60vh;
+  }
+
+  :focus-visible {
+    outline: 3px solid rgba(22, 113, 99, 0.26);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(22, 113, 99, 0.18);
+    color: #0c2949;
   }
 }

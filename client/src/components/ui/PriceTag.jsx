@@ -2,9 +2,9 @@ import { formatCurrency } from '../../utils/formatCurrency'
 
 function PriceTag({ value, prefix = 'Harga mulai' }) {
   return (
-    <span className="fw-bold">
-      <span className="ruk-muted fw-semibold">{prefix} </span>
-      {formatCurrency(value)}
+    <span className="font-extrabold">
+      <span className="ruk-muted font-semibold">{prefix} </span>
+      <span className="text-ruk-price">{formatCurrency(value)}</span>
     </span>
   )
 }

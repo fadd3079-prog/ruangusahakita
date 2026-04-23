@@ -28,21 +28,22 @@ function InfoPage({ type }) {
   const page = content[type]
 
   return (
-    <section className="ruk-section">
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-lg-8">
-            <h1 className="fw-bold">{page.title}</h1>
-            <p className="lead ruk-muted">{page.description}</p>
-            <div className="d-grid gap-3 my-4">
-              {page.points.map((point) => (
-                <div className="ruk-surface p-3" key={point}>{point}</div>
-              ))}
-            </div>
-            <div className="d-flex flex-column flex-sm-row gap-2">
-              <Button to={ROUTES.creators}>Cari kreator</Button>
-              <Button to={ROUTES.register} variant="secondary">Daftar</Button>
-            </div>
+    <section className="py-20 lg:py-32 bg-slate-50 min-h-screen">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+          <h1 className="text-3xl md:text-4xl font-black text-ruk-navy tracking-tight mb-4">{page.title}</h1>
+          <p className="text-xl text-slate-500 font-medium mb-10 leading-relaxed">{page.description}</p>
+          <div className="grid gap-4 mb-10">
+            {page.points.map((point) => (
+              <div className="bg-slate-50 border border-slate-100 rounded-xl p-5 text-slate-700 font-medium flex items-center gap-4" key={point}>
+                <div className="w-2 h-2 rounded-full bg-ruk-primary shrink-0"></div>
+                {point}
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-100">
+            <Button className="w-full sm:w-auto" to={ROUTES.creators}>Cari kreator</Button>
+            <Button className="w-full sm:w-auto" to={ROUTES.register} variant="outline">Daftar sekarang</Button>
           </div>
         </div>
       </div>

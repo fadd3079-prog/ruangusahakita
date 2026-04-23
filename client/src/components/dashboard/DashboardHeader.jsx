@@ -1,11 +1,11 @@
 function DashboardHeader({ title, description, action }) {
   return (
-    <div className="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+    <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-8">
       <div>
-        <h1 className="fw-bold">{title}</h1>
-        {description && <p className="ruk-muted mb-0">{description}</p>}
+        <h1 className="text-2xl sm:text-3xl font-black text-ruk-navy tracking-tight">{title}</h1>
+        {description && <p className="text-slate-500 mt-2 text-base font-medium">{description}</p>}
       </div>
-      {action && <div>{action}</div>}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   )
 }

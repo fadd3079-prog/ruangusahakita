@@ -1,5 +1,8 @@
 import logoPrimary from '../assets/images/logo.png'
+import logoWhite from '../assets/images/logo-putih-kecil.png'
 import heroUmkm from '../assets/images/photo/umkm.webp'
+import aiAssistant from '../assets/images/photo/artificialintelligence.webp'
+import aiAnalytics from '../assets/images/photo/artificialintelligence1.webp'
 import bannerLifestyle from '../assets/images/photo/marketing.webp'
 import bannerBeauty from '../assets/images/photo/digitalmerketing.webp'
 import avatarNadia from '../assets/images/profile/female-1.webp'
@@ -12,9 +15,12 @@ import portfolioBeauty from '../assets/images/portfolio/portfolio-21.webp'
 export const assets = {
   logos: {
     primary: logoPrimary,
+    white: logoWhite,
   },
   photos: {
     heroUmkm,
+    aiAssistant,
+    aiAnalytics,
     bannerKuliner: heroUmkm,
     bannerLifestyle,
     bannerBeauty,

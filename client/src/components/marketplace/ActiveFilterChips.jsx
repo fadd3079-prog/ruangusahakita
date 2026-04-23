@@ -13,7 +13,7 @@ function ActiveFilterChips({ filters, onRemove }) {
   if (!entries.length) return null
 
   return (
-    <div className="d-flex flex-wrap gap-2 ruk-active-filters">
+    <div className="flex flex-wrap gap-2">
       {entries.map(([key, value]) => (
         <Chip key={key} onRemove={() => onRemove(key)}>
           {labelFor(key, value)}

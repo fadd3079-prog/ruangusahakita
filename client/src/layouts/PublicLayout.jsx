@@ -5,14 +5,14 @@ import Navbar from '../components/layout/Navbar'
 
 function PublicLayout() {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="ruk-page-shell">
+      <main className="flex-1 flex flex-col bg-white">
         <Outlet />
       </main>
       <Footer />
       <ToastAlert />
-    </>
+    </div>
   )
 }
 

@@ -12,12 +12,14 @@ function DashboardLayout() {
   const role = getRoleFromPath(location.pathname)
 
   return (
-    <div className="ruk-dashboard-shell">
+    <div className="flex h-screen bg-[#f8fafc] overflow-hidden">
       <Sidebar role={role} />
-      <div>
+      <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <Topbar role={role} />
-        <main className="container-fluid py-4">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="mx-auto max-w-6xl">
+            <Outlet />
+          </div>
         </main>
       </div>
       <ToastAlert />

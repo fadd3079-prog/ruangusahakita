@@ -1,19 +1,17 @@
-import Card from '../ui/Card'
-
 function CreatorStats({ creator }) {
   const stats = [
-    { label: 'Rating', value: creator.ratingAvg },
-    { label: 'Ulasan', value: creator.reviewCount },
-    { label: 'Layanan aktif', value: creator.services.length },
+    { label: 'Rating Kreator', value: creator.ratingAvg },
+    { label: 'Total Ulasan', value: creator.reviewCount },
+    { label: 'Layanan Aktif', value: creator.services.length },
   ]
 
   return (
-    <div className="ruk-grid ruk-grid-3 ruk-creator-stats">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {stats.map((stat) => (
-        <Card className="ruk-stat-card" key={stat.label}>
-          <p className="ruk-muted mb-1">{stat.label}</p>
-          <p className="h4 fw-bold mb-0">{stat.value}</p>
-        </Card>
+        <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col justify-center items-center text-center shadow-sm" key={stat.label}>
+          <p className="text-slate-500 font-bold uppercase tracking-wider text-xs mb-2">{stat.label}</p>
+          <p className="text-4xl font-black text-ruk-primary">{stat.value}</p>
+        </div>
       ))}
     </div>
   )

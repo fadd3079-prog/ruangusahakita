@@ -2,11 +2,12 @@ import RegisterForm from '../../components/forms/RegisterForm'
 
 function RegisterPage() {
   return (
-    <div className="row justify-content-center">
-      <div className="col-md-8 col-lg-6">
-        <div className="ruk-surface p-4">
-          <h1 className="fw-bold">Daftar</h1>
-          <p className="ruk-muted">Buat akun singkat, lalu pilih peran yang paling sesuai.</p>
+    <div className="flex justify-center">
+      <div className="w-full max-w-lg">
+        <div className="bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative">
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-ruk-primary to-teal-400 rounded-t-3xl"></div>
+          <h1 className="text-2xl font-black text-ruk-navy tracking-tight mb-2">Daftar</h1>
+          <p className="text-slate-500 font-medium mb-8">Buat akun singkat, lalu pilih peran yang paling sesuai.</p>
           <RegisterForm />
         </div>
       </div>
