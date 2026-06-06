@@ -6,9 +6,11 @@ type PriceTextProps = {
 };
 
 export function PriceText({ value, prefix = "Mulai dari" }: PriceTextProps) {
+  const formattedValue = formatCurrency(value);
+
   return (
     <span className="font-semibold text-foreground">
-      {prefix} {formatCurrency(value)}
+      {prefix ? `${prefix} ${formattedValue}` : formattedValue}
     </span>
   );
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, Clock, MapPin, Star } from "lucide-react";
+import { CheckCircle2, Clock, Layers3, MapPin, Star } from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +25,15 @@ const availabilityLabels: Record<DummyAvailabilityStatus, string> = {
 
 type CreatorCardProps = {
   creator: DummyCreatorProfile;
+  primaryService?: {
+    id: string;
+    title: string;
+    categoryName: string;
+    estimatedDays: number;
+  } | null;
 };
 
-export function CreatorCard({ creator }: CreatorCardProps) {
+export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
   return (
     <Card className="rounded-lg border-border/70 bg-card/80 shadow-xs transition-colors hover:border-primary/30">
       <CardHeader>
@@ -73,6 +79,25 @@ export function CreatorCard({ creator }: CreatorCardProps) {
             Respons sekitar {creator.responseTimeHours} jam
           </span>
         </div>
+        {primaryService ? (
+          <div className="rounded-lg border border-border/70 bg-muted/40 p-3">
+            <div className="flex items-start gap-2">
+              <Layers3
+                className="mt-0.5 size-4 shrink-0 text-primary"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <p className="line-clamp-1 text-sm font-medium text-foreground">
+                  {primaryService.title}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {primaryService.categoryName} - estimasi{" "}
+                  {primaryService.estimatedDays} hari
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
         <div className="rounded-lg border border-border/70 bg-muted/40 p-3">
           <p className="text-sm text-muted-foreground">
             {creator.completedOrdersCount} pesanan selesai
@@ -82,10 +107,25 @@ export function CreatorCard({ creator }: CreatorCardProps) {
           </p>
         </div>
       </CardContent>
-      <CardFooter className="bg-transparent">
-        <Button asChild className="w-full">
+      <CardFooter
+        className={
+          primaryService
+            ? "grid gap-2 bg-transparent sm:grid-cols-2"
+            : "bg-transparent"
+        }
+      >
+        <Button
+          asChild
+          variant={primaryService ? "outline" : "default"}
+          className="w-full"
+        >
           <Link href={`/kreator/${creator.id}`}>Lihat Profil Kreator</Link>
         </Button>
+        {primaryService ? (
+          <Button asChild className="w-full">
+            <Link href={`/layanan/${primaryService.id}`}>Pilih Layanan</Link>
+          </Button>
+        ) : null}
       </CardFooter>
     </Card>
   );

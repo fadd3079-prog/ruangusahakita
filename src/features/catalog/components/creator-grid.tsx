@@ -1,0 +1,33 @@
+import { CreatorCard } from "@/components/cards/creator-card";
+import type { DummyCreatorProfile } from "@/lib/dummy";
+
+export type CatalogCreator = {
+  readonly creator: DummyCreatorProfile;
+  readonly primaryService: {
+    readonly id: string;
+    readonly title: string;
+    readonly categoryId: string;
+    readonly categoryName: string;
+    readonly estimatedDays: number;
+    readonly basePrice: number;
+  } | null;
+  readonly searchText: string;
+};
+
+type CreatorGridProps = {
+  items: readonly CatalogCreator[];
+};
+
+export function CreatorGrid({ items }: CreatorGridProps) {
+  return (
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      {items.map((item) => (
+        <CreatorCard
+          key={item.creator.id}
+          creator={item.creator}
+          primaryService={item.primaryService}
+        />
+      ))}
+    </div>
+  );
+}
