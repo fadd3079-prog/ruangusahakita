@@ -1,13 +1,31 @@
-export default function Page() {
+import type { Metadata } from "next";
+
+import { CreatorCtaSection } from "@/features/public/components/creator-cta-section";
+import { FaqPreviewSection } from "@/features/public/components/faq-preview-section";
+import { FeaturedCreatorsSection } from "@/features/public/components/featured-creators-section";
+import { HeroSection } from "@/features/public/components/hero-section";
+import { HomeStatsSection } from "@/features/public/components/home-stats-section";
+import { HowItWorksSection } from "@/features/public/components/how-it-works-section";
+import { ServiceCategorySection } from "@/features/public/components/service-category-section";
+import { UmkmBenefitsSection } from "@/features/public/components/umkm-benefits-section";
+
+export const metadata: Metadata = {
+  title: "Ruang Usaha Kita — Marketplace Jasa Digital untuk UMKM",
+  description:
+    "Temukan kreator dan paket jasa digital untuk membantu promosi UMKM melalui brief campaign, pembayaran, status pesanan, revisi, dan review yang lebih terarah.",
+};
+
+export default function HomePage() {
   return (
-    <main className="min-h-screen px-6 py-10">
-      <section className="mx-auto max-w-6xl">
-        <p className="text-sm text-muted-foreground">Ruang Usaha Kita</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Beranda</h1>
-        <p className="mt-4 max-w-2xl text-muted-foreground">
-          Halaman ini masih berupa scaffold awal untuk marketplace jasa digital UMKM dan content creator.
-        </p>
-      </section>
+    <main>
+      <HeroSection />
+      <HomeStatsSection />
+      <ServiceCategorySection />
+      <FeaturedCreatorsSection />
+      <HowItWorksSection />
+      <UmkmBenefitsSection />
+      <CreatorCtaSection />
+      <FaqPreviewSection />
     </main>
   );
 }
