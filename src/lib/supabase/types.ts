@@ -328,6 +328,162 @@ export interface Database {
           }
         ]
       }
+      service_package_tiers: {
+        Row: {
+          id: string
+          service_package_id: string
+          name: string
+          description: string | null
+          price: number
+          estimated_days: number
+          revision_count: number
+          deliverables: string[] | null
+          sort_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          service_package_id: string
+          name: string
+          description?: string | null
+          price: number
+          estimated_days: number
+          revision_count?: number
+          deliverables?: string[] | null
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          service_package_id?: string
+          name?: string
+          description?: string | null
+          price?: number
+          estimated_days?: number
+          revision_count?: number
+          deliverables?: string[] | null
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_package_tiers_service_package_id_fkey"
+            columns: ["service_package_id"]
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      service_addons: {
+        Row: {
+          id: string
+          service_package_id: string
+          name: string
+          description: string | null
+          price: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          service_package_id: string
+          name: string
+          description?: string | null
+          price: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          service_package_id?: string
+          name?: string
+          description?: string | null
+          price?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_addons_service_package_id_fkey"
+            columns: ["service_package_id"]
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      portfolios: {
+        Row: {
+          id: string
+          creator_id: string
+          title: string
+          description: string | null
+          category_id: string | null
+          thumbnail_url: string | null
+          media_url: string | null
+          external_url: string | null
+          client_type: string | null
+          is_featured: boolean
+          sort_order: number
+          deleted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          creator_id: string
+          title: string
+          description?: string | null
+          category_id?: string | null
+          thumbnail_url?: string | null
+          media_url?: string | null
+          external_url?: string | null
+          client_type?: string | null
+          is_featured?: boolean
+          sort_order?: number
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          creator_id?: string
+          title?: string
+          description?: string | null
+          category_id?: string | null
+          thumbnail_url?: string | null
+          media_url?: string | null
+          external_url?: string | null
+          client_type?: string | null
+          is_featured?: boolean
+          sort_order?: number
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolios_creator_id_fkey"
+            columns: ["creator_id"]
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolios_category_id_fkey"
+            columns: ["category_id"]
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       orders: {
         Row: {
           id: string

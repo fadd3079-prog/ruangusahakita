@@ -11,24 +11,17 @@ import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreatorProfileHeader } from "@/features/creators/components/creator-profile-header";
+import { getPublicCreatorDetail } from "@/features/catalog/data/catalog-queries";
 import {
   dummyCreators,
-  dummyPortfolios,
-  dummyReviews,
-  dummyServiceCategories,
-  dummyServicePackages,
-  dummyUmkmProfiles,
 } from "@/lib/dummy";
+import type { DummyPortfolioItem, DummyServicePackage } from "@/lib/dummy/types";
 
 type CreatorPageProps = {
   params: Promise<{
     creatorId: string;
   }>;
 };
-
-const categoryById = new Map(
-  dummyServiceCategories.map((category) => [category.id, category]),
-);
 
 export function generateStaticParams() {
   return dummyCreators.map((creator) => ({
@@ -40,13 +33,15 @@ export async function generateMetadata({
   params,
 }: CreatorPageProps): Promise<Metadata> {
   const { creatorId } = await params;
-  const creator = dummyCreators.find((item) => item.id === creatorId);
+  const detail = await getPublicCreatorDetail(creatorId);
 
-  if (!creator) {
+  if (!detail) {
     return {
       title: "Kreator tidak ditemukan - Ruang Usaha Kita",
     };
   }
+
+  const { creator } = detail;
 
   return {
     title: `${creator.displayName} - Kreator Ruang Usaha Kita`,
@@ -56,22 +51,26 @@ export async function generateMetadata({
 
 export default async function CreatorDetailPage({ params }: CreatorPageProps) {
   const { creatorId } = await params;
-  const creator = dummyCreators.find((item) => item.id === creatorId);
+  const detail = await getPublicCreatorDetail(creatorId);
 
-  if (!creator) {
+  if (!detail) {
     notFound();
   }
 
-  const creatorServices = dummyServicePackages.filter(
-    (service) => service.creatorId === creator.id && service.isActive,
+  const { 
+    creator, 
+    services, 
+    portfolios, 
+    categories, 
+    reviews, 
+    umkmProfiles 
+  } = detail;
+
+  const categoryById = new Map(
+    categories.map((category) => [category.id, category]),
   );
-  const creatorPortfolios = dummyPortfolios.filter(
-    (portfolio) => portfolio.creatorId === creator.id,
-  );
-  const creatorReviews = dummyReviews.filter(
-    (review) => review.creatorId === creator.id && review.isVisible,
-  );
-  const primaryService = creatorServices[0];
+
+  const primaryService = services[0];
 
   return (
     <main>
@@ -91,7 +90,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
                 {creator.bio}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                {creator.skills.map((skill) => (
+                {creator.skills.map((skill: string) => (
                   <Badge key={skill} variant="secondary" className="rounded-lg">
                     {skill}
                   </Badge>
@@ -126,11 +125,11 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
           <SectionHeading
             eyebrow="Portofolio"
             title="Contoh hasil konten dan campaign yang pernah dikerjakan."
-            description="Preview ini menggunakan dummy data sebagai gambaran awal sebelum integrasi portofolio real."
+            description="Preview karya-karya terbaik dari kreator untuk referensi UMKM."
           />
-          {creatorPortfolios.length > 0 ? (
+          {portfolios.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {creatorPortfolios.map((portfolio) => (
+              {portfolios.map((portfolio: DummyPortfolioItem) => (
                 <PortfolioCard
                   key={portfolio.id}
                   portfolio={portfolio}
@@ -141,7 +140,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
           ) : (
             <EmptyPanel
               title="Portofolio belum tersedia."
-              description="Kreator ini belum memiliki portofolio dummy yang dapat ditampilkan."
+              description="Kreator ini belum memiliki portofolio yang dapat ditampilkan."
             />
           )}
         </PageContainer>
@@ -154,9 +153,9 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
             title="Pilih layanan digital yang sesuai dengan kebutuhan campaign."
             description="Setiap paket menampilkan output, estimasi pengerjaan, dan batas revisi agar ekspektasi UMKM lebih jelas."
           />
-          {creatorServices.length > 0 ? (
+          {services.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {creatorServices.map((service) => (
+              {services.map((service: DummyServicePackage) => (
                 <ServiceCard
                   key={service.id}
                   service={service}
@@ -168,7 +167,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
           ) : (
             <EmptyPanel
               title="Belum ada paket jasa."
-              description="Kreator ini belum memiliki paket jasa aktif pada dummy data."
+              description="Kreator ini belum memiliki paket jasa aktif."
             />
           )}
         </PageContainer>
@@ -179,15 +178,15 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
           <SectionHeading
             eyebrow="Review"
             title="Ulasan dari UMKM yang pernah menggunakan layanan kreator."
-            description="Review hanya ditampilkan dari pesanan dummy yang sudah selesai."
+            description="Review asli dari pesanan yang sudah selesai."
           />
-          {creatorReviews.length > 0 ? (
+          {reviews.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {creatorReviews.map((review) => (
+              {reviews.map((review) => (
                 <ReviewCard
                   key={review.id}
                   review={review}
-                  umkm={dummyUmkmProfiles.find(
+                  umkm={umkmProfiles.find(
                     (profile) => profile.id === review.umkmId,
                   )}
                 />
@@ -195,8 +194,8 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
             </div>
           ) : (
             <EmptyPanel
-              title="Belum ada review dummy."
-              description="Review akan muncul setelah ada pesanan selesai pada data pengembangan."
+              title="Belum ada review."
+              description="Review akan tampil setelah ada pesanan selesai."
             />
           )}
         </PageContainer>

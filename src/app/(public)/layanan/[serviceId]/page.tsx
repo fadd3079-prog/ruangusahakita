@@ -12,28 +12,17 @@ import { Button } from "@/components/ui/button";
 import { ServiceDetailHeader } from "@/features/services/components/service-detail-header";
 import { ServiceTierOptions } from "@/features/services/components/service-tier-options";
 import { formatCurrency } from "@/lib/formatters/currency";
+import { getPublicServiceDetail } from "@/features/catalog/data/catalog-queries";
 import {
-  dummyCreators,
-  dummyOrders,
-  dummyPortfolios,
-  dummyReviews,
-  dummyServiceAddons,
-  dummyServiceCategories,
   dummyServicePackages,
-  dummyServiceTiers,
-  dummyUmkmProfiles,
 } from "@/lib/dummy";
+import type { DummyServiceAddon, DummyPortfolioItem } from "@/lib/dummy/types";
 
 type ServicePageProps = {
   params: Promise<{
     serviceId: string;
   }>;
 };
-
-const creatorById = new Map(dummyCreators.map((creator) => [creator.id, creator]));
-const categoryById = new Map(
-  dummyServiceCategories.map((category) => [category.id, category]),
-);
 
 export function generateStaticParams() {
   return dummyServicePackages.map((service) => ({
@@ -45,14 +34,15 @@ export async function generateMetadata({
   params,
 }: ServicePageProps): Promise<Metadata> {
   const { serviceId } = await params;
-  const service = dummyServicePackages.find((item) => item.id === serviceId);
-  const creator = service ? creatorById.get(service.creatorId) : null;
+  const detail = await getPublicServiceDetail(serviceId);
 
-  if (!service) {
+  if (!detail) {
     return {
       title: "Paket jasa tidak ditemukan - Ruang Usaha Kita",
     };
   }
+
+  const { service, creator } = detail;
 
   return {
     title: `${service.title} - Ruang Usaha Kita`,
@@ -62,38 +52,22 @@ export async function generateMetadata({
 
 export default async function ServiceDetailPage({ params }: ServicePageProps) {
   const { serviceId } = await params;
-  const service = dummyServicePackages.find((item) => item.id === serviceId);
+  const detail = await getPublicServiceDetail(serviceId);
 
-  if (!service) {
+  if (!detail) {
     notFound();
   }
 
-  const creator = creatorById.get(service.creatorId);
-
-  if (!creator) {
-    notFound();
-  }
-
-  const category = categoryById.get(service.categoryId);
-  const tiers = dummyServiceTiers
-    .filter((tier) => tier.servicePackageId === service.id)
-    .sort((first, second) => first.sortOrder - second.sortOrder);
-  const addons = dummyServiceAddons.filter((addon) =>
-    addon.compatibleServiceIds.includes(service.id),
-  );
-  const relatedPortfolios = dummyPortfolios.filter(
-    (portfolio) =>
-      portfolio.creatorId === service.creatorId &&
-      portfolio.categoryId === service.categoryId,
-  );
-  const serviceOrderIds = new Set(
-    dummyOrders
-      .filter((order) => order.servicePackageId === service.id)
-      .map((order) => order.id),
-  );
-  const relatedReviews = dummyReviews.filter(
-    (review) => review.isVisible && serviceOrderIds.has(review.orderId),
-  );
+  const { 
+    service, 
+    creator, 
+    category, 
+    tiers, 
+    addons, 
+    portfolios, 
+    reviews, 
+    umkmProfiles 
+  } = detail;
 
   return (
     <main>
@@ -156,7 +130,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               </p>
               {addons.length > 0 ? (
                 <div className="mt-5 space-y-3">
-                  {addons.map((addon) => (
+                  {addons.map((addon: DummyServiceAddon) => (
                     <div
                       key={addon.id}
                       className="rounded-lg border border-border/70 bg-muted/35 p-3"
@@ -192,20 +166,20 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
             title="Contoh karya yang relevan dengan kategori layanan ini."
             description="Portofolio membantu UMKM menilai gaya visual, nada konten, dan kecocokan kreator."
           />
-          {relatedPortfolios.length > 0 ? (
+          {portfolios.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {relatedPortfolios.map((portfolio) => (
+              {portfolios.map((portfolio: DummyPortfolioItem) => (
                 <PortfolioCard
                   key={portfolio.id}
                   portfolio={portfolio}
-                  category={categoryById.get(portfolio.categoryId)}
+                  category={category}
                 />
               ))}
             </div>
           ) : (
             <EmptyPanel
               title="Belum ada portofolio terkait."
-              description="Portofolio dummy untuk paket jasa ini belum tersedia."
+              description="Portofolio untuk paket jasa ini belum tersedia."
             />
           )}
         </PageContainer>
@@ -216,15 +190,15 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <SectionHeading
             eyebrow="Review terkait"
             title="Ulasan dari pesanan yang memakai paket jasa ini."
-            description="Review hanya muncul dari pesanan dummy yang sudah selesai."
+            description="Ulasan dari UMKM yang telah menggunakan paket jasa ini."
           />
-          {relatedReviews.length > 0 ? (
+          {reviews.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {relatedReviews.map((review) => (
+              {reviews.map((review) => (
                 <ReviewCard
                   key={review.id}
                   review={review}
-                  umkm={dummyUmkmProfiles.find(
+                  umkm={umkmProfiles.find(
                     (profile) => profile.id === review.umkmId,
                   )}
                 />
@@ -233,7 +207,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           ) : (
             <EmptyPanel
               title="Belum ada review untuk paket jasa ini."
-              description="Review akan tampil setelah ada pesanan selesai pada data pengembangan."
+              description="Review akan tampil setelah ada pesanan selesai."
             />
           )}
         </PageContainer>

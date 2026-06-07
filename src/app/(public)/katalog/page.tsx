@@ -4,11 +4,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { CatalogFilter } from "@/features/catalog/components/catalog-filter";
 import { CatalogHero } from "@/features/catalog/components/catalog-hero";
 import type { CatalogCreator } from "@/features/catalog/components/creator-grid";
-import {
-  dummyCreators,
-  dummyServiceCategories,
-  dummyServicePackages,
-} from "@/lib/dummy";
+import { getPublicCatalogData } from "@/features/catalog/data/catalog-queries";
 
 export const metadata: Metadata = {
   title: "Katalog Kreator — Ruang Usaha Kita",
@@ -16,67 +12,69 @@ export const metadata: Metadata = {
     "Cari kreator dan paket jasa digital untuk kebutuhan promosi UMKM berdasarkan kategori layanan, niche, lokasi, harga, dan rating.",
 };
 
-const categoryById = new Map(
-  dummyServiceCategories.map((category) => [category.id, category]),
-);
+export default async function CatalogPage() {
+  const { creators, services, categories } = await getPublicCatalogData();
 
-const catalogCreators: readonly CatalogCreator[] = dummyCreators.map(
-  (creator) => {
-    const primaryService =
-      dummyServicePackages.find((service) => service.creatorId === creator.id) ??
-      null;
-    const category = primaryService
-      ? categoryById.get(primaryService.categoryId) ?? null
-      : null;
+  const categoryById = new Map(
+    categories.map((category) => [category.id, category]),
+  );
 
-    return {
-      creator,
-      primaryService:
-        primaryService && category
-          ? {
-              id: primaryService.id,
-              title: primaryService.title,
-              categoryId: category.id,
-              categoryName: category.name,
-              estimatedDays: primaryService.estimatedDays,
-              basePrice: primaryService.basePrice,
-            }
-          : null,
-      searchText: [
-        creator.displayName,
-        creator.niche,
-        creator.city,
-        creator.province,
-        creator.skills.join(" "),
-        primaryService?.title,
-        primaryService?.shortDescription,
-        primaryService?.tags.join(" "),
-        category?.name,
-      ]
-        .filter(Boolean)
-        .join(" "),
-    };
-  },
-);
+  const catalogCreators: readonly CatalogCreator[] = creators.map(
+    (creator) => {
+      const primaryService =
+        services.find((service) => service.creatorId === creator.id) ??
+        null;
+      const category = primaryService
+        ? categoryById.get(primaryService.categoryId) ?? null
+        : null;
 
-const locations = [
-  ...new Set(dummyCreators.map((creator) => creator.city)),
-].sort();
-const niches = [...new Set(dummyCreators.map((creator) => creator.niche))].sort();
+      return {
+        creator,
+        primaryService:
+          primaryService && category
+            ? {
+                id: primaryService.id,
+                title: primaryService.title,
+                categoryId: category.id,
+                categoryName: category.name,
+                estimatedDays: primaryService.estimatedDays,
+                basePrice: primaryService.basePrice,
+              }
+            : null,
+        searchText: [
+          creator.displayName,
+          creator.niche,
+          creator.city,
+          creator.province,
+          creator.skills.join(" "),
+          primaryService?.title,
+          primaryService?.shortDescription,
+          primaryService?.tags.join(" "),
+          category?.name,
+        ]
+          .filter(Boolean)
+          .join(" "),
+      };
+    },
+  );
 
-export default function CatalogPage() {
+  const locations = [
+    ...new Set(creators.map((creator) => creator.city)),
+  ].sort();
+  const niches = [...new Set(creators.map((creator) => creator.niche))].sort();
+
   return (
     <main>
       <CatalogHero
-        creatorCount={dummyCreators.length}
-        categoryCount={dummyServiceCategories.length}
-        serviceCount={dummyServicePackages.length}
+        creatorCount={creators.length}
+        categoryCount={categories.length}
+        serviceCount={services.length}
       />
       <section className="bg-muted/30 py-10 sm:py-12 lg:py-14">
         <PageContainer>
           <CatalogFilter
             items={catalogCreators}
-            categories={dummyServiceCategories.map((category) => ({
+            categories={categories.map((category) => ({
               id: category.id,
               name: category.name,
             }))}

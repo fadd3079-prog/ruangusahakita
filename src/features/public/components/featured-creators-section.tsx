@@ -4,13 +4,12 @@ import { ArrowRight } from "lucide-react";
 import { CreatorCard } from "@/components/cards/creator-card";
 import { SectionHeading } from "@/components/common/section-heading";
 import { PageContainer } from "@/components/layout/page-container";
-import { dummyCreators } from "@/lib/dummy";
 
-const featuredCreators = dummyCreators
-  .filter((creator) => creator.isFeatured)
-  .slice(0, 4);
+import { getPublicFeaturedCreators } from "@/features/catalog/data/catalog-queries";
 
-export function FeaturedCreatorsSection() {
+export async function FeaturedCreatorsSection() {
+  const featuredCreators = await getPublicFeaturedCreators();
+
   return (
     <section className="bg-muted/30 py-16 sm:py-20 lg:py-24">
       <PageContainer>

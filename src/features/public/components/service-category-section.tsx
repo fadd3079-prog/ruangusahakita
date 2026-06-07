@@ -12,7 +12,8 @@ import {
 
 import { SectionHeading } from "@/components/common/section-heading";
 import { PageContainer } from "@/components/layout/page-container";
-import { dummyServiceCategories } from "@/lib/dummy";
+
+import { getPublicCategories } from "@/features/catalog/data/catalog-queries";
 
 const categoryIcons: Record<string, LucideIcon> = {
   Camera,
@@ -23,7 +24,9 @@ const categoryIcons: Record<string, LucideIcon> = {
   TextQuote,
 };
 
-export function ServiceCategorySection() {
+export async function ServiceCategorySection() {
+  const categories = await getPublicCategories();
+
   return (
     <section className="bg-background py-16 sm:py-20 lg:py-24">
       <PageContainer>
@@ -42,7 +45,7 @@ export function ServiceCategorySection() {
           }
         />
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {dummyServiceCategories.map((category) => {
+          {categories.map((category) => {
             const Icon = categoryIcons[category.iconName] ?? Megaphone;
 
             return (
