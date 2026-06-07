@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { getCurrentProfile } from "./session";
 import type { UserRole } from "./roles";
 
 /**
@@ -18,12 +20,18 @@ export function getDashboardPathByRole(role: UserRole): string {
 
 /**
  * Validates if a user has the required role to access a route.
- * TODO: Integrate with real Supabase Auth.
+ * Redirects to the appropriate dashboard or login if unauthorized.
  */
 export async function requireRole(requiredRole: UserRole) {
-  // Placeholder logic until real auth is implemented.
-  // In a real implementation, this would fetch the user's session and profile,
-  // check the role, and redirect to /login or an "Unauthorized" page if it doesn't match.
-  console.warn("requireRole is currently a placeholder and does not perform real validation.", requiredRole);
-  return true; 
+  const profile = await getCurrentProfile();
+
+  if (!profile) {
+    redirect("/login");
+  }
+
+  if (profile.role !== requiredRole) {
+    redirect(getDashboardPathByRole(profile.role));
+  }
+
+  return true;
 }

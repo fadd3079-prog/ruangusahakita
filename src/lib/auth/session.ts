@@ -1,28 +1,48 @@
+import { createClient } from "../supabase/server";
 import type { Profile } from "./roles";
 
 /**
- * Placeholder to get the current authenticated user.
- * TODO: Integrate with real Supabase Auth.
+ * Gets the current authenticated user from Supabase Auth.
  */
 export async function getCurrentUser() {
-  console.warn("getCurrentUser is a placeholder.");
-  return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    return null;
+  }
+
+  return data.user;
 }
 
 /**
- * Placeholder to get the current user's profile.
- * TODO: Integrate with real Supabase Auth.
+ * Gets the current user's profile from the public.profiles table.
  */
 export async function getCurrentProfile(): Promise<Profile | null> {
-  console.warn("getCurrentProfile is a placeholder.");
-  return null;
+  const user = await getCurrentUser();
+  
+  if (!user) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !data) {
+    console.error("Error fetching profile:", error);
+    return null;
+  }
+
+  return data as Profile;
 }
 
 /**
- * Validates that a user is authenticated.
- * TODO: Integrate with real Supabase Auth.
+ * Validates that a user is authenticated. 
+ * Note: For route protection, prefer using Middleware.
  */
 export async function requireAuth() {
-  console.warn("requireAuth is a placeholder.");
-  return true;
+  const user = await getCurrentUser();
+  return !!user;
 }

@@ -3,19 +3,38 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Building2, UserRound, CheckCircle2 } from "lucide-react";
+import { useActionState } from "react"; // Next.js 15 uses useActionState, Next.js 14 uses useFormState from react-dom. The repo has React 19.2.4 according to package.json.
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { registerAction } from "@/lib/auth/actions";
 
 type Role = "umkm" | "creator";
 
 export function RegisterForm() {
   const [role, setRole] = useState<Role>("umkm");
+  
+  // Wrap the server action if we wanted to show errors, but for simplicity let's just 
+  // use a form action directly. Since the user asked for a professional foundation,
+  // error handling is good. React 19 provides useActionState.
+  const [state, formAction, isPending] = useActionState(
+    async (prevState: unknown, formData: FormData) => {
+      const password = formData.get("password");
+      const confirm = formData.get("confirmPassword");
+      
+      if (password !== confirm) {
+        return { error: "Password dan Konfirmasi Password tidak cocok." };
+      }
+      
+      return await registerAction(formData);
+    },
+    null
+  );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <form action={formAction} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">Buat Akun Baru</h1>
         <p className="text-muted-foreground">
@@ -23,9 +42,16 @@ export function RegisterForm() {
         </p>
       </div>
 
+      {state?.error && (
+        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-200">
+          {state.error}
+        </div>
+      )}
+
       <div className="space-y-6">
         <div className="space-y-3">
           <Label>Pilih Peran Anda</Label>
+          <input type="hidden" name="role" value={role} />
           <div className="grid grid-cols-2 gap-4">
             <button
               type="button"
@@ -86,19 +112,19 @@ export function RegisterForm() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nama Lengkap</Label>
-            <Input id="name" placeholder="John Doe" className="h-11 px-4" />
+            <Input id="name" name="name" placeholder="John Doe" className="h-11 px-4" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="nama@email.com" className="h-11 px-4" />
+            <Input id="email" name="email" type="email" placeholder="nama@email.com" className="h-11 px-4" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="Min. 8 karakter" className="h-11 px-4" />
+            <Input id="password" name="password" type="password" placeholder="Min. 8 karakter" className="h-11 px-4" required minLength={8} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-            <Input id="confirmPassword" type="password" placeholder="Ulangi password" className="h-11 px-4" />
+            <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="Ulangi password" className="h-11 px-4" required minLength={8} />
           </div>
         </div>
 
@@ -140,8 +166,8 @@ export function RegisterForm() {
           )}
         </div>
 
-        <Button className="w-full h-11 text-base font-semibold shadow-sm" size="lg">
-          Daftar Sekarang
+        <Button type="submit" disabled={isPending} className="w-full h-11 text-base font-semibold shadow-sm" size="lg">
+          {isPending ? "Mendaftar..." : "Daftar Sekarang"}
         </Button>
       </div>
 
@@ -155,6 +181,6 @@ export function RegisterForm() {
       <p className="text-center text-[10px] text-muted-foreground leading-relaxed">
         Dengan mendaftar, Anda menyetujui <span className="underline cursor-pointer">Syarat & Ketentuan</span> dan <span className="underline cursor-pointer">Kebijakan Privasi</span> kami.
       </p>
-    </div>
+    </form>
   );
 }
