@@ -1,0 +1,287 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { ArrowRight, FileUp, Info, Sparkles } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import type { DummyCampaignBrief, DummyUmkmProfile } from "@/lib/dummy";
+
+type CampaignBriefFormProps = {
+  brief: DummyCampaignBrief | null;
+  paymentHref: string;
+  umkm: DummyUmkmProfile | null;
+};
+
+export function CampaignBriefForm({
+  brief,
+  paymentHref,
+  umkm,
+}: CampaignBriefFormProps) {
+  const businessName = brief?.businessName ?? umkm?.businessName ?? "";
+  const businessCategory = brief?.businessCategory ?? umkm?.businessCategory ?? "";
+
+  return (
+    <section
+      aria-labelledby="campaign-brief-form-title"
+      className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-card)]"
+    >
+      <div className="border-b border-border/70 bg-[linear-gradient(135deg,var(--surface-elevated),var(--surface-soft))] p-5 sm:p-6">
+        <div className="flex items-start gap-4">
+          <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+            <Sparkles className="size-5" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-primary">Brief Campaign</p>
+            <h2
+              id="campaign-brief-form-title"
+              className="mt-2 text-2xl font-semibold tracking-tight text-foreground"
+            >
+              Lengkapi arahan konten untuk kreator
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Form ini memakai dummy data agar UMKM dapat melihat struktur brief
+              sebelum integrasi penyimpanan dan pembayaran dibuat.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <form className="space-y-6 p-5 sm:p-6">
+        <FormGroup
+          title="Profil usaha"
+          description="Bagian ini membantu kreator memahami konteks UMKM dan fokus promosi."
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextField
+              id="business-name"
+              label="Nama usaha"
+              defaultValue={businessName}
+              placeholder="Contoh: Bakso Mas Adi"
+            />
+            <TextField
+              id="business-category"
+              label="Kategori usaha"
+              defaultValue={businessCategory}
+              placeholder="Contoh: Kuliner"
+            />
+          </div>
+
+          <TextField
+            id="promoted-focus"
+            label="Produk/jasa yang dipromosikan"
+            helperText="Tuliskan fokus utama yang perlu terlihat dalam konten."
+            defaultValue={brief?.promotedFocus ?? ""}
+            placeholder="Contoh: menu bakso urat dan promo paket keluarga"
+          />
+        </FormGroup>
+
+        <FormGroup
+          title="Arah campaign"
+          description="Semakin jelas tujuan dan audiens, semakin mudah kreator memilih sudut konten."
+        >
+          <TextAreaField
+            id="campaign-goal"
+            label="Tujuan campaign"
+            helperText="Gunakan satu tujuan utama agar arahan tidak melebar."
+            defaultValue={brief?.campaignGoal ?? ""}
+            placeholder="Jelaskan tujuan utama campaign secara singkat."
+          />
+
+          <TextAreaField
+            id="target-audience"
+            label="Target audiens"
+            defaultValue={joinValues(brief?.targetAudience)}
+            placeholder="Contoh: pekerja kantor, keluarga muda"
+          />
+        </FormGroup>
+
+        <FormGroup
+          title="Format dan gaya konten"
+          description="Tentukan kanal, rasa visual, dan referensi agar hasil konten punya arah yang konsisten."
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextAreaField
+              id="content-platforms"
+              label="Platform konten"
+              defaultValue={joinValues(brief?.contentPlatforms)}
+              placeholder="Contoh: Instagram Reels, TikTok"
+            />
+            <TextAreaField
+              id="content-style"
+              label="Gaya konten"
+              defaultValue={joinValues(brief?.contentStyle)}
+              placeholder="Contoh: hangat, natural, elegan"
+            />
+          </div>
+
+          <TextAreaField
+            id="reference-links"
+            label="Referensi konten"
+            helperText="Tambahkan tautan contoh konten, mood, atau gaya visual jika ada."
+            defaultValue={joinLines(brief?.referenceLinks)}
+            placeholder="Masukkan tautan referensi jika ada."
+          />
+        </FormGroup>
+
+        <FormGroup
+          title="Waktu, catatan, dan aset"
+          description="Tambahkan deadline, arahan khusus, dan placeholder aset campaign."
+        >
+          <TextField
+            id="deadline"
+            label="Deadline"
+            helperText="Tanggal ini hanya tampil sebagai dummy data pada tahap fondasi."
+            type="date"
+            defaultValue={brief?.deadline ?? ""}
+          />
+
+          <TextAreaField
+            id="additional-notes"
+            label="Catatan tambahan"
+            defaultValue={brief?.additionalNotes ?? ""}
+            placeholder="Tambahkan arahan khusus untuk kreator."
+          />
+
+          <div>
+            <p className="text-sm font-medium leading-none text-foreground">
+              Upload aset placeholder
+            </p>
+            <div className="mt-2 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  <FileUp className="size-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Aset campaign akan ditambahkan pada tahap integrasi storage.
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    Untuk sementara, contoh aset dari dummy data hanya menjadi
+                    referensi visual bagi halaman checkout.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </FormGroup>
+
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+          <p className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
+            <Info className="mt-1 size-4 shrink-0 text-primary" aria-hidden="true" />
+            Tombol di bawah hanya placeholder. Data brief belum disimpan dan
+            belum memproses pembayaran.
+          </p>
+        </div>
+
+        <div className="flex justify-end">
+          <Button asChild size="lg" className="h-11 px-5">
+            <Link href={paymentHref}>
+              Lanjut ke Pembayaran
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </Button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+type FormGroupProps = {
+  children: ReactNode;
+  description: string;
+  title: string;
+};
+
+function FormGroup({ children, description, title }: FormGroupProps) {
+  return (
+    <fieldset className="rounded-2xl border border-border/70 bg-background p-4 sm:p-5">
+      <legend className="px-1 text-base font-semibold tracking-tight text-foreground">
+        {title}
+      </legend>
+      <p className="mb-5 mt-2 text-sm leading-6 text-muted-foreground">
+        {description}
+      </p>
+      <div className="space-y-4">{children}</div>
+    </fieldset>
+  );
+}
+
+type TextFieldProps = {
+  defaultValue?: string;
+  helperText?: string;
+  id: string;
+  label: string;
+  placeholder?: string;
+  type?: "date" | "text";
+};
+
+function TextField({
+  defaultValue,
+  helperText,
+  id,
+  label,
+  placeholder,
+  type = "text",
+}: TextFieldProps) {
+  return (
+    <div>
+      <label htmlFor={id} className="text-sm font-medium leading-none text-foreground">
+        {label}
+      </label>
+      {helperText ? (
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">{helperText}</p>
+      ) : null}
+      <Input
+        id={id}
+        name={id}
+        type={type}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        className="mt-2 h-11 bg-card"
+      />
+    </div>
+  );
+}
+
+type TextAreaFieldProps = {
+  defaultValue?: string;
+  helperText?: string;
+  id: string;
+  label: string;
+  placeholder?: string;
+};
+
+function TextAreaField({
+  defaultValue,
+  helperText,
+  id,
+  label,
+  placeholder,
+}: TextAreaFieldProps) {
+  return (
+    <div>
+      <label htmlFor={id} className="text-sm font-medium leading-none text-foreground">
+        {label}
+      </label>
+      {helperText ? (
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">{helperText}</p>
+      ) : null}
+      <Textarea
+        id={id}
+        name={id}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        className="mt-2 min-h-28 bg-card"
+      />
+    </div>
+  );
+}
+
+function joinValues(values: readonly string[] | undefined) {
+  return values?.join(", ") ?? "";
+}
+
+function joinLines(values: readonly string[] | undefined) {
+  return values?.join("\n") ?? "";
+}

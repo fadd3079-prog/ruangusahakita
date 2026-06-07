@@ -1,13 +1,41 @@
-export default function Page() {
+import type { Metadata } from "next";
+import { Inbox } from "lucide-react";
+
+import { PageContainer } from "@/components/layout/page-container";
+import {
+  getOrderListItems,
+  getOrdersForRole,
+} from "@/features/orders/components/order-data";
+import { OrderFilterBar } from "@/features/orders/components/order-filter-bar";
+import { OrderListTable } from "@/features/orders/components/order-list-table";
+import { OrderPageHero } from "@/features/orders/components/order-page-hero";
+
+export const metadata: Metadata = {
+  title: "Order Masuk - Kreator Ruang Usaha Kita",
+  description:
+    "Daftar order dummy untuk kreator, termasuk brief campaign, status pesanan, pembayaran, deadline, dan CTA placeholder.",
+};
+
+const orders = getOrdersForRole("creator");
+const orderItems = getOrderListItems(orders, "creator");
+
+export default function CreatorOrdersPage() {
   return (
-    <main className="min-h-screen px-6 py-10">
-      <section className="mx-auto max-w-6xl">
-        <p className="text-sm text-muted-foreground">Ruang Usaha Kita</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Order Masuk</h1>
-        <p className="mt-4 max-w-2xl text-muted-foreground">
-          Halaman ini masih berupa scaffold awal untuk marketplace jasa digital UMKM dan content creator.
-        </p>
-      </section>
+    <main>
+      <PageContainer maxWidth="full" className="px-0 sm:px-0 lg:px-0">
+        <div className="space-y-8">
+          <OrderPageHero
+            icon={Inbox}
+            eyebrow="Order kreator"
+            title="Order masuk dan proses konten aktif."
+            description="Kreator dapat membaca brief, melihat scope layanan, memantau pembayaran, dan menyiapkan hasil konten pada UI dummy ini."
+            metricLabel="Order aktif"
+            metricValue={`${orders.length} pesanan`}
+          />
+          <OrderFilterBar showPaymentFilter />
+          <OrderListTable items={orderItems} role="creator" />
+        </div>
+      </PageContainer>
     </main>
   );
 }
