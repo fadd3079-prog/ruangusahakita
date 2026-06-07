@@ -284,99 +284,95 @@ export function CatalogFilter({
   return (
     <div
       className={cn(
-        "grid gap-6 lg:items-start",
+        "grid gap-8 lg:items-start",
         isFilterCollapsed
-          ? "lg:grid-cols-[72px_minmax(0,1fr)]"
-          : "lg:grid-cols-[280px_minmax(0,1fr)]",
+          ? "lg:grid-cols-[48px_minmax(0,1fr)]"
+          : "lg:grid-cols-[260px_minmax(0,1fr)]",
       )}
     >
       <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
-        <div
-          className={cn(
-            "overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[var(--shadow-soft)] transition-[width] duration-200 ease-out",
-            isFilterCollapsed ? "w-[72px]" : "w-[280px]",
-          )}
-        >
-          <div className="flex min-h-14 items-center justify-between gap-2 border-b border-border/70 px-4">
-            <div className={cn("min-w-0", isFilterCollapsed && "sr-only")}>
-              <p className="text-sm font-semibold text-foreground">Filter</p>
-              <p className="text-xs text-muted-foreground">
-                Sesuaikan kebutuhan campaign
-              </p>
+        <div className="flex items-center justify-between gap-2 pb-4">
+          <div
+            className={cn(
+              "flex items-center gap-2 transition-opacity duration-200",
+              isFilterCollapsed ? "sr-only opacity-0" : "opacity-100",
+            )}
+          >
+            <SlidersHorizontal className="size-4 text-primary" aria-hidden="true" />
+            <p className="text-sm font-semibold text-foreground">Filter</p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsFilterCollapsed((currentValue) => !currentValue)}
+            aria-label={isFilterCollapsed ? "Perluas filter" : "Ciutkan filter"}
+            className="h-8 w-8 shrink-0"
+          >
+            {isFilterCollapsed ? (
+              <PanelLeftOpen aria-hidden="true" className="size-4" />
+            ) : (
+              <PanelLeftClose aria-hidden="true" className="size-4" />
+            )}
+          </Button>
+        </div>
+        {!isFilterCollapsed ? (
+          <div className="space-y-6 pr-2">{renderFilterPanel()}</div>
+        ) : null}
+      </aside>
+
+      <div className="min-w-0 space-y-8">
+        <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 items-center gap-3">
+            <div className="flex-1 lg:max-w-md">
+              <CatalogSearch
+                value={query}
+                onChange={setQuery}
+                labelClassName="sr-only"
+              />
             </div>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 lg:hidden"
+                >
+                  <SlidersHorizontal aria-hidden="true" />
+                  Filter
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                side="left"
+                className="w-[min(24rem,calc(100vw-2rem))] overflow-y-auto p-0"
+              >
+                <SheetHeader className="border-b p-5 text-left">
+                  <SheetTitle>Filter katalog</SheetTitle>
+                  <SheetDescription>
+                    Pilih kategori, lokasi, niche, harga, rating, dan
+                    ketersediaan kreator.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="p-5">{renderFilterPanel()}</div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <p className="hidden text-sm text-muted-foreground sm:block">
+              {filteredItems.length} kreator ditemukan
+            </p>
+            <CatalogSort value={sort} onChange={setSort} labelClassName="sr-only" />
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() =>
-                setIsFilterCollapsed((currentValue) => !currentValue)
-              }
-              aria-label={
-                isFilterCollapsed ? "Perluas filter" : "Ciutkan filter"
-              }
-              className="shrink-0"
-            >
-              {isFilterCollapsed ? (
-                <PanelLeftOpen aria-hidden="true" />
-              ) : (
-                <PanelLeftClose aria-hidden="true" />
-              )}
-            </Button>
-          </div>
-          {!isFilterCollapsed ? (
-            <div className="p-4">{renderFilterPanel()}</div>
-          ) : null}
-        </div>
-      </aside>
-
-      <div className="min-w-0 space-y-6">
-        <section className="rounded-2xl border border-border/70 bg-card/90 p-4 shadow-[var(--shadow-soft)] sm:p-5">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-            <CatalogSearch value={query} onChange={setQuery} />
-            <CatalogSort value={sort} onChange={setSort} />
-          </div>
-
-          <div className="mt-4 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="lg:hidden"
-                  >
-                    <SlidersHorizontal aria-hidden="true" />
-                    Filter
-                  </Button>
-                </SheetTrigger>
-                <SheetContent
-                  side="left"
-                  className="w-[min(24rem,calc(100vw-2rem))] overflow-y-auto p-0"
-                >
-                  <SheetHeader className="border-b p-5 text-left">
-                    <SheetTitle>Filter katalog</SheetTitle>
-                    <SheetDescription>
-                      Pilih kategori, lokasi, niche, harga, rating, dan
-                      ketersediaan kreator.
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="p-5">{renderFilterPanel()}</div>
-                </SheetContent>
-              </Sheet>
-
-              <p className="text-sm text-muted-foreground">
-                {filteredItems.length} kreator ditemukan
-              </p>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
               onClick={resetFilters}
               disabled={!hasActiveFilter}
+              title="Reset filter"
+              className="h-11 w-11"
             >
-              <RotateCcw aria-hidden="true" />
-              Reset
+              <RotateCcw aria-hidden="true" className="size-4" />
             </Button>
           </div>
         </section>

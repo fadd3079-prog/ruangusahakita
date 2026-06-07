@@ -1,0 +1,160 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Building2, UserRound, CheckCircle2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+
+type Role = "umkm" | "creator";
+
+export function RegisterForm() {
+  const [role, setRole] = useState<Role>("umkm");
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">Buat Akun Baru</h1>
+        <p className="text-muted-foreground">
+          Bergabunglah dengan komunitas marketplace jasa digital terbesar di Indonesia.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        <div className="space-y-3">
+          <Label>Pilih Peran Anda</Label>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => setRole("umkm")}
+              className={cn(
+                "group relative flex flex-col items-center gap-3 rounded-2xl border-2 p-4 text-center transition-all",
+                role === "umkm"
+                  ? "border-primary bg-primary/5 text-brand-navy shadow-sm"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-muted/50"
+              )}
+            >
+              <div className={cn(
+                "flex size-10 items-center justify-center rounded-full transition-colors",
+                role === "umkm" ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
+              )}>
+                <Building2 className="size-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">UMKM</p>
+                <p className="text-[10px] leading-tight">Saya ingin mencari jasa digital</p>
+              </div>
+              {role === "umkm" && (
+                <div className="absolute -right-2 -top-2 rounded-full bg-primary text-white">
+                  <CheckCircle2 className="size-5 fill-primary text-white" />
+                </div>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setRole("creator")}
+              className={cn(
+                "group relative flex flex-col items-center gap-3 rounded-2xl border-2 p-4 text-center transition-all",
+                role === "creator"
+                  ? "border-primary bg-primary/5 text-brand-navy shadow-sm"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-muted/50"
+              )}
+            >
+              <div className={cn(
+                "flex size-10 items-center justify-center rounded-full transition-colors",
+                role === "creator" ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
+              )}>
+                <UserRound className="size-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">Kreator</p>
+                <p className="text-[10px] leading-tight">Saya ingin menawarkan jasa</p>
+              </div>
+              {role === "creator" && (
+                <div className="absolute -right-2 -top-2 rounded-full bg-primary text-white">
+                  <CheckCircle2 className="size-5 fill-primary text-white" />
+                </div>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nama Lengkap</Label>
+            <Input id="name" placeholder="John Doe" className="h-11 px-4" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" placeholder="nama@email.com" className="h-11 px-4" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input id="password" type="password" placeholder="Min. 8 karakter" className="h-11 px-4" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+            <Input id="confirmPassword" type="password" placeholder="Ulangi password" className="h-11 px-4" />
+          </div>
+        </div>
+
+        <div className="rounded-2xl border-2 border-primary/10 bg-primary/5 p-4 animate-in fade-in zoom-in-95 duration-300">
+          {role === "umkm" ? (
+            <div className="space-y-2">
+              <p className="text-sm font-bold text-brand-navy">Manfaat Akun UMKM:</p>
+              <ul className="grid gap-1.5">
+                {[
+                  "Akses ke ribuan kreator terverifikasi",
+                  "Sistem brief campaign terstruktur",
+                  "Pembayaran aman dan transparan",
+                  "Manajemen revisi hasil konten"
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <CheckCircle2 className="size-3.5 text-primary" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm font-bold text-brand-navy">Manfaat Akun Kreator:</p>
+              <ul className="grid gap-1.5">
+                {[
+                  "Jangkau klien UMKM dari seluruh Indonesia",
+                  "Kelola portofolio dan paket layanan",
+                  "Sistem pesanan dan deadline otomatis",
+                  "Pencairan dana hasil jasa terjamin"
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <CheckCircle2 className="size-3.5 text-primary" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <Button className="w-full h-11 text-base font-semibold shadow-sm" size="lg">
+          Daftar Sekarang
+        </Button>
+      </div>
+
+      <div className="text-center text-sm">
+        <span className="text-muted-foreground">Sudah punya akun?</span>{" "}
+        <Link href="/login" className="font-semibold text-primary hover:text-brand-navy transition-colors">
+          Masuk di sini
+        </Link>
+      </div>
+
+      <p className="text-center text-[10px] text-muted-foreground leading-relaxed">
+        Dengan mendaftar, Anda menyetujui <span className="underline cursor-pointer">Syarat & Ketentuan</span> dan <span className="underline cursor-pointer">Kebijakan Privasi</span> kami.
+      </p>
+    </div>
+  );
+}

@@ -30,10 +30,8 @@ export function DashboardShell({ children, variant }: DashboardShellProps) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <DashboardTopbar variant={variant} />
-          <main className="min-h-0 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-[1440px] px-5 py-6 sm:px-8 lg:px-[100px] lg:py-10">
-              {children}
-            </div>
+          <main className="min-h-0 flex-1 overflow-y-auto py-6 lg:py-10">
+            {children}
           </main>
         </div>
       </div>

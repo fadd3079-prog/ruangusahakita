@@ -52,7 +52,7 @@ export default async function CreatorOrderDetailPage({ params }: OrderPageProps)
 
   return (
     <main>
-      <PageContainer maxWidth="full" className="px-0 sm:px-0 lg:px-0">
+      <PageContainer>
         <OrderDetailContent
           data={data}
           viewer="creator"

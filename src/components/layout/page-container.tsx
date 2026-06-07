@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const maxWidthClasses = {
-  default: "max-w-[1320px]",
-  narrow: "max-w-3xl",
-  wide: "max-w-[1440px]",
+  content: "max-w-[1520px]", // 1320px content + 200px padding
+  narrow: "max-w-[968px]", // 768px content + 200px padding
+  wide: "max-w-[1640px]", // 1440px content + 200px padding
   full: "max-w-none",
 } as const;
 
@@ -18,7 +18,7 @@ type PageContainerProps = {
 export function PageContainer({
   children,
   className,
-  maxWidth = "default",
+  maxWidth = "full",
 }: PageContainerProps) {
   return (
     <div

@@ -22,7 +22,7 @@ const orderItems = getOrderListItems(orders, "creator");
 export default function CreatorOrdersPage() {
   return (
     <main>
-      <PageContainer maxWidth="full" className="px-0 sm:px-0 lg:px-0">
+      <PageContainer>
         <div className="space-y-8">
           <OrderPageHero
             icon={Inbox}

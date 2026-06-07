@@ -51,7 +51,7 @@ export function HowItWorksSection() {
         <SectionHeading
           eyebrow="Cara kerja"
           title="Alur sederhana dari menemukan kreator sampai menerima hasil konten."
-          description="Homepage ini hanya memperkenalkan alur. Implementasi fitur detail dapat dibangun bertahap setelah struktur data dan UI dasar siap."
+          description="Platform kami dirancang untuk memastikan kolaborasi yang transparan, aman, dan tepat sasaran antara UMKM dan kreator digital."
         />
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {steps.map((step, index) => {

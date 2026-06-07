@@ -35,7 +35,7 @@ export default function UmkmCartPage() {
 
   return (
     <main>
-      <PageContainer maxWidth="full" className="px-0 sm:px-0 lg:px-0">
+      <PageContainer>
         <div className="space-y-8">
           <section className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
             <div className="grid gap-8 p-6 sm:p-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-end">
@@ -131,7 +131,7 @@ function getCartDisplayItems(cart: DummyCart): readonly CartDisplayItem[] {
 function CartEmptyState() {
   return (
     <main>
-      <PageContainer maxWidth="full" className="px-0 sm:px-0 lg:px-0">
+      <PageContainer>
         <section className="rounded-lg border border-dashed border-border bg-card p-8 text-center shadow-xs">
           <div className="mx-auto grid size-12 place-items-center rounded-lg bg-primary/10 text-primary">
             <BriefcaseBusiness className="size-6" aria-hidden="true" />

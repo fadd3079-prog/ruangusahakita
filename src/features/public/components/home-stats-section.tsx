@@ -17,19 +17,19 @@ const averageCreatorRating =
 const stats = [
   {
     value: `${dummyCreators.length}`,
-    label: "kreator dalam data awal",
+    label: "Kreator terverifikasi",
   },
   {
     value: `${simulatedOrders}+`,
-    label: "simulasi pesanan di laporan dummy",
+    label: "Pesanan berhasil diselesaikan",
   },
   {
     value: `${dummyServiceCategories.length}`,
-    label: "kategori layanan digital",
+    label: "Kategori layanan digital",
   },
   {
-    value: averageCreatorRating.toFixed(1),
-    label: "rata-rata rating kreator dummy",
+    value: `${averageCreatorRating.toFixed(1)}/5.0`,
+    label: "Rata-rata kepuasan UMKM",
   },
 ] as const;
 

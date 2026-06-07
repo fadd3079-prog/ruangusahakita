@@ -1,6 +1,7 @@
 import { Menu } from "lucide-react";
 
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +26,7 @@ export function DashboardTopbar({ variant }: DashboardTopbarProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
-      <div className="flex min-h-16 items-center justify-between gap-4 px-5 sm:px-8 lg:px-[100px]">
+      <PageContainer className="flex min-h-16 items-center justify-between gap-4 py-0">
         <div className="flex min-w-0 items-center gap-3">
           <Sheet>
             <SheetTrigger asChild>
@@ -74,7 +75,7 @@ export function DashboardTopbar({ variant }: DashboardTopbarProps) {
             </span>
           </div>
         </div>
-      </div>
+      </PageContainer>
     </header>
   );
 }

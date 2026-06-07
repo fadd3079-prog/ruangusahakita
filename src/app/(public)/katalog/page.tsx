@@ -73,7 +73,7 @@ export default function CatalogPage() {
         serviceCount={dummyServicePackages.length}
       />
       <section className="bg-muted/30 py-10 sm:py-12 lg:py-14">
-        <PageContainer maxWidth="wide">
+        <PageContainer>
           <CatalogFilter
             items={catalogCreators}
             categories={dummyServiceCategories.map((category) => ({

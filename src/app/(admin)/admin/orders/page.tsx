@@ -21,9 +21,8 @@ const orderItems = getOrderListItems(orders, "admin");
 
 export default function AdminOrdersPage() {
   return (
-    <main>
-      <PageContainer maxWidth="full" className="px-0 sm:px-0 lg:px-0">
-        <div className="space-y-8">
+    <PageContainer>
+      <div className="space-y-8">
           <OrderPageHero
             icon={BarChart3}
             eyebrow="Admin order monitoring"
@@ -36,6 +35,5 @@ export default function AdminOrdersPage() {
           <OrderListTable items={orderItems} role="admin" />
         </div>
       </PageContainer>
-    </main>
   );
 }

@@ -47,9 +47,8 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
   }
 
   return (
-    <main>
-      <PageContainer maxWidth="full" className="px-0 sm:px-0 lg:px-0">
-        <OrderDetailContent
+    <PageContainer>
+      <OrderDetailContent
           data={data}
           viewer="admin"
           actionTitle="Aksi monitoring admin"
@@ -62,6 +61,5 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
           ]}
         />
       </PageContainer>
-    </main>
-  );
+    );
 }

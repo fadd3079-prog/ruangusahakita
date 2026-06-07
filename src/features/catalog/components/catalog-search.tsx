@@ -5,18 +5,25 @@ import { cn } from "@/lib/utils";
 
 type CatalogSearchProps = {
   className?: string;
+  labelClassName?: string;
   value: string;
   onChange: (value: string) => void;
 };
 
 export function CatalogSearch({
   className,
+  labelClassName,
   value,
   onChange,
 }: CatalogSearchProps) {
   return (
     <label className={cn("block", className)}>
-      <span className="mb-2 block text-sm font-medium text-foreground">
+      <span
+        className={cn(
+          "mb-2 block text-sm font-medium text-foreground",
+          labelClassName,
+        )}
+      >
         Pencarian
       </span>
       <span className="relative block">
@@ -28,7 +35,7 @@ export function CatalogSearch({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder="Cari kreator, layanan, atau kategori"
-          className="h-11 bg-background pl-10"
+          className="h-10 bg-background pl-10"
         />
       </span>
     </label>

@@ -56,7 +56,7 @@ const resultItems: readonly ResultListItem[] = dummyOrders
 export default function UmkmResultsPage() {
   return (
     <main>
-      <PageContainer maxWidth="full" className="px-0 sm:px-0 lg:px-0">
+      <PageContainer>
         <div className="space-y-8">
           <OrderPageHero
             icon={FileCheck2}

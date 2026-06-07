@@ -44,10 +44,10 @@ type CreatorCardProps = {
 
 export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
   return (
-    <Card className="h-full rounded-2xl border-border/70 bg-card/90 shadow-[var(--shadow-soft)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_20px_48px_rgba(12,41,73,0.12)]">
-      <CardHeader className="pb-2">
+    <Card className="h-full rounded-xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_16px_36px_rgba(12,41,73,0.1)]">
+      <CardHeader className="pb-1">
         <div className="flex items-start gap-3">
-          <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(135deg,rgba(22,113,99,0.14),rgba(12,41,73,0.08))] text-sm font-semibold text-primary ring-1 ring-primary/10">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[linear-gradient(135deg,rgba(22,113,99,0.14),rgba(12,41,73,0.08))] text-sm font-semibold text-primary ring-1 ring-primary/10">
             {creator.displayName
               .split(" ")
               .map((part) => part[0])
@@ -55,16 +55,16 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
               .slice(0, 2)}
           </div>
           <div className="min-w-0 flex-1">
-            <CardTitle className="truncate text-lg">
+            <CardTitle className="truncate text-base">
               {creator.displayName}
             </CardTitle>
-            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
+            <p className="mt-1 line-clamp-1 text-sm leading-5 text-muted-foreground">
               {creator.niche}
             </p>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col space-y-4">
+      <CardContent className="flex flex-1 flex-col space-y-3">
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="rounded-lg">
             <CheckCircle2 aria-hidden="true" />
@@ -76,7 +76,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
             </Badge>
           ) : null}
         </div>
-        <div className="grid gap-2 text-sm text-muted-foreground">
+        <div className="grid gap-1.5 text-sm text-muted-foreground">
           <CreatorMeta icon={MapPin}>
             {creator.city}, {creator.province}
           </CreatorMeta>
@@ -88,14 +88,14 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
           </CreatorMeta>
         </div>
         {primaryService ? (
-          <div className="rounded-2xl border border-border/70 bg-muted/40 p-3.5">
+          <div className="rounded-xl border border-border/70 bg-muted/40 p-3">
             <div className="flex items-start gap-2">
               <Layers3
                 className="mt-0.5 size-4 shrink-0 text-primary"
                 aria-hidden="true"
               />
               <div className="min-w-0">
-                <p className="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-5 text-foreground">
+                <p className="line-clamp-2 min-h-10 text-sm font-medium leading-5 text-foreground">
                   {primaryService.title}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -106,14 +106,14 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
             </div>
           </div>
         ) : null}
-        <div className="mt-auto grid grid-cols-2 overflow-hidden rounded-2xl border border-border/70 bg-background">
-          <div className="border-r border-border/70 p-3">
+        <div className="mt-auto grid grid-cols-2 overflow-hidden rounded-xl border border-border/70 bg-background">
+          <div className="border-r border-border/70 p-2.5">
             <p className="text-xs text-muted-foreground">Mulai dari</p>
             <p className="mt-1 text-sm font-semibold text-foreground">
-              <PriceText value={creator.startingPrice} />
+              <PriceText value={creator.startingPrice} prefix="" />
             </p>
           </div>
-          <div className="p-3">
+          <div className="p-2.5">
             <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
               <Trophy className="size-3.5 text-primary" aria-hidden="true" />
               Selesai
@@ -127,8 +127,8 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
       <CardFooter
         className={
           primaryService
-            ? "mt-auto grid gap-2 bg-muted/35 sm:grid-cols-2"
-            : "mt-auto bg-muted/35"
+            ? "mt-auto grid gap-2 bg-muted/35 p-3 sm:grid-cols-2"
+            : "mt-auto bg-muted/35 p-3"
         }
       >
         <Button

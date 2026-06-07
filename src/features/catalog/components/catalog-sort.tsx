@@ -27,21 +27,32 @@ const sortOptions: readonly {
 
 type CatalogSortProps = {
   className?: string;
+  labelClassName?: string;
   value: CatalogSortValue;
   onChange: (value: CatalogSortValue) => void;
 };
 
-export function CatalogSort({ className, value, onChange }: CatalogSortProps) {
+export function CatalogSort({
+  className,
+  labelClassName,
+  value,
+  onChange,
+}: CatalogSortProps) {
   return (
     <label className={cn("block", className)}>
-      <span className="mb-2 block text-sm font-medium text-foreground">
+      <span
+        className={cn(
+          "mb-2 block text-sm font-medium text-foreground",
+          labelClassName,
+        )}
+      >
         Urutkan
       </span>
       <Select
         value={value}
         onValueChange={(nextValue) => onChange(nextValue as CatalogSortValue)}
       >
-        <SelectTrigger className="h-11 w-full bg-background">
+        <SelectTrigger className="h-10 w-full bg-background">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
