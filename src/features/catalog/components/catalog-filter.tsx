@@ -1,7 +1,18 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { RotateCcw } from "lucide-react";
+import {
+  ClipboardList,
+  FileCheck2,
+  ListChecks,
+  PanelLeftClose,
+  PanelLeftOpen,
+  RotateCcw,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { DummyAvailabilityStatus } from "@/lib/dummy";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { CatalogEmptyState } from "@/features/catalog/components/catalog-empty-state";
 import { CatalogSearch } from "@/features/catalog/components/catalog-search";
 import {
@@ -22,6 +40,8 @@ import {
   CreatorGrid,
   type CatalogCreator,
 } from "@/features/catalog/components/creator-grid";
+import type { DummyAvailabilityStatus } from "@/lib/dummy";
+import { cn } from "@/lib/utils";
 
 type PriceFilterValue = "all" | "under_150" | "150_250" | "over_250";
 type RatingFilterValue = "all" | "4_8" | "4_7";
@@ -37,34 +57,65 @@ type CatalogFilterProps = {
   niches: readonly string[];
 };
 
-const priceOptions: readonly {
-  value: PriceFilterValue;
+type FilterSelectOption = {
+  value: string;
   label: string;
-}[] = [
+};
+
+type CatalogFilterState = {
+  availability: AvailabilityFilterValue;
+  categoryId: string;
+  location: string;
+  niche: string;
+  price: PriceFilterValue;
+  rating: RatingFilterValue;
+};
+
+const priceOptions: readonly FilterSelectOption[] = [
   { value: "all", label: "Semua harga" },
   { value: "under_150", label: "Di bawah Rp150.000" },
   { value: "150_250", label: "Rp150.000 - Rp250.000" },
   { value: "over_250", label: "Di atas Rp250.000" },
 ];
 
-const ratingOptions: readonly {
-  value: RatingFilterValue;
-  label: string;
-}[] = [
+const ratingOptions: readonly FilterSelectOption[] = [
   { value: "all", label: "Semua rating" },
   { value: "4_8", label: "Minimal 4.8" },
   { value: "4_7", label: "Minimal 4.7" },
 ];
 
-const availabilityOptions: readonly {
-  value: AvailabilityFilterValue;
-  label: string;
-}[] = [
+const availabilityOptions: readonly FilterSelectOption[] = [
   { value: "all", label: "Semua ketersediaan" },
   { value: "available", label: "Tersedia" },
   { value: "limited", label: "Terbatas" },
   { value: "busy", label: "Penuh sementara" },
   { value: "unavailable", label: "Belum tersedia" },
+];
+
+const guidanceItems: readonly {
+  title: string;
+  icon: LucideIcon;
+}[] = [
+  {
+    title: "Sesuaikan niche dengan jenis usaha",
+    icon: Sparkles,
+  },
+  {
+    title: "Cek portofolio dan gaya konten kreator",
+    icon: Star,
+  },
+  {
+    title: "Cek output paket jasa sebelum memilih",
+    icon: ListChecks,
+  },
+  {
+    title: "Perhatikan estimasi pengerjaan dan revisi",
+    icon: FileCheck2,
+  },
+  {
+    title: "Isi brief campaign dengan jelas saat checkout",
+    icon: ClipboardList,
+  },
 ];
 
 function matchesPrice(value: number, filter: PriceFilterValue) {
@@ -106,7 +157,9 @@ function sortItems(items: readonly CatalogCreator[], sort: CatalogSortValue) {
     }
 
     if (sort === "projects") {
-      return second.creator.completedOrdersCount - first.creator.completedOrdersCount;
+      return (
+        second.creator.completedOrdersCount - first.creator.completedOrdersCount
+      );
     }
 
     if (sort === "fastest") {
@@ -135,6 +188,16 @@ export function CatalogFilter({
   const [availability, setAvailability] =
     useState<AvailabilityFilterValue>("all");
   const [sort, setSort] = useState<CatalogSortValue>("relevant");
+  const [isFilterCollapsed, setIsFilterCollapsed] = useState(false);
+
+  const filterState: CatalogFilterState = {
+    availability,
+    categoryId,
+    location,
+    niche,
+    price,
+    rating,
+  };
 
   const filteredItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -164,7 +227,17 @@ export function CatalogFilter({
     });
 
     return sortItems(result, sort);
-  }, [availability, categoryId, items, location, niche, price, query, rating, sort]);
+  }, [
+    availability,
+    categoryId,
+    items,
+    location,
+    niche,
+    price,
+    query,
+    rating,
+    sort,
+  ]);
 
   const hasActiveFilter =
     query.trim().length > 0 ||
@@ -187,71 +260,115 @@ export function CatalogFilter({
     setSort("relevant");
   }
 
+  function renderFilterPanel() {
+    return (
+      <FilterPanel
+        categories={categories}
+        filterState={filterState}
+        locations={locations}
+        niches={niches}
+        onAvailabilityChange={(nextValue) =>
+          setAvailability(nextValue as AvailabilityFilterValue)
+        }
+        onCategoryChange={setCategoryId}
+        onLocationChange={setLocation}
+        onNicheChange={setNiche}
+        onPriceChange={(nextValue) => setPrice(nextValue as PriceFilterValue)}
+        onRatingChange={(nextValue) =>
+          setRating(nextValue as RatingFilterValue)
+        }
+      />
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <section className="rounded-lg border border-border/70 bg-card p-4 shadow-xs sm:p-5">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(180px,0.7fr)]">
-          <CatalogSearch value={query} onChange={setQuery} />
-          <CatalogSort value={sort} onChange={setSort} />
+    <div
+      className={cn(
+        "grid gap-6 lg:items-start",
+        isFilterCollapsed
+          ? "lg:grid-cols-[72px_minmax(0,1fr)]"
+          : "lg:grid-cols-[280px_minmax(0,1fr)]",
+      )}
+    >
+      <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
+        <div
+          className={cn(
+            "overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[var(--shadow-soft)] transition-[width] duration-200 ease-out",
+            isFilterCollapsed ? "w-[72px]" : "w-[280px]",
+          )}
+        >
+          <div className="flex min-h-14 items-center justify-between gap-2 border-b border-border/70 px-4">
+            <div className={cn("min-w-0", isFilterCollapsed && "sr-only")}>
+              <p className="text-sm font-semibold text-foreground">Filter</p>
+              <p className="text-xs text-muted-foreground">
+                Sesuaikan kebutuhan campaign
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                setIsFilterCollapsed((currentValue) => !currentValue)
+              }
+              aria-label={
+                isFilterCollapsed ? "Perluas filter" : "Ciutkan filter"
+              }
+              className="shrink-0"
+            >
+              {isFilterCollapsed ? (
+                <PanelLeftOpen aria-hidden="true" />
+              ) : (
+                <PanelLeftClose aria-hidden="true" />
+              )}
+            </Button>
+          </div>
+          {!isFilterCollapsed ? (
+            <div className="p-4">{renderFilterPanel()}</div>
+          ) : null}
         </div>
+      </aside>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <FilterSelect
-            label="Kategori layanan"
-            value={categoryId}
-            onChange={setCategoryId}
-            options={[
-              { value: "all", label: "Semua kategori" },
-              ...categories.map((category) => ({
-                value: category.id,
-                label: category.name,
-              })),
-            ]}
-          />
-          <FilterSelect
-            label="Lokasi"
-            value={location}
-            onChange={setLocation}
-            options={[
-              { value: "all", label: "Semua lokasi" },
-              ...locations.map((item) => ({ value: item, label: item })),
-            ]}
-          />
-          <FilterSelect
-            label="Niche"
-            value={niche}
-            onChange={setNiche}
-            options={[
-              { value: "all", label: "Semua niche" },
-              ...niches.map((item) => ({ value: item, label: item })),
-            ]}
-          />
-          <FilterSelect
-            label="Harga"
-            value={price}
-            onChange={(value) => setPrice(value as PriceFilterValue)}
-            options={priceOptions}
-          />
-          <FilterSelect
-            label="Rating"
-            value={rating}
-            onChange={(value) => setRating(value as RatingFilterValue)}
-            options={ratingOptions}
-          />
-        </div>
+      <div className="min-w-0 space-y-6">
+        <section className="rounded-2xl border border-border/70 bg-card/90 p-4 shadow-[var(--shadow-soft)] sm:p-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+            <CatalogSearch value={query} onChange={setQuery} />
+            <CatalogSort value={sort} onChange={setSort} />
+          </div>
 
-        <div className="mt-5 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-end sm:justify-between">
-          <FilterSelect
-            label="Ketersediaan kreator"
-            value={availability}
-            onChange={(value) => setAvailability(value as AvailabilityFilterValue)}
-            options={availabilityOptions}
-            className="sm:max-w-xs"
-          />
-          <div className="flex items-center justify-between gap-3 sm:justify-end">
-            <p className="text-sm text-muted-foreground">
-              {filteredItems.length} kreator ditemukan
-            </p>
+          <div className="mt-4 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="lg:hidden"
+                  >
+                    <SlidersHorizontal aria-hidden="true" />
+                    Filter
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side="left"
+                  className="w-[min(24rem,calc(100vw-2rem))] overflow-y-auto p-0"
+                >
+                  <SheetHeader className="border-b p-5 text-left">
+                    <SheetTitle>Filter katalog</SheetTitle>
+                    <SheetDescription>
+                      Pilih kategori, lokasi, niche, harga, rating, dan
+                      ketersediaan kreator.
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="p-5">{renderFilterPanel()}</div>
+                </SheetContent>
+              </Sheet>
+
+              <p className="text-sm text-muted-foreground">
+                {filteredItems.length} kreator ditemukan
+              </p>
+            </div>
+
             <Button
               type="button"
               variant="outline"
@@ -262,14 +379,98 @@ export function CatalogFilter({
               Reset
             </Button>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {filteredItems.length > 0 ? (
-        <CreatorGrid items={filteredItems} />
-      ) : (
-        <CatalogEmptyState />
-      )}
+        {filteredItems.length > 0 ? (
+          <CreatorGrid items={filteredItems} />
+        ) : (
+          <CatalogEmptyState />
+        )}
+
+        <CatalogGuidanceStrip />
+      </div>
+    </div>
+  );
+}
+
+type FilterPanelProps = {
+  categories: readonly {
+    id: string;
+    name: string;
+  }[];
+  filterState: CatalogFilterState;
+  locations: readonly string[];
+  niches: readonly string[];
+  onAvailabilityChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
+  onLocationChange: (value: string) => void;
+  onNicheChange: (value: string) => void;
+  onPriceChange: (value: string) => void;
+  onRatingChange: (value: string) => void;
+};
+
+function FilterPanel({
+  categories,
+  filterState,
+  locations,
+  niches,
+  onAvailabilityChange,
+  onCategoryChange,
+  onLocationChange,
+  onNicheChange,
+  onPriceChange,
+  onRatingChange,
+}: FilterPanelProps) {
+  return (
+    <div className="grid gap-4">
+      <FilterSelect
+        label="Kategori layanan"
+        value={filterState.categoryId}
+        onChange={onCategoryChange}
+        options={[
+          { value: "all", label: "Semua kategori" },
+          ...categories.map((category) => ({
+            value: category.id,
+            label: category.name,
+          })),
+        ]}
+      />
+      <FilterSelect
+        label="Lokasi"
+        value={filterState.location}
+        onChange={onLocationChange}
+        options={[
+          { value: "all", label: "Semua lokasi" },
+          ...locations.map((item) => ({ value: item, label: item })),
+        ]}
+      />
+      <FilterSelect
+        label="Niche"
+        value={filterState.niche}
+        onChange={onNicheChange}
+        options={[
+          { value: "all", label: "Semua niche" },
+          ...niches.map((item) => ({ value: item, label: item })),
+        ]}
+      />
+      <FilterSelect
+        label="Harga"
+        value={filterState.price}
+        onChange={onPriceChange}
+        options={priceOptions}
+      />
+      <FilterSelect
+        label="Rating"
+        value={filterState.rating}
+        onChange={onRatingChange}
+        options={ratingOptions}
+      />
+      <FilterSelect
+        label="Ketersediaan kreator"
+        value={filterState.availability}
+        onChange={onAvailabilityChange}
+        options={availabilityOptions}
+      />
     </div>
   );
 }
@@ -278,22 +479,12 @@ type FilterSelectProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  options: readonly {
-    value: string;
-    label: string;
-  }[];
-  className?: string;
+  options: readonly FilterSelectOption[];
 };
 
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-  className,
-}: FilterSelectProps) {
+function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
   return (
-    <label className={className}>
+    <label>
       <span className="mb-2 block text-sm font-medium text-foreground">
         {label}
       </span>
@@ -310,5 +501,38 @@ function FilterSelect({
         </SelectContent>
       </Select>
     </label>
+  );
+}
+
+function CatalogGuidanceStrip() {
+  return (
+    <section className="rounded-2xl border border-primary/15 bg-[linear-gradient(135deg,rgba(12,41,73,0.96),rgba(17,73,85,0.94))] p-5 text-primary-foreground shadow-[0_18px_45px_rgba(12,41,73,0.16)] sm:p-6">
+      <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+        <div>
+          <p className="text-sm font-semibold text-primary-foreground/75">
+            Panduan memilih kreator
+          </p>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
+            Pilih berdasarkan kebutuhan campaign, bukan hanya harga.
+          </h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {guidanceItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <div key={item.title} className="flex items-start gap-3">
+                <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-white/10 text-primary-foreground ring-1 ring-white/15">
+                  <Icon className="size-4" aria-hidden="true" />
+                </div>
+                <p className="pt-1 text-sm leading-6 text-primary-foreground/80">
+                  {item.title}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }

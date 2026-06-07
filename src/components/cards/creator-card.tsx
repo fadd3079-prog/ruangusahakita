@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { CheckCircle2, Clock, Layers3, MapPin, Star } from "lucide-react";
+import type { ReactNode } from "react";
+import {
+  CheckCircle2,
+  Clock,
+  Layers3,
+  MapPin,
+  Star,
+  Trophy,
+  type LucideIcon,
+} from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
 import { Badge } from "@/components/ui/badge";
@@ -35,25 +44,27 @@ type CreatorCardProps = {
 
 export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
   return (
-    <Card className="rounded-lg border-border/70 bg-card/80 shadow-xs transition-colors hover:border-primary/30">
-      <CardHeader>
+    <Card className="h-full rounded-2xl border-border/70 bg-card/90 shadow-[var(--shadow-soft)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_20px_48px_rgba(12,41,73,0.12)]">
+      <CardHeader className="pb-2">
         <div className="flex items-start gap-3">
-          <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
+          <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(135deg,rgba(22,113,99,0.14),rgba(12,41,73,0.08))] text-sm font-semibold text-primary ring-1 ring-primary/10">
             {creator.displayName
               .split(" ")
               .map((part) => part[0])
               .join("")
               .slice(0, 2)}
           </div>
-          <div className="min-w-0">
-            <CardTitle className="text-lg">{creator.displayName}</CardTitle>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="truncate text-lg">
+              {creator.displayName}
+            </CardTitle>
             <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
               {creator.niche}
             </p>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-1 flex-col space-y-4">
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="rounded-lg">
             <CheckCircle2 aria-hidden="true" />
@@ -66,28 +77,25 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
           ) : null}
         </div>
         <div className="grid gap-2 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-2">
-            <MapPin className="size-4 text-primary" aria-hidden="true" />
+          <CreatorMeta icon={MapPin}>
             {creator.city}, {creator.province}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Star className="size-4 fill-primary text-primary" aria-hidden="true" />
+          </CreatorMeta>
+          <CreatorMeta icon={Star} emphasized>
             {creator.averageRating.toFixed(1)} rating rata-rata
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Clock className="size-4 text-primary" aria-hidden="true" />
+          </CreatorMeta>
+          <CreatorMeta icon={Clock}>
             Respons sekitar {creator.responseTimeHours} jam
-          </span>
+          </CreatorMeta>
         </div>
         {primaryService ? (
-          <div className="rounded-lg border border-border/70 bg-muted/40 p-3">
+          <div className="rounded-2xl border border-border/70 bg-muted/40 p-3.5">
             <div className="flex items-start gap-2">
               <Layers3
                 className="mt-0.5 size-4 shrink-0 text-primary"
                 aria-hidden="true"
               />
               <div className="min-w-0">
-                <p className="line-clamp-1 text-sm font-medium text-foreground">
+                <p className="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-5 text-foreground">
                   {primaryService.title}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -98,35 +106,68 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
             </div>
           </div>
         ) : null}
-        <div className="rounded-lg border border-border/70 bg-muted/40 p-3">
-          <p className="text-sm text-muted-foreground">
-            {creator.completedOrdersCount} pesanan selesai
-          </p>
-          <p className="mt-1 text-sm">
-            <PriceText value={creator.startingPrice} />
-          </p>
+        <div className="mt-auto grid grid-cols-2 overflow-hidden rounded-2xl border border-border/70 bg-background">
+          <div className="border-r border-border/70 p-3">
+            <p className="text-xs text-muted-foreground">Mulai dari</p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
+              <PriceText value={creator.startingPrice} />
+            </p>
+          </div>
+          <div className="p-3">
+            <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Trophy className="size-3.5 text-primary" aria-hidden="true" />
+              Selesai
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
+              {creator.completedOrdersCount} pesanan
+            </p>
+          </div>
         </div>
       </CardContent>
       <CardFooter
         className={
           primaryService
-            ? "grid gap-2 bg-transparent sm:grid-cols-2"
-            : "bg-transparent"
+            ? "mt-auto grid gap-2 bg-muted/35 sm:grid-cols-2"
+            : "mt-auto bg-muted/35"
         }
       >
         <Button
           asChild
           variant={primaryService ? "outline" : "default"}
-          className="w-full"
+          className="h-9 w-full"
         >
-          <Link href={`/kreator/${creator.id}`}>Lihat Profil Kreator</Link>
+          <Link href={`/kreator/${creator.id}`}>Lihat Profil</Link>
         </Button>
         {primaryService ? (
-          <Button asChild className="w-full">
+          <Button asChild className="h-9 w-full">
             <Link href={`/layanan/${primaryService.id}`}>Pilih Layanan</Link>
           </Button>
         ) : null}
       </CardFooter>
     </Card>
+  );
+}
+
+type CreatorMetaProps = {
+  children: ReactNode;
+  emphasized?: boolean;
+  icon: LucideIcon;
+};
+
+function CreatorMeta({
+  children,
+  emphasized = false,
+  icon: Icon,
+}: CreatorMetaProps) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-2">
+      <Icon
+        className={
+          emphasized ? "size-4 fill-primary text-primary" : "size-4 text-primary"
+        }
+        aria-hidden="true"
+      />
+      <span className="truncate">{children}</span>
+    </span>
   );
 }

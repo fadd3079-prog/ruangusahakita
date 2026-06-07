@@ -19,8 +19,8 @@ import { authNavigation, publicNavigation } from "@/lib/constants/navigation";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-xl">
-      <PageContainer className="flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
+      <PageContainer className="flex h-16 items-center justify-between py-0">
         <AppLogo priority />
 
         <nav

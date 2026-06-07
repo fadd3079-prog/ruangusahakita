@@ -20,6 +20,8 @@ import {
   ListPlus,
   LogIn,
   MessageSquareWarning,
+  PanelLeftClose,
+  PanelLeftOpen,
   Route,
   Search,
   Settings,
@@ -32,6 +34,8 @@ import {
 } from "lucide-react";
 
 import { AppLogo } from "@/components/common/app-logo";
+import { Button } from "@/components/ui/button";
+import { SheetClose } from "@/components/ui/sheet";
 import {
   dashboardNavigation,
   dashboardRoleLabels,
@@ -68,75 +72,103 @@ const iconMap = {
 } satisfies Record<NavigationIcon, LucideIcon>;
 
 type DashboardSidebarProps = {
+  collapsed?: boolean;
   className?: string;
-  mode?: "sidebar" | "mobile";
+  mode?: "sidebar" | "drawer";
+  onToggleCollapsed?: () => void;
   variant: DashboardNavigationVariant;
 };
 
 export function DashboardSidebar({
+  collapsed = false,
   className,
   mode = "sidebar",
+  onToggleCollapsed,
   variant,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const items = dashboardNavigation[variant];
   const roleLabel = dashboardRoleLabels[variant];
-  const isMobile = mode === "mobile";
+  const isDrawer = mode === "drawer";
 
   return (
     <aside
       className={cn(
-        isMobile
-          ? "border-b bg-background/85"
-          : "h-screen border-r bg-background/80",
+        isDrawer
+          ? "h-full bg-background"
+          : "h-dvh shrink-0 border-r border-border/70 bg-background/90 transition-[width] duration-200 ease-out",
+        !isDrawer && (collapsed ? "w-[84px]" : "w-[280px]"),
         className,
       )}
     >
-      <div
-        className={cn(
-          isMobile ? "px-5 py-3 sm:px-8" : "flex h-full flex-col p-5",
-        )}
-      >
-        {!isMobile && (
-          <div className="mb-7">
-            <AppLogo />
-            <p className="mt-3 text-xs font-medium uppercase text-muted-foreground">
-              Dashboard {roleLabel}
-            </p>
-          </div>
-        )}
+      <div className="flex h-full flex-col p-4">
+        <div className="mb-6 flex min-h-12 items-center justify-between gap-2">
+          <AppLogo showText={!collapsed || isDrawer} />
+          {!isDrawer && onToggleCollapsed ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onToggleCollapsed}
+              aria-label={collapsed ? "Perluas navigasi" : "Ciutkan navigasi"}
+              className="hidden lg:inline-flex"
+            >
+              {collapsed ? (
+                <PanelLeftOpen aria-hidden="true" />
+              ) : (
+                <PanelLeftClose aria-hidden="true" />
+              )}
+            </Button>
+          ) : null}
+        </div>
+
+        <div className={cn("mb-4", collapsed && !isDrawer && "sr-only")}>
+          <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+            Dashboard {roleLabel}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kelola aktivitas marketplace layanan digital.
+          </p>
+        </div>
 
         <nav
           aria-label={`Navigasi dashboard ${roleLabel}`}
-          className={cn(
-            isMobile
-              ? "flex gap-2 overflow-x-auto"
-              : "grid flex-1 content-start gap-1",
-          )}
+          className="grid flex-1 content-start gap-1 overflow-y-auto pr-1"
         >
           {items.map((item) => {
             const Icon = iconMap[item.icon];
             const isActive =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-            return (
+            const link = (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
+                title={collapsed && !isDrawer ? item.title : undefined}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                  isMobile
-                    ? "shrink-0 px-3 py-2"
-                    : "min-h-10 px-3 py-2.5",
+                  "inline-flex min-h-10 items-center rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                  collapsed && !isDrawer
+                    ? "justify-center px-2"
+                    : "gap-2 px-3 py-2.5",
                   isActive
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(12,41,73,0.14)]"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 <Icon aria-hidden="true" className="size-4" />
-                <span>{item.title}</span>
+                <span className={cn(collapsed && !isDrawer && "sr-only")}>
+                  {item.title}
+                </span>
               </Link>
+            );
+
+            return isDrawer ? (
+              <SheetClose key={item.href} asChild>
+                {link}
+              </SheetClose>
+            ) : (
+              link
             );
           })}
         </nav>

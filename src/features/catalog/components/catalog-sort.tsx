@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 export type CatalogSortValue =
   | "relevant"
@@ -25,13 +26,14 @@ const sortOptions: readonly {
 ];
 
 type CatalogSortProps = {
+  className?: string;
   value: CatalogSortValue;
   onChange: (value: CatalogSortValue) => void;
 };
 
-export function CatalogSort({ value, onChange }: CatalogSortProps) {
+export function CatalogSort({ className, value, onChange }: CatalogSortProps) {
   return (
-    <label className="block">
+    <label className={cn("block", className)}>
       <span className="mb-2 block text-sm font-medium text-foreground">
         Urutkan
       </span>

@@ -1,15 +1,21 @@
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 type CatalogSearchProps = {
+  className?: string;
   value: string;
   onChange: (value: string) => void;
 };
 
-export function CatalogSearch({ value, onChange }: CatalogSearchProps) {
+export function CatalogSearch({
+  className,
+  value,
+  onChange,
+}: CatalogSearchProps) {
   return (
-    <label className="block">
+    <label className={cn("block", className)}>
       <span className="mb-2 block text-sm font-medium text-foreground">
         Pencarian
       </span>
