@@ -1,15 +1,26 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "../supabase/server";
 import { createAdminClient } from "../supabase/admin";
 import { getDashboardPathByRole } from "./guards";
 import type { UserRole } from "./roles";
 
+type PublicRegisterRole = Exclude<UserRole, "admin">;
+
+function getRequiredText(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function isPublicRegisterRole(role: string): role is PublicRegisterRole {
+  return role === "umkm" || role === "creator";
+}
+
 export async function loginAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = getRequiredText(formData, "email").toLowerCase();
+  const password = getRequiredText(formData, "password");
 
   if (!email || !password) {
     return { error: "Email dan password wajib diisi." };
@@ -22,38 +33,53 @@ export async function loginAction(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: "Email atau password tidak valid." };
   }
 
-  // Fetch role for redirect
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, account_status")
     .eq("id", data.user.id)
-    .single() as { data: { role: string } | null, error: unknown };
+    .single();
 
-  if (profile) {
-    redirect(getDashboardPathByRole(profile.role as UserRole));
-  } else {
-    redirect("/");
+  if (profileError || !profile) {
+    await supabase.auth.signOut();
+    return { error: "Profil akun belum tersedia. Hubungi admin." };
   }
+
+  if (profile.account_status !== "active") {
+    await supabase.auth.signOut();
+    return { error: "Akun belum aktif atau sedang dibatasi. Hubungi admin." };
+  }
+
+  await supabase
+    .from("profiles")
+    .update({ last_login_at: new Date().toISOString() })
+    .eq("id", data.user.id);
+
+  revalidatePath("/", "layout");
+  redirect(getDashboardPathByRole(profile.role));
 }
 
 export async function registerAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const fullName = formData.get("name") as string;
-  const role = formData.get("role") as UserRole;
+  const email = getRequiredText(formData, "email").toLowerCase();
+  const password = getRequiredText(formData, "password");
+  const fullName = getRequiredText(formData, "name");
+  const roleValue = getRequiredText(formData, "role");
 
-  if (!email || !password || !fullName || !role) {
+  if (!email || !password || !fullName || !roleValue) {
     return { error: "Semua field wajib diisi." };
   }
 
-  if (role !== "umkm" && role !== "creator") {
+  if (password.length < 8) {
+    return { error: "Password minimal 8 karakter." };
+  }
+
+  if (!isPublicRegisterRole(roleValue)) {
     return { error: "Role tidak valid." };
   }
 
-  // 1. Sign up user
+  const role = roleValue;
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
@@ -70,40 +96,62 @@ export async function registerAction(formData: FormData) {
   }
 
   if (!authData.user) {
-    return { error: "Terjadi kesalahan saat mendaftar." };
+    return { error: "Akun belum dapat dibuat. Coba lagi beberapa saat." };
   }
 
-  // 2. Create profile and specific role profile using Admin Client 
-  // We use admin client because RLS might prevent unauthenticated inserts, 
-  // and we want this to be secure and guaranteed server-side.
-  const adminClient = createAdminClient();
+  let adminClient: ReturnType<typeof createAdminClient>;
+
+  try {
+    adminClient = createAdminClient();
+  } catch {
+    await supabase.auth.signOut();
+    return { error: "Registrasi belum dapat diproses karena konfigurasi server belum lengkap." };
+  }
 
   const { error: profileError } = await adminClient.from("profiles").insert({
     id: authData.user.id,
-    role: role,
+    role,
     full_name: fullName,
-    email: email,
-  } as never);
+    email,
+  });
 
   if (profileError) {
-    console.error("Profile creation error:", profileError);
+    await adminClient.auth.admin.deleteUser(authData.user.id);
+    await supabase.auth.signOut();
     return { error: "Gagal membuat profil pengguna." };
   }
 
+  let roleProfileError: { message: string } | null = null;
+
   if (role === "umkm") {
-    await adminClient.from("umkm_profiles").insert({
+    const { error } = await adminClient.from("umkm_profiles").insert({
       user_id: authData.user.id,
-      business_name: fullName + " Business", // Placeholder, can be edited later
-    } as never);
-  } else if (role === "creator") {
-    await adminClient.from("creator_profiles").insert({
-      user_id: authData.user.id,
-      display_name: fullName,
-    } as never);
+      business_name: fullName,
+      owner_name: fullName,
+    });
+    roleProfileError = error;
   }
 
-  // Revalidate layout to pick up new session
+  if (role === "creator") {
+    const { error } = await adminClient.from("creator_profiles").insert({
+      user_id: authData.user.id,
+      display_name: fullName,
+    });
+    roleProfileError = error;
+  }
+
+  if (roleProfileError) {
+    await adminClient.auth.admin.deleteUser(authData.user.id);
+    await supabase.auth.signOut();
+    return { error: "Gagal menyiapkan profil role pengguna." };
+  }
+
   revalidatePath("/", "layout");
+
+  if (!authData.session) {
+    redirect("/login?registered=1");
+  }
+
   redirect(getDashboardPathByRole(role));
 }
 
@@ -111,5 +159,5 @@ export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect("/login");
+  redirect("/login?logged_out=1");
 }

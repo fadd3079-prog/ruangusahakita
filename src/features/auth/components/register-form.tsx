@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
 import { Building2, UserRound, CheckCircle2 } from "lucide-react";
-import { useActionState } from "react"; // Next.js 15 uses useActionState, Next.js 14 uses useFormState from react-dom. The repo has React 19.2.4 according to package.json.
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,19 +15,16 @@ type Role = "umkm" | "creator";
 
 export function RegisterForm() {
   const [role, setRole] = useState<Role>("umkm");
-  
-  // Wrap the server action if we wanted to show errors, but for simplicity let's just 
-  // use a form action directly. Since the user asked for a professional foundation,
-  // error handling is good. React 19 provides useActionState.
+
   const [state, formAction, isPending] = useActionState(
-    async (prevState: unknown, formData: FormData) => {
+    async (_state: unknown, formData: FormData) => {
       const password = formData.get("password");
       const confirm = formData.get("confirmPassword");
-      
+
       if (password !== confirm) {
-        return { error: "Password dan Konfirmasi Password tidak cocok." };
+        return { error: "Password dan konfirmasi password tidak cocok." };
       }
-      
+
       return await registerAction(formData);
     },
     null
@@ -38,7 +35,7 @@ export function RegisterForm() {
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">Buat Akun Baru</h1>
         <p className="text-muted-foreground">
-          Bergabunglah dengan komunitas marketplace jasa digital terbesar di Indonesia.
+          Buat akun untuk mulai menemukan kreator atau menawarkan layanan digital.
         </p>
       </div>
 
@@ -112,7 +109,7 @@ export function RegisterForm() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nama Lengkap</Label>
-            <Input id="name" name="name" placeholder="John Doe" className="h-11 px-4" required />
+            <Input id="name" name="name" placeholder="Nama lengkap Anda" className="h-11 px-4" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -134,10 +131,10 @@ export function RegisterForm() {
               <p className="text-sm font-bold text-brand-navy">Manfaat Akun UMKM:</p>
               <ul className="grid gap-1.5">
                 {[
-                  "Akses ke ribuan kreator terverifikasi",
-                  "Sistem brief campaign terstruktur",
-                  "Pembayaran aman dan transparan",
-                  "Manajemen revisi hasil konten"
+                  "Temukan kreator sesuai kebutuhan campaign",
+                  "Brief campaign lebih terstruktur",
+                  "Pantau status pesanan dan pembayaran",
+                  "Kelola revisi hasil konten"
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <CheckCircle2 className="size-3.5 text-primary" />
@@ -151,10 +148,10 @@ export function RegisterForm() {
               <p className="text-sm font-bold text-brand-navy">Manfaat Akun Kreator:</p>
               <ul className="grid gap-1.5">
                 {[
-                  "Jangkau klien UMKM dari seluruh Indonesia",
-                  "Kelola portofolio dan paket layanan",
-                  "Sistem pesanan dan deadline otomatis",
-                  "Pencairan dana hasil jasa terjamin"
+                  "Tampilkan portofolio dan paket layanan",
+                  "Terima order dari UMKM",
+                  "Pantau brief dan deadline",
+                  "Kelola status pesanan jasa digital"
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <CheckCircle2 className="size-3.5 text-primary" />

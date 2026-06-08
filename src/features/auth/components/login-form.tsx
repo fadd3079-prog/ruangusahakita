@@ -7,13 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginAction } from "@/lib/auth/actions";
 
-export function LoginForm() {
+type LoginFormProps = {
+  notice?: string;
+  routeError?: string;
+};
+
+export function LoginForm({ notice, routeError }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(
-    async (prevState: unknown, formData: FormData) => {
+    async (_state: unknown, formData: FormData) => {
       return await loginAction(formData);
     },
     null
   );
+
+  const error = state?.error ?? routeError;
 
   return (
     <form action={formAction} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -24,9 +31,15 @@ export function LoginForm() {
         </p>
       </div>
 
-      {state?.error && (
+      {notice && (
+        <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-brand-navy">
+          {notice}
+        </div>
+      )}
+
+      {error && (
         <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-200">
-          {state.error}
+          {error}
         </div>
       )}
 
@@ -92,7 +105,7 @@ export function LoginForm() {
         </div>
 
         <Button type="submit" disabled={isPending} className="w-full h-11 text-base font-semibold shadow-sm" size="lg">
-          {isPending ? "Sedang Masuk..." : "Masuk ke Akun"}
+          {isPending ? "Sedang masuk..." : "Masuk ke Akun"}
         </Button>
       </div>
 

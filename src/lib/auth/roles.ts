@@ -1,7 +1,8 @@
 export type UserRole = "admin" | "creator" | "umkm";
+export type AccountStatus = "active" | "inactive" | "suspended" | "pending_verification";
 
 export interface Profile {
   id: string;
   role: UserRole;
-  // TODO: Add other profile fields as needed
+  account_status: AccountStatus;
 }
