@@ -13,8 +13,8 @@ import {
   Users,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/layout/page-container";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -32,19 +32,14 @@ import {
   type DashboardListItem,
   type DashboardMetric,
 } from "@/features/dashboard/components/dashboard-overview";
+import {
+  getAdminDashboardOverview,
+  type DashboardComplaintStatus,
+  type DashboardPaymentStatus,
+} from "@/features/dashboard/data/dashboard-queries";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
-import {
-  dummyAdminDashboardReport,
-  dummyComplaints,
-  dummyCreators,
-  dummyMonthlyReports,
-  dummyOrders,
-  dummyPayments,
-  dummyServicePackages,
-  dummyUmkmProfiles,
-} from "@/lib/dummy";
-import type { DummyComplaintStatus, DummyOrderStatus } from "@/lib/dummy";
+import type { DummyPaymentStatus } from "@/lib/dummy";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 import { cn } from "@/lib/utils";
@@ -55,154 +50,145 @@ export const metadata: Metadata = {
     "Ringkasan pengguna, pesanan, pembayaran, komplain, dan laporan marketplace jasa digital Ruang Usaha Kita.",
 };
 
-const activeOrderStatuses: readonly DummyOrderStatus[] = [
-  "paid",
-  "waiting_creator_confirmation",
-  "brief_accepted",
-  "in_progress",
-  "submitted",
-  "revision_requested",
-  "revised",
-] as const;
-
 const complaintStatusLabels = {
   open: "Terbuka",
   rejected: "Ditolak",
   resolved: "Selesai",
   under_review: "Ditinjau",
-} satisfies Record<DummyComplaintStatus, string>;
+  waiting_creator: "Menunggu Kreator",
+  waiting_umkm: "Menunggu UMKM",
+} satisfies Record<DashboardComplaintStatus, string>;
 
 const complaintStatusClasses = {
   open: "border-sky-200 bg-sky-50 text-sky-700",
   rejected: "border-slate-200 bg-slate-50 text-slate-700",
   resolved: "border-emerald-200 bg-emerald-50 text-emerald-700",
   under_review: "border-amber-200 bg-amber-50 text-amber-800",
-} satisfies Record<DummyComplaintStatus, string>;
+  waiting_creator: "border-cyan-200 bg-cyan-50 text-cyan-700",
+  waiting_umkm: "border-indigo-200 bg-indigo-50 text-indigo-700",
+} satisfies Record<DashboardComplaintStatus, string>;
 
-export default function AdminDashboardPage() {
-  const activeOrders = dummyOrders.filter((order) =>
-    activeOrderStatuses.includes(order.orderStatus),
-  );
-  const pendingPayments = dummyPayments.filter(
-    (payment) => payment.paymentStatus === "pending",
-  );
-  const activeComplaints = dummyComplaints.filter(
-    (complaint) =>
-      complaint.complaintStatus === "open" ||
-      complaint.complaintStatus === "under_review",
-  );
-  const latestReport = dummyMonthlyReports[dummyMonthlyReports.length - 1];
-  const paidPayments = dummyPayments.filter(
-    (payment) => payment.paymentStatus === "paid",
-  );
+function getPaymentBadgeStatus(status: DashboardPaymentStatus): DummyPaymentStatus {
+  return status === "partially_refunded" ? "refunded" : status;
+}
+
+function getPaymentMethodLabel(value: string | null) {
+  if (!value) {
+    return "Belum dipilih";
+  }
+
+  return value.replace("_", " ");
+}
+
+export default async function AdminDashboardPage() {
+  const dashboard = await getAdminDashboardOverview();
 
   const metrics: readonly DashboardMetric[] = [
     {
       label: "Total users",
-      value: String(dummyAdminDashboardReport.totalUsers),
-      description: "Gabungan akun UMKM, kreator, dan admin dalam dummy data.",
+      value: String(dashboard.userStats.totalUsers),
+      description: "Gabungan akun UMKM, kreator, dan admin dari database.",
       icon: Users,
     },
     {
       label: "Total UMKM",
-      value: String(dummyAdminDashboardReport.totalUmkm),
-      description: "Profil UMKM yang tersedia untuk simulasi marketplace.",
+      value: String(dashboard.userStats.totalUmkm),
+      description: "Profil UMKM yang dapat dipantau admin.",
       icon: Building2,
     },
     {
       label: "Total kreator",
-      value: String(dummyAdminDashboardReport.totalCreators),
-      description: "Kreator dan marketer yang dapat tampil di katalog.",
+      value: String(dashboard.userStats.totalCreators),
+      description: "Kreator dan marketer yang terdaftar di platform.",
       icon: UserRoundCheck,
     },
     {
       label: "Total pesanan",
-      value: String(dummyOrders.length),
-      description: "Seluruh status pesanan dummy lintas role.",
+      value: String(dashboard.orderStats.totalOrders),
+      description: "Seluruh status pesanan yang terbaca lewat RLS admin.",
       icon: ListChecks,
     },
     {
       label: "Pesanan aktif",
-      value: String(activeOrders.length),
+      value: String(dashboard.orderStats.activeOrders),
       description: "Pesanan yang masih dalam proses layanan digital.",
       icon: LayoutDashboard,
     },
     {
       label: "Pembayaran pending",
-      value: String(pendingPayments.length),
-      description: "Status pembayaran dummy yang belum paid.",
+      value: String(dashboard.paymentStats.pending),
+      description: "Status pembayaran yang belum paid.",
       icon: CreditCard,
     },
     {
       label: "Komplain aktif",
-      value: String(activeComplaints.length),
+      value: String(dashboard.activeComplaints),
       description: "Komplain yang memerlukan pemantauan admin.",
       icon: FileWarning,
     },
     {
       label: "Platform revenue",
-      value: formatCurrency(dummyAdminDashboardReport.platformRevenue),
-      description: "Akumulasi platform fee dan admin fee dari laporan dummy.",
+      value: formatCurrency(dashboard.orderStats.platformRevenue),
+      description: "Akumulasi platform fee dan admin fee yang terbaca.",
       icon: BarChart3,
     },
   ];
 
-  const recentOrderItems: readonly DashboardListItem[] = [...dummyOrders]
-    .sort(
-      (first, second) =>
-        new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
-    )
-    .slice(0, 5)
-    .map((order) => {
-      const umkm = dummyUmkmProfiles.find((item) => item.id === order.umkmId);
-      const creator = dummyCreators.find((item) => item.id === order.creatorId);
-      const service = dummyServicePackages.find(
-        (item) => item.id === order.servicePackageId,
-      );
+  const recentOrderItems: readonly DashboardListItem[] =
+    dashboard.recentOrders.map((order) => ({
+      title: order.orderNumber,
+      description: `${order.counterpartName} · ${order.serviceTitle}`,
+      meta: `${formatDate(order.createdAt)} · ${formatCurrency(order.totalAmount)}`,
+      href: `/admin/orders/${order.id}`,
+      badge: <OrderStatusBadge status={order.orderStatus} />,
+    }));
 
-      return {
-        title: order.orderNumber,
-        description: `${umkm?.businessName ?? "UMKM"} · ${
-          creator?.displayName ?? "kreator"
-        } · ${service?.title ?? "Paket jasa digital"}`,
-        meta: `${formatDate(order.createdAt)} · ${formatCurrency(order.totalAmount)}`,
-        href: `/admin/orders/${order.id}`,
-        badge: <OrderStatusBadge status={order.orderStatus} />,
-      };
-    });
+  const complaintItems: readonly DashboardListItem[] =
+    dashboard.recentComplaints.map((complaint) => ({
+      title: complaint.subject,
+      description: complaint.orderNumber
+        ? `Terkait pesanan ${complaint.orderNumber}`
+        : "Konteks pesanan belum tersedia.",
+      meta: formatDate(complaint.createdAt),
+      href: "/admin/complaints",
+      badge: <ComplaintStatusBadge status={complaint.status} />,
+    }));
 
-  const complaintItems: readonly DashboardListItem[] = activeComplaints.map(
-    (complaint) => {
-      const order = dummyOrders.find((item) => item.id === complaint.orderId);
-
-      return {
-        title: complaint.subject,
-        description: complaint.description,
-        meta: order
-          ? `${order.orderNumber} · dibuat ${formatDate(complaint.createdAt)}`
-          : formatDate(complaint.createdAt),
-        href: `/admin/complaints`,
-        badge: <ComplaintStatusBadge status={complaint.complaintStatus} />,
-      };
-    },
-  );
-
-  const reportItems: readonly DashboardListItem[] = dummyMonthlyReports
-    .slice(-4)
-    .reverse()
-    .map((report) => ({
-      title: `Laporan ${report.month}`,
-      description: `${report.orders} pesanan · GTV ${formatCurrency(
-        report.grossTransactionValue,
-      )}`,
-      meta: `Platform revenue ${formatCurrency(report.platformRevenue)}`,
+  const reportItems: readonly DashboardListItem[] = [
+    {
+      title: "Gross transaction value",
+      description: "Total nilai transaksi UMKM-kreator yang terbaca dari order.",
+      meta: formatCurrency(dashboard.orderStats.grossTransactionValue),
       href: "/admin/reports",
       badge: (
         <Badge variant="secondary" className="rounded-lg">
-          Report
+          GTV
         </Badge>
       ),
-    }));
+    },
+    {
+      title: "Total paid",
+      description: "Akumulasi pembayaran dengan status paid.",
+      meta: formatCurrency(dashboard.paymentStats.totalPaidAmount),
+      href: "/admin/payments",
+      badge: (
+        <Badge variant="secondary" className="rounded-lg">
+          Paid
+        </Badge>
+      ),
+    },
+    {
+      title: "Layanan aktif",
+      description: "Paket jasa aktif yang masih tampil dalam katalog.",
+      meta: `${dashboard.serviceStats.activeServices} dari ${dashboard.serviceStats.totalServices} layanan`,
+      href: "/admin/services",
+      badge: (
+        <Badge variant="secondary" className="rounded-lg">
+          Layanan
+        </Badge>
+      ),
+    },
+  ];
 
   return (
     <PageContainer>
@@ -210,7 +196,7 @@ export default function AdminDashboardPage() {
         <DashboardHero
           eyebrow="Dashboard Admin"
           title="Pantau kesehatan marketplace jasa digital dari satu tempat."
-          description="Ringkasan dummy ini membantu admin melihat pengguna, pesanan, pembayaran, komplain, dan pendapatan platform tanpa menjalankan logika backend nyata."
+          description="Ringkasan read-only ini membantu admin melihat pengguna, pesanan, pembayaran, komplain, dan pendapatan platform tanpa menjalankan mutasi backend."
           actions={[
             { href: "/admin/orders", label: "Pantau Pesanan" },
             { href: "/admin/payments", label: "Pembayaran", variant: "outline" },
@@ -219,17 +205,15 @@ export default function AdminDashboardPage() {
           highlights={[
             {
               label: "Gross transaction value",
-              value: formatCurrency(dummyAdminDashboardReport.grossTransactionValue),
+              value: formatCurrency(dashboard.orderStats.grossTransactionValue),
             },
             {
-              label: "GTV bulan ini",
-              value: formatCurrency(latestReport.grossTransactionValue),
+              label: "Pembayaran paid",
+              value: formatCurrency(dashboard.paymentStats.totalPaidAmount),
             },
             {
-              label: "Paid dummy",
-              value: formatCurrency(
-                paidPayments.reduce((total, payment) => total + payment.amount, 0),
-              ),
+              label: "Layanan aktif",
+              value: String(dashboard.serviceStats.activeServices),
             },
           ]}
         />
@@ -242,11 +226,14 @@ export default function AdminDashboardPage() {
             description="Pantau status pesanan tanpa mencampurnya dengan status pembayaran."
             action={{ href: "/admin/orders", label: "Buka pesanan" }}
           >
-            <DashboardList items={recentOrderItems} />
+            <DashboardList
+              items={recentOrderItems}
+              emptyText="Belum ada pesanan yang terbaca untuk admin."
+            />
           </DashboardPanel>
 
           <DashboardPanel
-            title="Laporan bulanan"
+            title="Ringkasan laporan"
             description="Platform revenue bukan seluruh nilai transaksi."
             action={{ href: "/admin/reports", label: "Lihat laporan" }}
           >
@@ -257,7 +244,7 @@ export default function AdminDashboardPage() {
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
           <DashboardPanel
             title="Monitoring pembayaran"
-            description="Provider masih dummy; status pembayaran tetap berdiri sendiri."
+            description="Status pembayaran tetap berdiri sendiri dari status pesanan."
             action={{ href: "/admin/payments", label: "Kelola pembayaran" }}
           >
             <div className="overflow-hidden rounded-2xl border border-border/70 bg-background/80">
@@ -272,12 +259,8 @@ export default function AdminDashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dummyPayments.slice(0, 5).map((payment) => {
-                    const order = dummyOrders.find(
-                      (item) => item.id === payment.orderId,
-                    );
-
-                    return (
+                  {dashboard.recentPayments.length > 0 ? (
+                    dashboard.recentPayments.map((payment) => (
                       <TableRow key={payment.id}>
                         <TableCell>
                           <Link
@@ -287,32 +270,43 @@ export default function AdminDashboardPage() {
                             {payment.paymentNumber}
                           </Link>
                         </TableCell>
-                        <TableCell>{order?.orderNumber ?? "-"}</TableCell>
+                        <TableCell>{payment.orderNumber ?? "-"}</TableCell>
                         <TableCell className="capitalize">
-                          {payment.paymentMethod.replace("_", " ")}
+                          {getPaymentMethodLabel(payment.method)}
                         </TableCell>
                         <TableCell>
-                          <PaymentStatusBadge status={payment.paymentStatus} />
+                          <PaymentStatusBadge
+                            status={getPaymentBadgeStatus(payment.status)}
+                          />
                         </TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(payment.amount)}
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="h-24 text-center text-sm text-muted-foreground"
+                      >
+                        Belum ada pembayaran yang terbaca untuk admin.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
           </DashboardPanel>
 
           <DashboardPanel
-            title="Komplain aktif"
+            title="Komplain terbaru"
             description="Konteks awal untuk pemantauan admin."
             action={{ href: "/admin/complaints", label: "Buka komplain" }}
           >
             <DashboardList
               items={complaintItems}
-              emptyText="Tidak ada komplain aktif dalam dummy data."
+              emptyText="Tidak ada komplain yang terbaca saat ini."
             />
           </DashboardPanel>
         </section>
@@ -332,7 +326,7 @@ export default function AdminDashboardPage() {
               {
                 href: "/admin/payments",
                 label: "Pembayaran",
-                description: "Review invoice dan status pembayaran dummy.",
+                description: "Review invoice dan status pembayaran.",
                 icon: ReceiptText,
               },
               {
@@ -367,7 +361,7 @@ export default function AdminDashboardPage() {
   );
 }
 
-function ComplaintStatusBadge({ status }: { status: DummyComplaintStatus }) {
+function ComplaintStatusBadge({ status }: { status: DashboardComplaintStatus }) {
   return (
     <Badge
       variant="outline"

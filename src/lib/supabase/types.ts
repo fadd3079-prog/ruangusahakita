@@ -484,6 +484,73 @@ export interface Database {
           }
         ]
       }
+      campaign_briefs: {
+        Row: {
+          id: string
+          umkm_id: string
+          order_id: string | null
+          business_name: string
+          business_category: string | null
+          promoted_product: string
+          campaign_goal: string
+          target_audience: string | null
+          content_platforms: string[] | null
+          content_style: string | null
+          reference_links: string[] | null
+          deadline: string | null
+          additional_notes: string | null
+          asset_urls: string[] | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          umkm_id: string
+          order_id?: string | null
+          business_name: string
+          business_category?: string | null
+          promoted_product: string
+          campaign_goal: string
+          target_audience?: string | null
+          content_platforms?: string[] | null
+          content_style?: string | null
+          reference_links?: string[] | null
+          deadline?: string | null
+          additional_notes?: string | null
+          asset_urls?: string[] | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          umkm_id?: string
+          order_id?: string | null
+          business_name?: string
+          business_category?: string | null
+          promoted_product?: string
+          campaign_goal?: string
+          target_audience?: string | null
+          content_platforms?: string[] | null
+          content_style?: string | null
+          reference_links?: string[] | null
+          deadline?: string | null
+          additional_notes?: string | null
+          asset_urls?: string[] | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_briefs_umkm_id_fkey"
+            columns: ["umkm_id"]
+            referencedRelation: "umkm_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       orders: {
         Row: {
           id: string
@@ -493,7 +560,16 @@ export interface Database {
           campaign_brief_id: string | null
           order_status: Database['public']['Enums']['order_status']
           payment_status: Database['public']['Enums']['payment_status']
+          subtotal_amount: number
+          addon_amount: number
+          admin_fee: number
+          platform_fee: number
+          discount_amount: number
           total_amount: number
+          deadline: string | null
+          completed_at: string | null
+          cancelled_at: string | null
+          cancellation_reason: string | null
           created_at: string
           updated_at: string
         }
@@ -505,7 +581,16 @@ export interface Database {
           campaign_brief_id?: string | null
           order_status?: Database['public']['Enums']['order_status']
           payment_status?: Database['public']['Enums']['payment_status']
-          total_amount: number
+          subtotal_amount?: number
+          addon_amount?: number
+          admin_fee?: number
+          platform_fee?: number
+          discount_amount?: number
+          total_amount?: number
+          deadline?: string | null
+          completed_at?: string | null
+          cancelled_at?: string | null
+          cancellation_reason?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -517,7 +602,16 @@ export interface Database {
           campaign_brief_id?: string | null
           order_status?: Database['public']['Enums']['order_status']
           payment_status?: Database['public']['Enums']['payment_status']
+          subtotal_amount?: number
+          addon_amount?: number
+          admin_fee?: number
+          platform_fee?: number
+          discount_amount?: number
           total_amount?: number
+          deadline?: string | null
+          completed_at?: string | null
+          cancelled_at?: string | null
+          cancellation_reason?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -532,6 +626,302 @@ export interface Database {
             foreignKeyName: "orders_creator_id_fkey"
             columns: ["creator_id"]
             referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          service_package_id: string | null
+          tier_id: string | null
+          service_title: string
+          tier_name: string | null
+          unit_price: number
+          addon_total: number
+          subtotal: number
+          estimated_days: number | null
+          revision_count: number | null
+          deliverables: string[] | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          service_package_id?: string | null
+          tier_id?: string | null
+          service_title: string
+          tier_name?: string | null
+          unit_price: number
+          addon_total?: number
+          subtotal: number
+          estimated_days?: number | null
+          revision_count?: number | null
+          deliverables?: string[] | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          service_package_id?: string | null
+          tier_id?: string | null
+          service_title?: string
+          tier_name?: string | null
+          unit_price?: number
+          addon_total?: number
+          subtotal?: number
+          estimated_days?: number | null
+          revision_count?: number | null
+          deliverables?: string[] | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_service_package_id_fkey"
+            columns: ["service_package_id"]
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_tier_id_fkey"
+            columns: ["tier_id"]
+            referencedRelation: "service_package_tiers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      payments: {
+        Row: {
+          id: string
+          order_id: string
+          payment_number: string
+          payment_status: Database['public']['Enums']['payment_status']
+          payment_method: Database['public']['Enums']['payment_method'] | null
+          amount: number
+          provider: string | null
+          provider_transaction_id: string | null
+          provider_payment_url: string | null
+          paid_at: string | null
+          expired_at: string | null
+          raw_response: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          payment_number: string
+          payment_status?: Database['public']['Enums']['payment_status']
+          payment_method?: Database['public']['Enums']['payment_method'] | null
+          amount: number
+          provider?: string | null
+          provider_transaction_id?: string | null
+          provider_payment_url?: string | null
+          paid_at?: string | null
+          expired_at?: string | null
+          raw_response?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          payment_number?: string
+          payment_status?: Database['public']['Enums']['payment_status']
+          payment_method?: Database['public']['Enums']['payment_method'] | null
+          amount?: number
+          provider?: string | null
+          provider_transaction_id?: string | null
+          provider_payment_url?: string | null
+          paid_at?: string | null
+          expired_at?: string | null
+          raw_response?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      reviews: {
+        Row: {
+          id: string
+          order_id: string
+          umkm_id: string
+          creator_id: string
+          rating: number
+          quality_rating: number | null
+          communication_rating: number | null
+          timeliness_rating: number | null
+          comment: string | null
+          is_visible: boolean
+          deleted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          umkm_id: string
+          creator_id: string
+          rating: number
+          quality_rating?: number | null
+          communication_rating?: number | null
+          timeliness_rating?: number | null
+          comment?: string | null
+          is_visible?: boolean
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          umkm_id?: string
+          creator_id?: string
+          rating?: number
+          quality_rating?: number | null
+          communication_rating?: number | null
+          timeliness_rating?: number | null
+          comment?: string | null
+          is_visible?: boolean
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_umkm_id_fkey"
+            columns: ["umkm_id"]
+            referencedRelation: "umkm_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_creator_id_fkey"
+            columns: ["creator_id"]
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      complaints: {
+        Row: {
+          id: string
+          order_id: string
+          opened_by: string
+          assigned_admin_id: string | null
+          complaint_status: Database['public']['Enums']['complaint_status']
+          subject: string
+          description: string
+          resolution_note: string | null
+          resolved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          opened_by: string
+          assigned_admin_id?: string | null
+          complaint_status?: Database['public']['Enums']['complaint_status']
+          subject: string
+          description: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          opened_by?: string
+          assigned_admin_id?: string | null
+          complaint_status?: Database['public']['Enums']['complaint_status']
+          subject?: string
+          description?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaints_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_opened_by_fkey"
+            columns: ["opened_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_assigned_admin_id_fkey"
+            columns: ["assigned_admin_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          notification_type: Database['public']['Enums']['notification_type']
+          title: string
+          message: string | null
+          action_url: string | null
+          is_read: boolean
+          deleted_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          notification_type?: Database['public']['Enums']['notification_type']
+          title: string
+          message?: string | null
+          action_url?: string | null
+          is_read?: boolean
+          deleted_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          notification_type?: Database['public']['Enums']['notification_type']
+          title?: string
+          message?: string | null
+          action_url?: string | null
+          is_read?: boolean
+          deleted_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]

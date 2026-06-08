@@ -24,21 +24,18 @@ import {
   type DashboardListItem,
   type DashboardMetric,
 } from "@/features/dashboard/components/dashboard-overview";
+import {
+  getUmkmDashboardOverview,
+  type DashboardPaymentStatus,
+} from "@/features/dashboard/data/dashboard-queries";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import {
-  dummyCampaignBriefs,
-  dummyCarts,
   dummyCreators,
-  dummyNotifications,
-  dummyOrders,
-  dummyPayments,
   dummyServiceCategories,
   dummyServicePackages,
-  dummyUmkmDashboardReports,
-  dummyUmkmProfiles,
 } from "@/lib/dummy";
-import type { DummyOrderStatus } from "@/lib/dummy";
+import type { DummyPaymentStatus } from "@/lib/dummy";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 
@@ -48,47 +45,21 @@ export const metadata: Metadata = {
     "Ringkasan pesanan, brief campaign, pembayaran, hasil konten, dan rekomendasi kreator untuk UMKM.",
 };
 
-const activeOrderStatuses: readonly DummyOrderStatus[] = [
-  "awaiting_payment",
-  "paid",
-  "waiting_creator_confirmation",
-  "brief_accepted",
-  "in_progress",
-  "submitted",
-  "revision_requested",
-  "revised",
-] as const;
+function formatOptionalDate(value: string | null) {
+  return value ? formatDate(value) : "Belum diatur";
+}
 
-const resultOrderStatuses: readonly DummyOrderStatus[] = [
-  "submitted",
-  "revision_requested",
-  "completed",
-] as const;
+function getPaymentBadgeStatus(status: DashboardPaymentStatus): DummyPaymentStatus {
+  return status === "partially_refunded" ? "refunded" : status;
+}
 
-export default function UmkmDashboardPage() {
-  const currentUmkm = dummyUmkmProfiles[0];
-  const dashboardReport =
-    dummyUmkmDashboardReports.find((report) => report.umkmId === currentUmkm.id) ??
-    null;
-  const activeCart =
-    dummyCarts.find((cart) => cart.umkmId === currentUmkm.id && cart.status === "active") ??
-    null;
-  const umkmOrders = dummyOrders.filter((order) => order.umkmId === currentUmkm.id);
-  const activeOrders = umkmOrders.filter((order) =>
-    activeOrderStatuses.includes(order.orderStatus),
-  );
-  const completedOrders = umkmOrders.filter(
-    (order) => order.orderStatus === "completed",
-  );
-  const pendingPayments = umkmOrders.filter(
-    (order) => order.paymentStatus === "pending",
-  );
-  const latestResults = dummyOrders
-    .filter((order) => resultOrderStatuses.includes(order.orderStatus))
-    .slice(0, 3);
-  const activeBrief =
-    dummyCampaignBriefs.find((brief) => brief.umkmId === currentUmkm.id) ??
-    dummyCampaignBriefs[0];
+export default async function UmkmDashboardPage() {
+  const dashboard = await getUmkmDashboardOverview();
+  const currentUmkm = dashboard.profile;
+  const businessName = currentUmkm?.business_name ?? "Profil UMKM belum lengkap";
+  const businessCategory = currentUmkm?.business_category ?? "Belum diisi";
+  const city = currentUmkm?.city ?? "Belum diisi";
+  const activeBrief = dashboard.recentBriefs[0] ?? null;
 
   const categoryById = new Map(
     dummyServiceCategories.map((category) => [category.id, category]),
@@ -121,87 +92,72 @@ export default function UmkmDashboardPage() {
   const metrics: readonly DashboardMetric[] = [
     {
       label: "Pesanan aktif",
-      value: String(dashboardReport?.activeOrders ?? activeOrders.length),
-      description: "Paket jasa digital yang sedang menunggu proses kreator.",
+      value: String(dashboard.metrics.activeOrders),
+      description: "Paket jasa digital yang sedang berjalan atau menunggu proses.",
       icon: ListChecks,
     },
     {
       label: "Pesanan selesai",
-      value: String(dashboardReport?.completedOrders ?? completedOrders.length),
-      description: "Campaign yang sudah selesai dan siap menjadi referensi.",
+      value: String(dashboard.metrics.completedOrders),
+      description: "Campaign yang sudah selesai dan dapat menjadi referensi.",
       icon: FolderCheck,
     },
     {
       label: "Pembayaran pending",
-      value: String(pendingPayments.length),
-      description: "Pembayaran dummy yang masih perlu ditinjau sebelum produksi.",
+      value: String(dashboard.metrics.pendingPayments),
+      description: "Pembayaran yang masih perlu dipantau secara terpisah.",
       icon: CreditCard,
     },
     {
-      label: "Total simulasi belanja",
-      value: formatCurrency(dashboardReport?.totalSpend ?? 0),
-      description: "Nilai dummy untuk pesanan UMKM pada tahap fondasi.",
+      label: "Total nilai pesanan",
+      value: formatCurrency(dashboard.metrics.totalSpend),
+      description: "Akumulasi nilai pesanan yang terbaca dari database.",
       icon: LayoutDashboard,
     },
   ];
 
-  const orderItems: readonly DashboardListItem[] = activeOrders.map((order) => {
-    const creator = dummyCreators.find((item) => item.id === order.creatorId);
-    const service = dummyServicePackages.find(
-      (item) => item.id === order.servicePackageId,
-    );
-
-    return {
+  const orderItems: readonly DashboardListItem[] = dashboard.recentOrders.map(
+    (order) => ({
       title: order.orderNumber,
-      description: `${service?.title ?? "Paket jasa digital"} oleh ${
-        creator?.displayName ?? "kreator"
-      }`,
-      meta: `Deadline ${formatDate(order.deadline)} · ${formatCurrency(order.totalAmount)}`,
+      description: `${order.serviceTitle} oleh ${order.counterpartName}`,
+      meta: `Deadline ${formatOptionalDate(order.deadline)} · ${formatCurrency(
+        order.totalAmount,
+      )}`,
       href: `/umkm/orders/${order.id}`,
       badge: <OrderStatusBadge status={order.orderStatus} />,
-    };
-  });
+    }),
+  );
 
-  const paymentItems: readonly DashboardListItem[] = pendingPayments.map((order) => {
-    const payment = dummyPayments.find((item) => item.id === order.paymentId);
-
-    return {
-      title: payment?.paymentNumber ?? order.orderNumber,
-      description: `Pembayaran untuk ${order.orderNumber}`,
+  const paymentItems: readonly DashboardListItem[] =
+    dashboard.pendingPaymentOrders.map((order) => ({
+      title: order.orderNumber,
+      description: `Pembayaran untuk ${order.serviceTitle}`,
       meta: formatCurrency(order.totalAmount),
-      href: payment ? `/umkm/payments/${payment.id}` : `/umkm/orders/${order.id}`,
-      badge: <PaymentStatusBadge status={order.paymentStatus} />,
-    };
-  });
+      href: `/umkm/orders/${order.id}`,
+      badge: (
+        <PaymentStatusBadge status={getPaymentBadgeStatus(order.paymentStatus)} />
+      ),
+    }));
 
-  const resultItems: readonly DashboardListItem[] = latestResults.map((order) => {
-    const creator = dummyCreators.find((item) => item.id === order.creatorId);
-    const service = dummyServicePackages.find(
-      (item) => item.id === order.servicePackageId,
-    );
-
-    return {
+  const resultItems: readonly DashboardListItem[] = dashboard.latestResults.map(
+    (order) => ({
       title: `Hasil konten · ${order.orderNumber}`,
-      description: `${service?.title ?? "Paket jasa digital"} dari ${
-        creator?.displayName ?? "kreator"
-      }`,
+      description: `${order.serviceTitle} dari ${order.counterpartName}`,
       meta:
         order.orderStatus === "completed"
           ? "Selesai dan siap diarsipkan"
           : "Perlu ditinjau oleh UMKM",
       href: `/umkm/orders/${order.id}`,
       badge: <OrderStatusBadge status={order.orderStatus} />,
-    };
-  });
+    }),
+  );
 
-  const activityItems: readonly DashboardListItem[] = dummyNotifications
-    .filter((notification) => notification.userId === currentUmkm.userId)
-    .slice(0, 4)
-    .map((notification) => ({
+  const activityItems: readonly DashboardListItem[] =
+    dashboard.notifications.map((notification) => ({
       title: notification.title,
-      description: notification.message,
+      description: notification.message ?? "Aktivitas terbaru untuk akun UMKM.",
       meta: formatDate(notification.createdAt),
-      href: notification.actionUrl,
+      href: notification.actionUrl ?? "/umkm/dashboard",
       badge: notification.isRead ? (
         <Badge variant="outline" className="rounded-lg">
           Terbaca
@@ -218,19 +174,19 @@ export default function UmkmDashboardPage() {
       <div className="space-y-6">
         <DashboardHero
           eyebrow="Dashboard UMKM"
-          title={`Selamat datang, ${currentUmkm.businessName}`}
-          description="Pantau status pesanan, brief campaign, pembayaran dummy, dan rekomendasi kreator dari satu ruang kerja yang rapi."
+          title={`Selamat datang, ${businessName}`}
+          description="Pantau status pesanan, brief campaign, pembayaran, hasil konten, dan rekomendasi kreator dari satu ruang kerja yang rapi."
           actions={[
             { href: "/katalog", label: "Cari Kreator" },
             { href: "/umkm/cart", label: "Lihat Keranjang", variant: "outline" },
             { href: "/umkm/orders", label: "Pesanan Saya", variant: "secondary" },
           ]}
           highlights={[
-            { label: "Kategori usaha", value: currentUmkm.businessCategory },
-            { label: "Kota", value: currentUmkm.city },
+            { label: "Kategori usaha", value: businessCategory },
+            { label: "Kota", value: city },
             {
-              label: "Keranjang aktif",
-              value: activeCart ? formatCurrency(activeCart.totalAmount) : "Belum ada",
+              label: "Status profil",
+              value: currentUmkm ? "Terhubung" : "Belum lengkap",
             },
           ]}
         />
@@ -239,57 +195,65 @@ export default function UmkmDashboardPage() {
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
           <DashboardPanel
-            title="Pesanan aktif"
+            title="Pesanan terbaru"
             description="Pantau status pesanan dan pembayaran secara terpisah."
             action={{ href: "/umkm/orders", label: "Lihat semua" }}
           >
             <DashboardList
               items={orderItems}
-              emptyText="Belum ada pesanan aktif untuk UMKM ini."
+              emptyText="Belum ada pesanan yang terbaca untuk akun UMKM ini."
             />
           </DashboardPanel>
 
           <DashboardPanel
-            title="Brief campaign aktif"
+            title="Brief campaign terbaru"
             description="Brief yang jelas membantu kreator memahami arah konten sejak awal."
             action={{ href: "/umkm/briefs", label: "Kelola brief" }}
           >
-            <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {activeBrief.promotedFocus}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {activeBrief.campaignGoal}
-                  </p>
+            {activeBrief ? (
+              <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {activeBrief.promotedFocus}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {activeBrief.campaignGoal}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="rounded-lg">
+                    {activeBrief.status}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="rounded-lg">
-                  {activeBrief.status === "linked_to_order" ? "Tertaut" : "Draft"}
-                </Badge>
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                  <div className="rounded-xl bg-muted/40 p-3">
+                    <p className="text-muted-foreground">Platform konten</p>
+                    <p className="mt-1 font-medium text-foreground">
+                      {activeBrief.contentPlatforms.length > 0
+                        ? activeBrief.contentPlatforms.join(", ")
+                        : "Belum diisi"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 p-3">
+                    <p className="text-muted-foreground">Deadline</p>
+                    <p className="mt-1 font-medium text-foreground">
+                      {formatOptionalDate(activeBrief.deadline)}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-                <div className="rounded-xl bg-muted/40 p-3">
-                  <p className="text-muted-foreground">Platform konten</p>
-                  <p className="mt-1 font-medium text-foreground">
-                    {activeBrief.contentPlatforms.join(", ")}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-muted/40 p-3">
-                  <p className="text-muted-foreground">Deadline</p>
-                  <p className="mt-1 font-medium text-foreground">
-                    {formatDate(activeBrief.deadline)}
-                  </p>
-                </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-5 text-sm text-muted-foreground">
+                Belum ada brief campaign yang terbaca untuk akun UMKM ini.
               </div>
-            </div>
+            )}
           </DashboardPanel>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
           <DashboardPanel
             title="Hasil konten terbaru"
-            description="Area ringkas untuk meninjau hasil konten dummy yang sudah dikirim kreator."
+            description="Area ringkas untuk meninjau hasil konten yang sudah dikirim kreator."
             action={{ href: "/umkm/results", label: "Buka file hasil" }}
           >
             <DashboardList
@@ -305,14 +269,14 @@ export default function UmkmDashboardPage() {
           >
             <DashboardList
               items={paymentItems}
-              emptyText="Tidak ada pembayaran pending untuk simulasi UMKM ini."
+              emptyText="Tidak ada pembayaran pending yang terbaca saat ini."
             />
           </DashboardPanel>
         </section>
 
         <DashboardPanel
           title="Rekomendasi kreator dan layanan digital"
-          description="Pilihan awal dari dummy data untuk membantu UMKM memulai pencarian."
+          description="Pilihan awal dari katalog untuk membantu UMKM memulai pencarian."
           action={{ href: "/katalog", label: "Jelajahi katalog" }}
         >
           <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
@@ -340,7 +304,10 @@ export default function UmkmDashboardPage() {
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <DashboardPanel title="Aktivitas terbaru">
-            <DashboardList items={activityItems} />
+            <DashboardList
+              items={activityItems}
+              emptyText="Belum ada aktivitas terbaru untuk akun UMKM ini."
+            />
           </DashboardPanel>
 
           <DashboardPanel title="Aksi cepat" description="Jalur utama untuk tahap MVP.">

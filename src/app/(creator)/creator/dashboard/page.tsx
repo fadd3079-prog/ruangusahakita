@@ -11,8 +11,8 @@ import {
   WalletCards,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/layout/page-container";
+import { Badge } from "@/components/ui/badge";
 import {
   DashboardHero,
   DashboardList,
@@ -22,186 +22,145 @@ import {
   type DashboardListItem,
   type DashboardMetric,
 } from "@/features/dashboard/components/dashboard-overview";
+import { getCreatorDashboardOverview } from "@/features/dashboard/data/dashboard-queries";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
-import {
-  dummyCampaignBriefs,
-  dummyCreators,
-  dummyNotifications,
-  dummyOrders,
-  dummyPortfolios,
-  dummyReviews,
-  dummyServiceCategories,
-  dummyServicePackages,
-  dummyUmkmProfiles,
-} from "@/lib/dummy";
-import type { DummyOrderStatus } from "@/lib/dummy";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 
 export const metadata: Metadata = {
   title: "Dashboard Kreator — Ruang Usaha Kita",
   description:
-    "Ringkasan order kreator, deadline, revisi, rating, pendapatan dummy, portofolio, dan paket layanan.",
+    "Ringkasan order kreator, deadline, revisi, rating, pendapatan, portofolio, dan paket layanan.",
 };
 
-const creatorActiveStatuses: readonly DummyOrderStatus[] = [
-  "paid",
-  "waiting_creator_confirmation",
-  "brief_accepted",
-  "in_progress",
-  "submitted",
-  "revision_requested",
-  "revised",
-] as const;
+function formatOptionalDate(value: string | null) {
+  return value ? formatDate(value) : "Belum diatur";
+}
 
-export default function CreatorDashboardPage() {
-  const currentCreator =
-    dummyCreators.find((creator) => creator.id === "creator_003") ??
-    dummyCreators[0];
-  const creatorOrders = dummyOrders.filter(
-    (order) => order.creatorId === currentCreator.id,
-  );
-  const activeOrders = creatorOrders.filter((order) =>
-    creatorActiveStatuses.includes(order.orderStatus),
-  );
-  const revisionOrders = creatorOrders.filter(
-    (order) => order.orderStatus === "revision_requested",
-  );
-  const completedOrders = creatorOrders.filter(
-    (order) => order.orderStatus === "completed",
-  );
-  const estimatedEarnings = creatorOrders
-    .filter((order) => order.paymentStatus === "paid")
-    .reduce(
-      (total, order) =>
-        total + order.subtotalAmount + order.addonAmount - order.platformFee,
-      0,
-    );
-  const creatorServices = dummyServicePackages.filter(
-    (service) => service.creatorId === currentCreator.id,
-  );
-  const creatorPortfolios = dummyPortfolios.filter(
-    (portfolio) => portfolio.creatorId === currentCreator.id,
-  );
-  const creatorReviewCount = dummyReviews.filter(
-    (review) => review.creatorId === currentCreator.id,
-  ).length;
+function getAvailabilityLabel(value: string | null | undefined) {
+  if (value === "available") {
+    return "Tersedia";
+  }
+
+  if (value === "limited") {
+    return "Terbatas";
+  }
+
+  if (value === "busy") {
+    return "Sibuk";
+  }
+
+  if (value === "unavailable") {
+    return "Tidak tersedia";
+  }
+
+  return "Belum diatur";
+}
+
+export default async function CreatorDashboardPage() {
+  const dashboard = await getCreatorDashboardOverview();
+  const currentCreator = dashboard.profile;
+  const displayName = currentCreator?.display_name ?? "Profil kreator belum lengkap";
+  const niche = currentCreator?.niche ?? "Belum diisi";
+  const completedOrders =
+    currentCreator?.completed_orders_count ?? dashboard.metrics.completedOrders;
 
   const metrics: readonly DashboardMetric[] = [
     {
       label: "Order aktif",
-      value: String(activeOrders.length),
-      description: "Order dummy yang masih perlu ditangani kreator.",
+      value: String(dashboard.metrics.activeOrders),
+      description: "Order yang masih perlu dipantau atau ditindaklanjuti.",
       icon: ListChecks,
     },
     {
       label: "Revisi diminta",
-      value: String(revisionOrders.length),
+      value: String(dashboard.metrics.revisionRequests),
       description: "Permintaan revisi yang menunggu respons kreator.",
       icon: MessageSquareWarning,
     },
     {
       label: "Order selesai",
-      value: String(completedOrders.length || currentCreator.completedOrdersCount),
-      description: "Jumlah order selesai pada data kreator dummy.",
+      value: String(completedOrders),
+      description: "Jumlah order selesai yang terbaca untuk kreator ini.",
       icon: FolderCheck,
     },
     {
       label: "Rating rata-rata",
-      value: currentCreator.averageRating.toFixed(1),
-      description: `${creatorReviewCount} review dummy yang sudah tersedia.`,
+      value: dashboard.metrics.averageRating.toFixed(1),
+      description: "Rating profil kreator berdasarkan data yang tersedia.",
       icon: Star,
     },
     {
       label: "Estimasi pendapatan",
-      value: formatCurrency(estimatedEarnings),
-      description: "Simulasi pendapatan dari order paid setelah platform fee.",
+      value: formatCurrency(dashboard.metrics.estimatedEarnings),
+      description: "Estimasi dari order paid setelah platform fee.",
       icon: WalletCards,
     },
   ];
 
-  const orderItems: readonly DashboardListItem[] = activeOrders.map((order) => {
-    const umkm = dummyUmkmProfiles.find((item) => item.id === order.umkmId);
-    const service = dummyServicePackages.find(
-      (item) => item.id === order.servicePackageId,
-    );
-
-    return {
+  const orderItems: readonly DashboardListItem[] = dashboard.recentOrders.map(
+    (order) => ({
       title: order.orderNumber,
-      description: `${umkm?.businessName ?? "UMKM"} · ${
-        service?.title ?? "Paket jasa digital"
-      }`,
-      meta: `Deadline ${formatDate(order.deadline)} · ${formatCurrency(order.totalAmount)}`,
+      description: `${order.counterpartName} · ${order.serviceTitle}`,
+      meta: `Deadline ${formatOptionalDate(order.deadline)} · ${formatCurrency(
+        order.totalAmount,
+      )}`,
       href: `/creator/orders/${order.id}`,
       badge: <OrderStatusBadge status={order.orderStatus} />,
-    };
-  });
-
-  const deadlineItems: readonly DashboardListItem[] = [...activeOrders]
-    .sort(
-      (first, second) =>
-        new Date(first.deadline).getTime() - new Date(second.deadline).getTime(),
-    )
-    .slice(0, 4)
-    .map((order) => {
-      const brief = dummyCampaignBriefs.find(
-        (item) => item.id === order.campaignBriefId,
-      );
-
-      return {
-        title: `${order.orderNumber} · ${brief?.businessName ?? "UMKM"}`,
-        description: brief?.promotedFocus ?? "Brief campaign aktif",
-        meta: `Deadline ${formatDate(order.deadline)}`,
-        href: `/creator/orders/${order.id}`,
-        badge: <OrderStatusBadge status={order.orderStatus} />,
-      };
-    });
-
-  const revisionItems: readonly DashboardListItem[] = revisionOrders.map((order) => {
-    const brief = dummyCampaignBriefs.find(
-      (item) => item.id === order.campaignBriefId,
-    );
-
-    return {
-      title: `Revisi · ${order.orderNumber}`,
-      description:
-        brief?.additionalNotes ??
-        "UMKM meminta penyesuaian pada hasil konten yang dikirim.",
-      meta: brief ? `${brief.businessName} · ${formatDate(order.deadline)}` : undefined,
-      href: `/creator/orders/${order.id}`,
-      badge: <OrderStatusBadge status={order.orderStatus} />,
-    };
-  });
-
-  const serviceItems: readonly DashboardListItem[] = creatorServices.map(
-    (service) => {
-      const category = dummyServiceCategories.find(
-        (item) => item.id === service.categoryId,
-      );
-
-      return {
-        title: service.title,
-        description: service.shortDescription,
-        meta: `${category?.name ?? "Layanan digital"} · ${formatCurrency(
-          service.basePrice,
-        )}`,
-        href: `/layanan/${service.id}`,
-        badge: service.isFeatured ? (
-          <Badge variant="secondary" className="rounded-lg">
-            Unggulan
-          </Badge>
-        ) : null,
-      };
-    },
+    }),
   );
 
-  const portfolioItems: readonly DashboardListItem[] = creatorPortfolios.map(
+  const deadlineItems: readonly DashboardListItem[] = [...dashboard.recentOrders]
+    .sort((first, second) => {
+      if (!first.deadline) {
+        return 1;
+      }
+
+      if (!second.deadline) {
+        return -1;
+      }
+
+      return new Date(first.deadline).getTime() - new Date(second.deadline).getTime();
+    })
+    .slice(0, 4)
+    .map((order) => ({
+      title: `${order.orderNumber} · ${order.counterpartName}`,
+      description: order.serviceTitle,
+      meta: `Deadline ${formatOptionalDate(order.deadline)}`,
+      href: `/creator/orders/${order.id}`,
+      badge: <OrderStatusBadge status={order.orderStatus} />,
+    }));
+
+  const revisionItems: readonly DashboardListItem[] =
+    dashboard.revisionOrders.map((order) => ({
+      title: `Revisi · ${order.orderNumber}`,
+      description: `${order.counterpartName} meminta penyesuaian hasil konten.`,
+      meta: `Deadline ${formatOptionalDate(order.deadline)}`,
+      href: `/creator/orders/${order.id}`,
+      badge: <OrderStatusBadge status={order.orderStatus} />,
+    }));
+
+  const serviceItems: readonly DashboardListItem[] = dashboard.services.map(
+    (service) => ({
+      title: service.title,
+      description: service.short_description ?? "Paket jasa digital kreator.",
+      meta: `${formatCurrency(Number(service.base_price))} · ${service.estimated_days} hari`,
+      href: `/layanan/${service.id}`,
+      badge: service.is_featured ? (
+        <Badge variant="secondary" className="rounded-lg">
+          Unggulan
+        </Badge>
+      ) : null,
+    }),
+  );
+
+  const portfolioItems: readonly DashboardListItem[] = dashboard.portfolios.map(
     (portfolio) => ({
       title: portfolio.title,
-      description: portfolio.description,
-      meta: portfolio.clientName,
+      description: portfolio.description ?? "Preview portofolio kreator.",
+      meta: portfolio.client_type ?? "Portofolio",
       href: "/creator/portfolio",
-      badge: portfolio.isFeatured ? (
+      badge: portfolio.is_featured ? (
         <Badge variant="secondary" className="rounded-lg">
           Featured
         </Badge>
@@ -209,14 +168,12 @@ export default function CreatorDashboardPage() {
     }),
   );
 
-  const activityItems: readonly DashboardListItem[] = dummyNotifications
-    .filter((notification) => notification.userId === currentCreator.userId)
-    .slice(0, 4)
-    .map((notification) => ({
+  const activityItems: readonly DashboardListItem[] =
+    dashboard.notifications.map((notification) => ({
       title: notification.title,
-      description: notification.message,
+      description: notification.message ?? "Aktivitas terbaru untuk kreator.",
       meta: formatDate(notification.createdAt),
-      href: notification.actionUrl,
+      href: notification.actionUrl ?? "/creator/dashboard",
       badge: notification.isRead ? (
         <Badge variant="outline" className="rounded-lg">
           Terbaca
@@ -233,147 +190,144 @@ export default function CreatorDashboardPage() {
       <div className="space-y-6">
         <DashboardHero
           eyebrow="Dashboard Kreator"
-          title={`Halo, ${currentCreator.displayName}`}
-        description="Pantau order masuk, deadline terdekat, permintaan revisi, dan kualitas layanan digital dari satu dashboard ringkas."
-        actions={[
-          { href: "/creator/orders", label: "Lihat Order" },
-          {
-            href: "/creator/services",
-            label: "Kelola Paket Layanan",
-            variant: "outline",
-          },
-          {
-            href: "/creator/portfolio",
-            label: "Portofolio",
-            variant: "secondary",
-          },
-        ]}
-        highlights={[
-          { label: "Niche", value: currentCreator.niche },
-          { label: "Order selesai", value: String(currentCreator.completedOrdersCount) },
-          {
-            label: "Ketersediaan",
-            value:
-              currentCreator.availabilityStatus === "available"
-                ? "Tersedia"
-                : "Terbatas",
-          },
-        ]}
-      />
+          title={`Halo, ${displayName}`}
+          description="Pantau order masuk, deadline terdekat, permintaan revisi, dan kualitas layanan digital dari satu dashboard ringkas."
+          actions={[
+            { href: "/creator/orders", label: "Lihat Order" },
+            {
+              href: "/creator/services",
+              label: "Kelola Paket Layanan",
+              variant: "outline",
+            },
+            {
+              href: "/creator/portfolio",
+              label: "Portofolio",
+              variant: "secondary",
+            },
+          ]}
+          highlights={[
+            { label: "Niche", value: niche },
+            { label: "Order selesai", value: String(completedOrders) },
+            {
+              label: "Ketersediaan",
+              value: getAvailabilityLabel(currentCreator?.availability_status),
+            },
+          ]}
+        />
 
-      <DashboardMetricGrid metrics={metrics} />
+        <DashboardMetricGrid metrics={metrics} />
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-        <DashboardPanel
-          title="Order aktif"
-          description="Daftar order yang perlu dipantau atau ditindaklanjuti."
-          action={{ href: "/creator/orders", label: "Buka order" }}
-        >
-          <DashboardList
-            items={orderItems}
-            emptyText="Belum ada order aktif untuk kreator ini."
-          />
-        </DashboardPanel>
-
-        <DashboardPanel
-          title="Deadline terdekat"
-          description="Prioritaskan pekerjaan berdasarkan tanggal deadline."
-        >
-          <DashboardList
-            items={deadlineItems}
-            emptyText="Tidak ada deadline aktif dalam dummy data."
-          />
-        </DashboardPanel>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <DashboardPanel
-          title="Permintaan revisi"
-          description="CTA di halaman detail order masih berupa placeholder UI."
-          action={{ href: "/creator/orders", label: "Tangani revisi" }}
-        >
-          <DashboardList
-            items={revisionItems}
-            emptyText="Belum ada revisi yang perlu ditangani."
-          />
-        </DashboardPanel>
-
-        <DashboardPanel
-          title="Aktivitas terbaru"
-          description="Notifikasi dummy untuk ruang kerja kreator."
-        >
-          <DashboardList items={activityItems} />
-        </DashboardPanel>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="grid gap-6">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
           <DashboardPanel
-            title="Paket layanan"
-            description="Shortcut untuk melihat paket jasa yang tampil di katalog."
-            action={{ href: "/creator/services", label: "Kelola layanan" }}
+            title="Order terbaru"
+            description="Daftar order yang perlu dipantau atau ditindaklanjuti."
+            action={{ href: "/creator/orders", label: "Buka order" }}
           >
             <DashboardList
-              items={serviceItems}
-              emptyText="Belum ada paket layanan untuk kreator ini."
+              items={orderItems}
+              emptyText="Belum ada order yang terbaca untuk kreator ini."
             />
           </DashboardPanel>
 
           <DashboardPanel
-            title="Portofolio"
-            description="Contoh hasil kerja yang membantu UMKM menilai gaya kreator."
-            action={{ href: "/creator/portfolio", label: "Kelola portofolio" }}
+            title="Deadline terdekat"
+            description="Prioritaskan pekerjaan berdasarkan tanggal deadline."
           >
             <DashboardList
-              items={portfolioItems}
-              emptyText="Belum ada portofolio untuk kreator ini."
+              items={deadlineItems}
+              emptyText="Tidak ada deadline aktif yang tersedia."
             />
           </DashboardPanel>
-        </div>
+        </section>
 
-        <DashboardPanel
-          title="Aksi cepat"
-          description="Jalur utama kreator pada tahap dashboard dummy."
-        >
-          <DashboardQuickActions
-            actions={[
-              {
-                href: "/creator/orders",
-                label: "Order masuk",
-                description: "Lihat brief campaign dan status pesanan.",
-                icon: ClipboardList,
-              },
-              {
-                href: "/creator/services",
-                label: "Paket layanan",
-                description: "Rapikan paket jasa dan estimasi pengerjaan.",
-                icon: BriefcaseBusiness,
-              },
-              {
-                href: "/creator/portfolio",
-                label: "Portofolio",
-                description: "Tampilkan contoh hasil konten terbaik.",
-                icon: Images,
-              },
-            ]}
-          />
-          <div className="mt-5 rounded-2xl border border-primary/15 bg-primary/10 p-4">
-            <div className="flex items-start gap-3">
-              <CalendarClock className="mt-0.5 size-5 text-primary" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Fokus minggu ini
-                </p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Selesaikan order revisi lebih dulu agar hasil konten bisa
-                  segera direview UMKM.
-                </p>
+        <section className="grid gap-6 xl:grid-cols-2">
+          <DashboardPanel
+            title="Permintaan revisi"
+            description="Aksi revisi tetap placeholder sampai fitur update status dikerjakan."
+            action={{ href: "/creator/orders", label: "Tangani revisi" }}
+          >
+            <DashboardList
+              items={revisionItems}
+              emptyText="Belum ada revisi yang perlu ditangani."
+            />
+          </DashboardPanel>
+
+          <DashboardPanel title="Aktivitas terbaru">
+            <DashboardList
+              items={activityItems}
+              emptyText="Belum ada aktivitas terbaru untuk kreator ini."
+            />
+          </DashboardPanel>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="grid gap-6">
+            <DashboardPanel
+              title="Paket layanan"
+              description="Shortcut untuk melihat paket jasa yang tampil di katalog."
+              action={{ href: "/creator/services", label: "Kelola layanan" }}
+            >
+              <DashboardList
+                items={serviceItems}
+                emptyText="Belum ada paket layanan aktif yang terbaca untuk kreator ini."
+              />
+            </DashboardPanel>
+
+            <DashboardPanel
+              title="Portofolio"
+              description="Contoh hasil kerja yang membantu UMKM menilai gaya kreator."
+              action={{ href: "/creator/portfolio", label: "Kelola portofolio" }}
+            >
+              <DashboardList
+                items={portfolioItems}
+                emptyText="Belum ada portofolio yang terbaca untuk kreator ini."
+              />
+            </DashboardPanel>
+          </div>
+
+          <DashboardPanel
+            title="Aksi cepat"
+            description="Jalur utama kreator pada tahap dashboard read-only."
+          >
+            <DashboardQuickActions
+              actions={[
+                {
+                  href: "/creator/orders",
+                  label: "Order masuk",
+                  description: "Lihat brief campaign dan status pesanan.",
+                  icon: ClipboardList,
+                },
+                {
+                  href: "/creator/services",
+                  label: "Paket layanan",
+                  description: "Rapikan paket jasa dan estimasi pengerjaan.",
+                  icon: BriefcaseBusiness,
+                },
+                {
+                  href: "/creator/portfolio",
+                  label: "Portofolio",
+                  description: "Tampilkan contoh hasil konten terbaik.",
+                  icon: Images,
+                },
+              ]}
+            />
+            <div className="mt-5 rounded-2xl border border-primary/15 bg-primary/10 p-4">
+              <div className="flex items-start gap-3">
+                <CalendarClock className="mt-0.5 size-5 text-primary" aria-hidden="true" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Fokus minggu ini
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    Dahulukan order dengan deadline terdekat dan brief campaign
+                    yang sudah jelas.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </DashboardPanel>
-      </section>
-    </div>
-  </PageContainer>
-);
+          </DashboardPanel>
+        </section>
+      </div>
+    </PageContainer>
+  );
 }
