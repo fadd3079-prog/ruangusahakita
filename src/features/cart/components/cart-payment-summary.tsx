@@ -60,7 +60,7 @@ export function CartPaymentSummary({
 
         <p className="mt-5 text-sm leading-6 text-white/68">
           Pastikan detail layanan dan brief sudah sesuai sebelum melanjutkan ke
-          pembayaran. Nominal ini masih berasal dari dummy data.
+          tahap berikutnya. Nominal dihitung ulang dari data layanan di server.
         </p>
 
         <Button

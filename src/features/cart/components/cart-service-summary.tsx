@@ -10,14 +10,15 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import type { DummyCartAddon, DummyServiceTierName } from "@/lib/dummy";
+import { Button } from "@/components/ui/button";
+import { removeCartItem } from "@/features/cart/actions/cart-actions";
 import { formatCurrency } from "@/lib/formatters/currency";
 
 export type CartDisplayItem = {
   readonly id: string;
   readonly serviceTitle: string;
   readonly creatorName: string;
-  readonly tierName: DummyServiceTierName;
+  readonly tierName: string;
   readonly tierPrice: number;
   readonly addonTotal: number;
   readonly categoryName: string;
@@ -26,7 +27,11 @@ export type CartDisplayItem = {
   readonly estimatedDays: number;
   readonly revisionCount: number;
   readonly deliverables: readonly string[];
-  readonly addons: readonly DummyCartAddon[];
+  readonly addons: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly price: number;
+  }[];
 };
 
 type CartServiceSummaryProps = {
@@ -50,7 +55,7 @@ export function CartServiceSummary({ items }: CartServiceSummaryProps) {
           </h2>
         </div>
         <Badge variant="secondary" className="w-fit rounded-lg">
-          Dummy data
+          Server-side
         </Badge>
       </div>
 
@@ -138,10 +143,23 @@ export function CartServiceSummary({ items }: CartServiceSummaryProps) {
                   </div>
 
                   <div className="rounded-2xl border border-border/70 bg-card p-4">
-                    <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <PlusCircle className="size-4 text-primary" aria-hidden="true" />
-                      Add-on terpilih
-                    </h4>
+                    <div className="flex items-start justify-between gap-3">
+                      <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <PlusCircle className="size-4 text-primary" aria-hidden="true" />
+                        Add-on terpilih
+                      </h4>
+                      <form action={removeCartItem}>
+                        <input type="hidden" name="itemId" value={item.id} />
+                        <Button
+                          type="submit"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 bg-background"
+                        >
+                          Hapus
+                        </Button>
+                      </form>
+                    </div>
                     {item.addons.length > 0 ? (
                       <div className="mt-4 space-y-2">
                         {item.addons.map((addon) => (

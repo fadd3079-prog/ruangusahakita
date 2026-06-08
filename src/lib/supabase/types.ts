@@ -484,6 +484,144 @@ export interface Database {
           }
         ]
       }
+      carts: {
+        Row: {
+          id: string
+          umkm_id: string
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          umkm_id: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          umkm_id?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carts_umkm_id_fkey"
+            columns: ["umkm_id"]
+            referencedRelation: "umkm_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      cart_items: {
+        Row: {
+          id: string
+          cart_id: string
+          service_package_id: string
+          tier_id: string | null
+          creator_id: string
+          quantity: number
+          unit_price: number
+          addon_total: number
+          subtotal: number
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          cart_id: string
+          service_package_id: string
+          tier_id?: string | null
+          creator_id: string
+          quantity?: number
+          unit_price: number
+          addon_total?: number
+          subtotal: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          cart_id?: string
+          service_package_id?: string
+          tier_id?: string | null
+          creator_id?: string
+          quantity?: number
+          unit_price?: number
+          addon_total?: number
+          subtotal?: number
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_service_package_id_fkey"
+            columns: ["service_package_id"]
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_tier_id_fkey"
+            columns: ["tier_id"]
+            referencedRelation: "service_package_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_creator_id_fkey"
+            columns: ["creator_id"]
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      cart_item_addons: {
+        Row: {
+          id: string
+          cart_item_id: string
+          addon_id: string
+          price: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          cart_item_id: string
+          addon_id: string
+          price: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          cart_item_id?: string
+          addon_id?: string
+          price?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_item_addons_cart_item_id_fkey"
+            columns: ["cart_item_id"]
+            referencedRelation: "cart_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_item_addons_addon_id_fkey"
+            columns: ["addon_id"]
+            referencedRelation: "service_addons"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       campaign_briefs: {
         Row: {
           id: string

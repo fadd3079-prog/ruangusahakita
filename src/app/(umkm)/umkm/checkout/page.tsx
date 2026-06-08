@@ -5,55 +5,50 @@ import { BriefcaseBusiness, CheckCircle2, Sparkles } from "lucide-react";
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import { CampaignBriefForm } from "@/features/briefs/components/campaign-brief-form";
-import type { CartDisplayItem } from "@/features/cart/components/cart-service-summary";
 import { CheckoutGuidanceCard } from "@/features/checkout/components/checkout-guidance-card";
 import { CheckoutOrderSummary } from "@/features/checkout/components/checkout-order-summary";
 import { CheckoutStepper } from "@/features/checkout/components/checkout-stepper";
-import {
-  dummyCampaignBriefs,
-  dummyCarts,
-  dummyOrders,
-  dummyPayments,
-  dummyServiceCategories,
-  dummyServicePackages,
-  dummyServiceTiers,
-  dummyUmkmProfiles,
-  type DummyCart,
-} from "@/lib/dummy";
+import { getCurrentCheckoutData } from "@/features/cart/data/cart-queries";
 
 export const metadata: Metadata = {
   title: "Checkout Brief Campaign - Ruang Usaha Kita",
   description:
-    "Lengkapi brief campaign untuk paket jasa digital UMKM sebelum melanjutkan ke pembayaran dummy.",
+    "Lengkapi brief campaign untuk paket jasa digital UMKM sebelum masuk tahap order dan pembayaran.",
 };
 
-const activeCart = dummyCarts.find((cart) => cart.status === "active") ?? null;
+type UmkmCheckoutPageProps = {
+  searchParams: Promise<{
+    error?: string;
+    saved?: string;
+  }>;
+};
 
-export default function UmkmCheckoutPage() {
-  if (!activeCart) {
-    return <CheckoutEmptyState />;
+const errorMessages = {
+  brief_required: "Nama usaha, kategori usaha, fokus promosi, dan tujuan campaign wajib diisi.",
+  brief_save: "Brief campaign belum bisa disimpan.",
+};
+
+function getErrorMessage(error?: string) {
+  if (!error) {
+    return null;
   }
 
-  const displayItems = getCartDisplayItems(activeCart);
-  const selectedItem = displayItems[0] ?? null;
+  return errorMessages[error as keyof typeof errorMessages] ?? "Checkout brief belum bisa diproses.";
+}
+
+export default async function UmkmCheckoutPage({
+  searchParams,
+}: UmkmCheckoutPageProps) {
+  const [checkoutData, params] = await Promise.all([
+    getCurrentCheckoutData(),
+    searchParams,
+  ]);
+  const selectedItem = checkoutData.cart.items[0] ?? null;
+  const errorMessage = getErrorMessage(params.error);
 
   if (!selectedItem) {
-    return <CheckoutEmptyState />;
+    return <CheckoutEmptyState errorMessage={errorMessage} />;
   }
-
-  const umkm =
-    dummyUmkmProfiles.find((profile) => profile.id === activeCart.umkmId) ??
-    null;
-  const brief =
-    dummyCampaignBriefs.find((entry) => entry.umkmId === activeCart.umkmId) ??
-    null;
-  const order = brief?.orderId
-    ? dummyOrders.find((entry) => entry.id === brief.orderId) ?? null
-    : null;
-  const payment = order
-    ? dummyPayments.find((entry) => entry.id === order.paymentId) ?? null
-    : null;
-  const paymentHref = `/umkm/payments/${payment?.id ?? "payment_001"}`;
 
   return (
     <main>
@@ -83,7 +78,7 @@ export default function UmkmCheckoutPage() {
                   {[
                     "Pastikan detail layanan sudah sesuai.",
                     "Isi brief campaign secara natural dan jelas.",
-                    "Pembayaran masih berupa simulasi alur.",
+                    "Order dan pembayaran belum dibuat pada fase ini.",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <CheckCircle2
@@ -98,25 +93,31 @@ export default function UmkmCheckoutPage() {
             </div>
           </section>
 
+          {errorMessage ? (
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
+              {errorMessage}
+            </div>
+          ) : null}
+
           <CheckoutStepper />
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-6">
               <CheckoutGuidanceCard />
               <CampaignBriefForm
-                brief={brief}
-                umkm={umkm}
-                paymentHref={paymentHref}
+                brief={checkoutData.brief}
+                saved={params.saved === "1"}
+                umkm={checkoutData.umkm}
               />
             </div>
             <div className="space-y-6">
               <CheckoutOrderSummary
                 item={selectedItem}
-                businessName={umkm?.businessName ?? "UMKM"}
-                serviceSubtotal={activeCart.subtotalAmount}
-                addonTotal={activeCart.addonAmount}
-                adminFee={activeCart.adminFee}
-                totalPayment={activeCart.totalAmount}
+                businessName={checkoutData.umkm?.businessName ?? "UMKM"}
+                serviceSubtotal={checkoutData.cart.serviceSubtotal}
+                addonTotal={checkoutData.cart.addonTotal}
+                adminFee={checkoutData.cart.adminFee}
+                totalPayment={checkoutData.cart.totalPayment}
               />
             </div>
           </div>
@@ -126,55 +127,32 @@ export default function UmkmCheckoutPage() {
   );
 }
 
-function getCartDisplayItems(cart: DummyCart): readonly CartDisplayItem[] {
-  return cart.items.map((item) => {
-    const tier = dummyServiceTiers.find((entry) => entry.id === item.tierId);
-    const service = dummyServicePackages.find(
-      (entry) => entry.id === item.servicePackageId,
-    );
-    const category = service
-      ? dummyServiceCategories.find((entry) => entry.id === service.categoryId)
-      : null;
-
-    return {
-      id: item.id,
-      serviceTitle: item.serviceTitle,
-      creatorName: item.creatorName,
-      tierName: item.tierName,
-      tierPrice: tier?.price ?? item.unitPrice,
-      addonTotal: item.addonTotal,
-      categoryName: category?.name ?? "Layanan Digital",
-      categoryDescription:
-        category?.description ??
-        "Layanan digital untuk kebutuhan promosi UMKM.",
-      subtotal: item.subtotal,
-      estimatedDays: item.estimatedDays,
-      revisionCount: item.revisionCount,
-      deliverables: tier?.deliverables ?? service?.deliverables ?? [],
-      addons: item.addons,
-    };
-  });
-}
-
-function CheckoutEmptyState() {
+function CheckoutEmptyState({ errorMessage }: { errorMessage: string | null }) {
   return (
     <main>
       <PageContainer>
-        <section className="rounded-lg border border-dashed border-border bg-card p-8 text-center shadow-xs">
-          <div className="mx-auto grid size-12 place-items-center rounded-lg bg-primary/10 text-primary">
-            <BriefcaseBusiness className="size-6" aria-hidden="true" />
-          </div>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
-            Belum ada paket jasa untuk checkout.
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-            Pilih paket jasa digital terlebih dahulu agar brief campaign dapat
-            disusun dengan konteks yang jelas.
-          </p>
-          <Button asChild className="mt-5">
-            <Link href="/umkm/cart">Kembali ke Keranjang</Link>
-          </Button>
-        </section>
+        <div className="space-y-4">
+          {errorMessage ? (
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
+              {errorMessage}
+            </div>
+          ) : null}
+          <section className="rounded-lg border border-dashed border-border bg-card p-8 text-center shadow-xs">
+            <div className="mx-auto grid size-12 place-items-center rounded-lg bg-primary/10 text-primary">
+              <BriefcaseBusiness className="size-6" aria-hidden="true" />
+            </div>
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+              Belum ada layanan di keranjang
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+              Pilih paket jasa digital terlebih dahulu agar brief campaign dapat
+              disusun dengan konteks yang jelas.
+            </p>
+            <Button asChild className="mt-5">
+              <Link href="/katalog">Cari Kreator</Link>
+            </Button>
+          </section>
+        </div>
       </PageContainer>
     </main>
   );

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2, ListChecks, PlusCircle } from "lucide-react";
 
@@ -9,6 +8,7 @@ import { SectionHeading } from "@/components/common/section-heading";
 import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { addServiceToCart } from "@/features/cart/actions/cart-actions";
 import { ServiceDetailHeader } from "@/features/services/components/service-detail-header";
 import { ServiceTierOptions } from "@/features/services/components/service-tier-options";
 import { formatCurrency } from "@/lib/formatters/currency";
@@ -68,6 +68,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
     reviews, 
     umkmProfiles 
   } = detail;
+  const primaryTier = tiers[0] ?? null;
 
   return (
     <main>
@@ -226,17 +227,32 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               </h2>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button asChild size="lg" className="h-11 px-5">
-                <Link href={`/umkm/cart?serviceId=${service.id}`}>
+              <form action={addServiceToCart}>
+                <input type="hidden" name="serviceId" value={service.id} />
+                {primaryTier ? (
+                  <input type="hidden" name="tierId" value={primaryTier.id} />
+                ) : null}
+                <input type="hidden" name="redirectTo" value="/umkm/cart" />
+                <Button type="submit" size="lg" className="h-11 w-full px-5">
                   Tambah ke Keranjang
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-11 px-5">
-                <Link href={`/umkm/checkout?serviceId=${service.id}`}>
+                </Button>
+              </form>
+              <form action={addServiceToCart}>
+                <input type="hidden" name="serviceId" value={service.id} />
+                {primaryTier ? (
+                  <input type="hidden" name="tierId" value={primaryTier.id} />
+                ) : null}
+                <input type="hidden" name="redirectTo" value="/umkm/checkout" />
+                <Button
+                  type="submit"
+                  size="lg"
+                  variant="outline"
+                  className="h-11 w-full px-5"
+                >
                   Pesan Sekarang
                   <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
+                </Button>
+              </form>
             </div>
           </div>
         </PageContainer>

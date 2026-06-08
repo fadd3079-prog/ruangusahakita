@@ -1,21 +1,24 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRight, FileUp, Info, Sparkles } from "lucide-react";
+import { FileUp, Info, Save, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { DummyCampaignBrief, DummyUmkmProfile } from "@/lib/dummy";
+import { createOrUpdateCampaignBrief } from "@/features/cart/actions/cart-actions";
+import type {
+  CheckoutBriefData,
+  CheckoutUmkmData,
+} from "@/features/cart/data/cart-queries";
 
 type CampaignBriefFormProps = {
-  brief: DummyCampaignBrief | null;
-  paymentHref: string;
-  umkm: DummyUmkmProfile | null;
+  brief: CheckoutBriefData | null;
+  saved?: boolean;
+  umkm: CheckoutUmkmData | null;
 };
 
 export function CampaignBriefForm({
   brief,
-  paymentHref,
+  saved = false,
   umkm,
 }: CampaignBriefFormProps) {
   const businessName = brief?.businessName ?? umkm?.businessName ?? "";
@@ -40,27 +43,27 @@ export function CampaignBriefForm({
               Lengkapi arahan konten untuk kreator
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Form ini memakai dummy data agar UMKM dapat melihat struktur brief
-              sebelum integrasi penyimpanan dan pembayaran dibuat.
+              Simpan arahan campaign agar kreator memahami tujuan promosi,
+              target audiens, gaya konten, dan referensi sejak awal.
             </p>
           </div>
         </div>
       </div>
 
-      <form className="space-y-6 p-5 sm:p-6">
+      <form action={createOrUpdateCampaignBrief} className="space-y-6 p-5 sm:p-6">
         <FormGroup
           title="Profil usaha"
           description="Bagian ini membantu kreator memahami konteks UMKM dan fokus promosi."
         >
           <div className="grid gap-4 md:grid-cols-2">
             <TextField
-              id="business-name"
+              id="businessName"
               label="Nama usaha"
               defaultValue={businessName}
               placeholder="Contoh: Bakso Mas Adi"
             />
             <TextField
-              id="business-category"
+              id="businessCategory"
               label="Kategori usaha"
               defaultValue={businessCategory}
               placeholder="Contoh: Kuliner"
@@ -68,7 +71,7 @@ export function CampaignBriefForm({
           </div>
 
           <TextField
-            id="promoted-focus"
+            id="promotedFocus"
             label="Produk/jasa yang dipromosikan"
             helperText="Tuliskan fokus utama yang perlu terlihat dalam konten."
             defaultValue={brief?.promotedFocus ?? ""}
@@ -81,7 +84,7 @@ export function CampaignBriefForm({
           description="Semakin jelas tujuan dan audiens, semakin mudah kreator memilih sudut konten."
         >
           <TextAreaField
-            id="campaign-goal"
+            id="campaignGoal"
             label="Tujuan campaign"
             helperText="Gunakan satu tujuan utama agar arahan tidak melebar."
             defaultValue={brief?.campaignGoal ?? ""}
@@ -89,9 +92,9 @@ export function CampaignBriefForm({
           />
 
           <TextAreaField
-            id="target-audience"
+            id="targetAudience"
             label="Target audiens"
-            defaultValue={joinValues(brief?.targetAudience)}
+            defaultValue={brief?.targetAudience ?? umkm?.targetAudience ?? ""}
             placeholder="Contoh: pekerja kantor, keluarga muda"
           />
         </FormGroup>
@@ -102,21 +105,21 @@ export function CampaignBriefForm({
         >
           <div className="grid gap-4 md:grid-cols-2">
             <TextAreaField
-              id="content-platforms"
+              id="contentPlatforms"
               label="Platform konten"
               defaultValue={joinValues(brief?.contentPlatforms)}
               placeholder="Contoh: Instagram Reels, TikTok"
             />
             <TextAreaField
-              id="content-style"
+              id="contentStyle"
               label="Gaya konten"
-              defaultValue={joinValues(brief?.contentStyle)}
+              defaultValue={brief?.contentStyle ?? ""}
               placeholder="Contoh: hangat, natural, elegan"
             />
           </div>
 
           <TextAreaField
-            id="reference-links"
+            id="referenceLinks"
             label="Referensi konten"
             helperText="Tambahkan tautan contoh konten, mood, atau gaya visual jika ada."
             defaultValue={joinLines(brief?.referenceLinks)}
@@ -137,7 +140,7 @@ export function CampaignBriefForm({
           />
 
           <TextAreaField
-            id="additional-notes"
+            id="additionalNotes"
             label="Catatan tambahan"
             defaultValue={brief?.additionalNotes ?? ""}
             placeholder="Tambahkan arahan khusus untuk kreator."
@@ -169,17 +172,21 @@ export function CampaignBriefForm({
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
           <p className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
             <Info className="mt-1 size-4 shrink-0 text-primary" aria-hidden="true" />
-            Tombol di bawah hanya placeholder. Data brief belum disimpan dan
-            belum memproses pembayaran.
+            Brief disimpan sebagai draft checkout. Order, invoice, dan pembayaran
+            belum dibuat pada fase ini.
           </p>
         </div>
 
+        {saved ? (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm font-medium text-primary">
+            Brief campaign berhasil disimpan sebagai draft checkout.
+          </div>
+        ) : null}
+
         <div className="flex justify-end">
-          <Button asChild size="lg" className="h-11 px-5">
-            <Link href={paymentHref}>
-              Lanjut ke Pembayaran
-              <ArrowRight aria-hidden="true" />
-            </Link>
+          <Button type="submit" size="lg" className="h-11 px-5">
+            Simpan Brief Campaign
+            <Save aria-hidden="true" />
           </Button>
         </div>
       </form>
