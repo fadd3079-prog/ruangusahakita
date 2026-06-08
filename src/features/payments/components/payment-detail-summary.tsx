@@ -2,32 +2,21 @@ import Link from "next/link";
 import { ArrowRight, FileText, Info, ReceiptText, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { markDummyPaymentAsPaid } from "@/features/payments/actions/payment-actions";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
-import type {
-  DummyCreatorProfile,
-  DummyOrder,
-  DummyPayment,
-  DummyServicePackage,
-  DummyUmkmProfile,
-} from "@/lib/dummy";
+import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
+import type { CurrentUmkmPaymentDetail } from "@/features/payments/data/payment-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 
 type PaymentDetailSummaryProps = {
-  creator: DummyCreatorProfile;
-  order: DummyOrder;
-  payment: DummyPayment;
-  service: DummyServicePackage;
-  umkm: DummyUmkmProfile;
+  detail: CurrentUmkmPaymentDetail;
 };
 
-export function PaymentDetailSummary({
-  creator,
-  order,
-  payment,
-  service,
-  umkm,
-}: PaymentDetailSummaryProps) {
+export function PaymentDetailSummary({ detail }: PaymentDetailSummaryProps) {
+  const serviceTitle = detail.primaryItem?.service_title ?? "Paket jasa digital";
+  const creatorName = detail.creator?.display_name ?? "Kreator";
+
   return (
     <section className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
       <div className="grid gap-8 p-6 sm:p-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
@@ -37,21 +26,19 @@ export function PaymentDetailSummary({
             Detail pembayaran dummy
           </p>
           <h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-            {payment.paymentNumber}
+            {detail.payment.payment_number}
           </h1>
           <p className="mt-5 max-w-3xl text-sm leading-6 text-white/72 sm:text-base">
-            Pembayaran untuk {service.title} oleh {creator.displayName}. Status
+            Pembayaran untuk {serviceTitle} oleh {creatorName}. Status
             pembayaran dan status pesanan ditampilkan terpisah agar alur jasa
             digital tetap jelas.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <PaymentStatusBadge status={payment.paymentStatus} />
+            <PaymentStatusBadge status={detail.payment.payment_status} />
+            <OrderStatusBadge status={detail.order.order_status} />
             <span className="rounded-lg border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/80">
-              Order {order.orderNumber}
-            </span>
-            <span className="rounded-lg border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-white/80">
-              Invoice dummy
+              Order {detail.order.order_number}
             </span>
           </div>
         </div>
@@ -62,12 +49,12 @@ export function PaymentDetailSummary({
             Total pembayaran
           </p>
           <p className="mt-3 text-4xl font-semibold tracking-tight text-white">
-            {formatCurrency(payment.amount)}
+            {formatCurrency(Number(detail.payment.amount))}
           </p>
           <dl className="mt-5 space-y-3 text-sm">
-            <InfoRow label="UMKM" value={umkm.businessName} />
-            <InfoRow label="Kreator" value={creator.displayName} />
-            <InfoRow label="Dibuat" value={formatDate(payment.createdAt)} />
+            <InfoRow label="UMKM" value={detail.umkm.business_name} />
+            <InfoRow label="Kreator" value={creatorName} />
+            <InfoRow label="Dibuat" value={formatDate(detail.payment.created_at)} />
           </dl>
         </div>
       </div>
@@ -75,19 +62,15 @@ export function PaymentDetailSummary({
   );
 }
 
-type InvoiceSummaryProps = {
-  creator: DummyCreatorProfile;
-  order: DummyOrder;
-  payment: DummyPayment;
-  service: DummyServicePackage;
-};
+export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
+  const canPay =
+    detail.payment.payment_status === "pending" &&
+    detail.order.payment_status === "pending" &&
+    detail.order.order_status === "awaiting_payment" &&
+    Number(detail.payment.amount) === Number(detail.order.total_amount);
+  const serviceTitle = detail.primaryItem?.service_title ?? "Paket jasa digital";
+  const creatorName = detail.creator?.display_name ?? "Kreator";
 
-export function InvoiceSummary({
-  creator,
-  order,
-  payment,
-  service,
-}: InvoiceSummaryProps) {
   return (
     <aside
       aria-labelledby="invoice-summary-title"
@@ -99,7 +82,7 @@ export function InvoiceSummary({
           id="invoice-summary-title"
           className="mt-2 text-xl font-semibold tracking-tight text-foreground"
         >
-          {payment.paymentNumber}
+          {detail.invoice?.invoice_number ?? detail.payment.payment_number}
         </h2>
       </div>
 
@@ -109,18 +92,18 @@ export function InvoiceSummary({
             Paket jasa
           </p>
           <h3 className="mt-2 text-lg font-semibold tracking-tight text-foreground">
-            {service.title}
+            {serviceTitle}
           </h3>
           <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
             <UserRound className="size-4 text-primary" aria-hidden="true" />
-            Kreator: {creator.displayName}
+            Kreator: {creatorName}
           </p>
         </article>
 
         <dl className="mt-5 space-y-3 text-sm">
-          <SummaryRow label="Subtotal layanan" value={order.subtotalAmount} />
-          <SummaryRow label="Add-on" value={order.addonAmount} />
-          <SummaryRow label="Biaya admin" value={order.adminFee} />
+          <SummaryRow label="Subtotal layanan" value={Number(detail.order.subtotal_amount)} />
+          <SummaryRow label="Add-on" value={Number(detail.order.addon_amount)} />
+          <SummaryRow label="Biaya admin" value={Number(detail.order.admin_fee)} />
         </dl>
 
         <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
@@ -128,40 +111,45 @@ export function InvoiceSummary({
             Total pembayaran
           </p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-            {formatCurrency(order.totalAmount)}
+            {formatCurrency(Number(detail.order.total_amount))}
           </p>
         </div>
 
         <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
           <p className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
             <Info className="mt-1 size-4 shrink-0 text-primary" aria-hidden="true" />
-            Pembayaran pada halaman ini masih dummy dan siap menjadi dasar
-            integrasi sandbox. Tombol simulasi tidak mengubah status apa pun.
+            Pembayaran pada halaman ini masih dummy. Status paid hanya dibuat
+            lewat Server Action, bukan perubahan langsung dari client.
           </p>
         </div>
 
         <div className="mt-5 grid gap-2">
-          <Button type="button" className="h-11 w-full">
-            Simulasikan Pembayaran Berhasil
-          </Button>
+          <form action={markDummyPaymentAsPaid}>
+            <input type="hidden" name="paymentId" value={detail.payment.id} />
+            <Button type="submit" disabled={!canPay} className="h-11 w-full">
+              Simulasikan Pembayaran Berhasil
+            </Button>
+          </form>
           <Button asChild variant="outline" className="h-11 w-full">
-            <Link href={`/umkm/orders/${order.id}`}>
+            <Link href={`/umkm/orders/${detail.order.id}`}>
               Lihat Pesanan
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
         </div>
+
+        {!canPay ? (
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            Simulasi hanya tersedia untuk payment pending pada pesanan yang masih
+            menunggu pembayaran dan nominalnya sesuai.
+          </p>
+        ) : null}
       </div>
     </aside>
   );
 }
 
-type PaymentContextCardProps = {
-  order: DummyOrder;
-  payment: DummyPayment;
-};
-
-export function PaymentContextCard({ order, payment }: PaymentContextCardProps) {
+export function PaymentContextCard({ detail }: PaymentDetailSummaryProps) {
   return (
     <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
       <p className="text-sm font-semibold text-primary">Catatan pembayaran</p>
@@ -169,12 +157,16 @@ export function PaymentContextCard({ order, payment }: PaymentContextCardProps) 
         Status pembayaran berbeda dari status pesanan
       </h2>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <ContextPill label="Status pembayaran" value={payment.paymentStatus} />
-        <ContextPill label="Status pesanan" value={order.orderStatus} />
+        <ContextPill
+          label="Status pembayaran"
+          value={detail.payment.payment_status}
+        />
+        <ContextPill label="Status pesanan" value={detail.order.order_status} />
       </div>
       <p className="mt-4 text-sm leading-6 text-muted-foreground">
         Pada integrasi nyata, perubahan status pembayaran hanya boleh berasal
-        dari server atau webhook. Halaman ini hanya menampilkan simulasi alur.
+        dari server atau webhook. Halaman ini memakai simulasi server-side agar
+        pola keamanan tetap benar.
       </p>
     </section>
   );

@@ -1211,6 +1211,12 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      mark_dummy_payment_as_paid: {
+        Args: {
+          target_payment_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       user_role: 'admin' | 'umkm' | 'creator'

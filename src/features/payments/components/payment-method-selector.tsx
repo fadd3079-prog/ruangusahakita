@@ -1,19 +1,24 @@
 import { Building2, CreditCard, QrCode, WalletCards, type LucideIcon } from "lucide-react";
 
-import type { DummyPaymentMethod } from "@/lib/dummy";
+import type { Database } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
+
+type PaymentMethod = Database["public"]["Enums"]["payment_method"];
+type DisplayPaymentMethod = PaymentMethod | "e_wallet";
 
 export const paymentMethodLabels = {
   bank_transfer: "Transfer Bank",
   e_wallet: "E-Wallet",
+  ewallet: "E-Wallet",
+  manual: "Manual",
   qris: "QRIS",
   virtual_account: "Virtual Account",
-} satisfies Record<DummyPaymentMethod, string>;
+} satisfies Record<DisplayPaymentMethod, string>;
 
 const paymentMethodOptions: readonly {
   description: string;
   icon: LucideIcon;
-  method: DummyPaymentMethod;
+  method: PaymentMethod;
 }[] = [
   {
     description: "Simulasi kode bayar QR untuk alur pembayaran cepat.",
@@ -33,12 +38,17 @@ const paymentMethodOptions: readonly {
   {
     description: "Simulasi dompet digital untuk tahap MVP.",
     icon: WalletCards,
-    method: "e_wallet",
+    method: "ewallet",
+  },
+  {
+    description: "Simulasi verifikasi manual untuk pembayaran dummy.",
+    icon: WalletCards,
+    method: "manual",
   },
 ];
 
 type PaymentMethodSelectorProps = {
-  selectedMethod: DummyPaymentMethod;
+  selectedMethod: PaymentMethod | null;
 };
 
 export function PaymentMethodSelector({

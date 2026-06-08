@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarClock, FileText, ReceiptText, WalletCards } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarClock, FileText, ReceiptText, WalletCards } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
@@ -328,6 +328,15 @@ function PaymentSummaryCard({ data }: { data: UmkmOrderDetail }) {
           value={data.invoice?.invoice_number ?? "Belum tersedia"}
         />
       </div>
+
+      {data.payment ? (
+        <Button asChild className="mt-5 w-full">
+          <Link href={`/umkm/payments/${data.payment.id}`}>
+            Lihat Pembayaran
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </Button>
+      ) : null}
     </aside>
   );
 }
