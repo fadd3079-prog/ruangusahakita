@@ -479,6 +479,10 @@ type FilterSelectProps = {
 };
 
 function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
+  const safeOptions = options.filter(
+    (option) => option.value.trim().length > 0,
+  );
+
   return (
     <label>
       <span className="mb-2 block text-sm font-medium text-foreground">
@@ -489,7 +493,7 @@ function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {options.map((option) => (
+          {safeOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>

@@ -59,9 +59,19 @@ export default async function CatalogPage() {
   );
 
   const locations = [
-    ...new Set(creators.map((creator) => creator.city)),
+    ...new Set(
+      creators
+        .map((creator) => creator.city.trim())
+        .filter((location) => location.length > 0),
+    ),
   ].sort();
-  const niches = [...new Set(creators.map((creator) => creator.niche))].sort();
+  const niches = [
+    ...new Set(
+      creators
+        .map((creator) => creator.niche.trim())
+        .filter((niche) => niche.length > 0),
+    ),
+  ].sort();
 
   return (
     <main>
@@ -74,10 +84,12 @@ export default async function CatalogPage() {
         <PageContainer>
           <CatalogFilter
             items={catalogCreators}
-            categories={categories.map((category) => ({
-              id: category.id,
-              name: category.name,
-            }))}
+            categories={categories
+              .filter((category) => category.id.trim().length > 0)
+              .map((category) => ({
+                id: category.id,
+                name: category.name,
+              }))}
             locations={locations}
             niches={niches}
           />
