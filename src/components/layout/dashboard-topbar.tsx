@@ -25,7 +25,7 @@ export function DashboardTopbar({ variant }: DashboardTopbarProps) {
   const roleLabel = dashboardRoleLabels[variant];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/78">
       <PageContainer className="flex min-h-16 items-center justify-between gap-4 py-0">
         <div className="flex min-w-0 items-center gap-3">
           <Sheet>
@@ -65,7 +65,7 @@ export function DashboardTopbar({ variant }: DashboardTopbarProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <Badge variant="secondary">Fondasi</Badge>
+          <Badge variant="secondary" className="rounded-full">Live</Badge>
           <div className="hidden items-center gap-2 rounded-full border bg-card px-2 py-1 sm:flex">
             <div className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
               {roleLabel.slice(0, 1)}

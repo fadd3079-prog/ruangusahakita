@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CreatorServiceAddonManager } from "@/features/creator/services/components/creator-service-addon-manager";
 import type {
   CreatorServiceCategory,
   CreatorServiceEditData,
@@ -24,10 +25,18 @@ type CreatorServiceFormProps = {
   error?: string;
   service?: CreatorServiceEditData | null;
   submitLabel: string;
+  success?: string;
   title: string;
 };
 
 const errorMessages = {
+  addon_delete: "Add-on belum bisa dihapus.",
+  addon_missing: "Data add-on tidak lengkap.",
+  addon_not_found: "Add-on tidak ditemukan atau bukan bagian dari layanan ini.",
+  addon_price: "Harga add-on tidak boleh negatif.",
+  addon_required: "Nama add-on wajib diisi.",
+  addon_save: "Add-on belum bisa disimpan.",
+  addon_update: "Add-on belum bisa diperbarui.",
   missing: "Data layanan tidak lengkap.",
   not_found: "Layanan tidak ditemukan atau bukan milik akun kreator ini.",
   price: "Harga layanan dan harga tier wajib lebih dari nol.",
@@ -40,12 +49,26 @@ const errorMessages = {
   unauthorized: "Akun ini tidak memiliki akses kreator aktif.",
 };
 
+const successMessages = {
+  addon_created: "Add-on berhasil ditambahkan.",
+  addon_deleted: "Add-on berhasil dihapus.",
+  addon_updated: "Add-on berhasil diperbarui.",
+};
+
 function getErrorMessage(error?: string) {
   if (!error) {
     return null;
   }
 
   return errorMessages[error as keyof typeof errorMessages] ?? "Terjadi kendala saat menyimpan layanan.";
+}
+
+function getSuccessMessage(success?: string) {
+  if (!success) {
+    return null;
+  }
+
+  return successMessages[success as keyof typeof successMessages] ?? null;
 }
 
 function toTextareaValue(value: readonly string[] | null) {
@@ -59,11 +82,16 @@ export function CreatorServiceForm({
   error,
   service,
   submitLabel,
+  success,
   title,
 }: CreatorServiceFormProps) {
   const errorMessage = getErrorMessage(error);
+  const successMessage = getSuccessMessage(success);
   const primaryTier = service?.primaryTier ?? null;
   const servicePackage = service?.service ?? null;
+  const formId = servicePackage
+    ? "creator-service-edit-form"
+    : "creator-service-create-form";
 
   return (
     <div className="space-y-8 pb-10">
@@ -90,15 +118,23 @@ export function CreatorServiceForm({
         </Alert>
       ) : null}
 
-      <form action={action} className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        {servicePackage ? (
-          <input type="hidden" name="serviceId" value={servicePackage.id} />
-        ) : null}
-        {primaryTier ? (
-          <input type="hidden" name="tierId" value={primaryTier.id} />
-        ) : null}
+      {successMessage ? (
+        <Alert>
+          <Info className="size-4" />
+          <AlertTitle>Perubahan tersimpan</AlertTitle>
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      ) : null}
 
-        <div className="space-y-8">
+      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+        <form id={formId} action={action} className="space-y-8">
+          {servicePackage ? (
+            <input type="hidden" name="serviceId" value={servicePackage.id} />
+          ) : null}
+          {primaryTier ? (
+            <input type="hidden" name="tierId" value={primaryTier.id} />
+          ) : null}
+
           <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
             <CardHeader>
               <CardTitle className="text-xl">Informasi dasar</CardTitle>
@@ -337,7 +373,7 @@ export function CreatorServiceForm({
               </div>
             </CardContent>
           </Card>
-        </div>
+        </form>
 
         <aside className="space-y-6">
           <Card className="sticky top-24 rounded-2xl border-primary/20 bg-primary/5 shadow-[var(--shadow-soft)]">
@@ -349,7 +385,7 @@ export function CreatorServiceForm({
                 Pastikan harga, output, estimasi, dan revisi sudah sesuai sebelum
                 layanan ditampilkan kepada UMKM.
               </p>
-              <Button type="submit" className="h-11 w-full">
+              <Button type="submit" form={formId} className="h-11 w-full">
                 <Save className="size-4" />
                 {submitLabel}
               </Button>
@@ -359,19 +395,26 @@ export function CreatorServiceForm({
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
-            <CardHeader>
-              <CardTitle className="text-lg">Add-on layanan</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Add-on akan dikelola pada fase berikutnya. Untuk saat ini, fokuskan
-                layanan pada satu tier utama yang jelas.
-              </p>
-            </CardContent>
-          </Card>
+          {servicePackage ? (
+            <CreatorServiceAddonManager
+              addons={service?.addons ?? []}
+              serviceId={servicePackage.id}
+            />
+          ) : (
+            <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+              <CardHeader>
+                <CardTitle className="text-lg">Add-on layanan</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Simpan paket jasa terlebih dahulu, lalu tambahkan add-on dari
+                  halaman edit layanan.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </aside>
-      </form>
+      </div>
     </div>
   );
 }

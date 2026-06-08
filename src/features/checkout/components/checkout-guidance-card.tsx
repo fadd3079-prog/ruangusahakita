@@ -3,7 +3,7 @@ import { CheckCircle2, FileText } from "lucide-react";
 const guidanceItems = [
   "Tuliskan tujuan campaign dalam satu arah utama agar kreator tidak menebak prioritas.",
   "Sertakan gaya konten dan referensi agar hasil konten lebih dekat dengan ekspektasi UMKM.",
-  "Order dan pembayaran disiapkan pada fase berikutnya setelah brief tersimpan.",
+  "Setelah brief tersimpan, sistem membuat pesanan dan pembayaran sandbox dari data keranjang.",
 ] as const;
 
 export function CheckoutGuidanceCard() {

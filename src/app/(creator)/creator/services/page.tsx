@@ -83,26 +83,28 @@ export default async function CreatorServicesPage({
 
   return (
     <PageContainer>
-      <div className="space-y-8 pb-10">
-        <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end">
+      <div className="space-y-6 pb-10">
+        <section className="rounded-[22px] border border-primary/15 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-6 text-white shadow-[0_20px_56px_rgba(12,41,73,0.16)] sm:p-7">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white/70">
               Creator Services
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-brand-navy">
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
               Layanan Saya
             </h1>
-            <p className="mt-2 max-w-2xl text-muted-foreground">
-              Kelola paket jasa digital yang Anda tawarkan kepada UMKM melalui katalog.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/72">
+              Kelola paket jasa digital yang tampil di katalog kreator.
             </p>
           </div>
-          <Button asChild>
+          <Button asChild className="rounded-full bg-white text-brand-navy hover:bg-white/90">
             <Link href="/creator/services/new">
               <PlusCircle className="size-4" />
               Tambah Paket Layanan
             </Link>
           </Button>
-        </div>
+          </div>
+        </section>
 
         {errorMessage ? (
           <Alert variant="destructive">
@@ -119,7 +121,7 @@ export default async function CreatorServicesPage({
         ) : null}
 
         <section className="grid gap-4 sm:grid-cols-3">
-          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+          <Card className="dashboard-surface">
             <CardContent className="space-y-2">
               <p className="text-sm text-muted-foreground">Total layanan</p>
               <p className="text-3xl font-semibold tracking-tight">
@@ -127,7 +129,7 @@ export default async function CreatorServicesPage({
               </p>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+          <Card className="dashboard-surface">
             <CardContent className="space-y-2">
               <p className="text-sm text-muted-foreground">Layanan aktif</p>
               <p className="text-3xl font-semibold tracking-tight">
@@ -135,7 +137,7 @@ export default async function CreatorServicesPage({
               </p>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+          <Card className="dashboard-surface">
             <CardContent className="space-y-2">
               <p className="text-sm text-muted-foreground">Status katalog</p>
               <p className="text-lg font-semibold tracking-tight">
@@ -153,34 +155,40 @@ export default async function CreatorServicesPage({
               return (
                 <Card
                   key={item.service.id}
-                  className="h-full rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]"
+                  className="marketplace-card h-full overflow-hidden p-0"
                 >
-                  <CardHeader className="gap-4">
+                  <div
+                    className="aspect-[16/9] bg-cover bg-center"
+                    style={{
+                      backgroundImage: `url("${item.service.cover_image_url || "/images/image (10).webp"}")`,
+                    }}
+                  />
+                  <CardHeader className="gap-4 px-4 pb-2 pt-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <div className="mb-3 flex flex-wrap gap-2">
-                          <Badge variant="secondary" className="rounded-lg">
+                          <Badge variant="secondary" className="rounded-full">
                             {item.category?.name ?? "Layanan digital"}
                           </Badge>
                           <Badge
                             variant="outline"
                             className={
                               item.service.is_active
-                                ? "rounded-lg border-primary/20 bg-primary/10 text-primary"
-                                : "rounded-lg"
+                                ? "rounded-full border-primary/20 bg-primary/10 text-primary"
+                                : "rounded-full"
                             }
                           >
                             {item.service.is_active ? "Aktif" : "Tidak aktif"}
                           </Badge>
                         </div>
-                        <CardTitle className="line-clamp-2 text-xl">
+                        <CardTitle className="line-clamp-2 min-h-12 text-lg">
                           {item.service.title}
                         </CardTitle>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="flex flex-1 flex-col gap-5">
-                    <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
+                  <CardContent className="flex flex-1 flex-col gap-4 px-4">
+                    <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
                       {item.service.short_description ??
                         "Paket jasa digital kreator untuk kebutuhan promosi UMKM."}
                     </p>
@@ -210,19 +218,19 @@ export default async function CreatorServicesPage({
                       <p className="mt-1 text-sm text-muted-foreground">
                         {primaryTier?.name ?? "Tier utama"} ·{" "}
                         {item.addons.length > 0
-                          ? `${item.addons.length} add-on read-only`
+                          ? `${item.addons.length} add-on`
                           : "Add-on belum diatur"}
                       </p>
                     </div>
                   </CardContent>
-                  <CardFooter className="grid gap-3 bg-muted/30 sm:grid-cols-3">
-                    <Button asChild className="sm:col-span-1">
+                  <CardFooter className="grid gap-2 border-t border-border/70 bg-muted/25 p-3 sm:grid-cols-3">
+                    <Button asChild className="h-10 rounded-full sm:col-span-1">
                       <Link href={`/creator/services/${item.service.id}/edit`}>
                         <Pencil className="size-4" />
                         Edit
                       </Link>
                     </Button>
-                    <Button asChild variant="outline" className="bg-background sm:col-span-1">
+                    <Button asChild variant="outline" className="h-10 rounded-full bg-background sm:col-span-1">
                       <Link href={`/layanan/${item.service.id}`}>Preview</Link>
                     </Button>
                     <form action={toggleCreatorServiceStatusAction}>
@@ -230,7 +238,7 @@ export default async function CreatorServicesPage({
                       <Button
                         type="submit"
                         variant="outline"
-                        className="w-full bg-background"
+                        className="h-10 w-full rounded-full bg-background"
                       >
                         <Power className="size-4" />
                         {item.service.is_active ? "Nonaktifkan" : "Aktifkan"}
@@ -242,7 +250,7 @@ export default async function CreatorServicesPage({
             })}
           </div>
         ) : (
-          <section className="rounded-3xl border border-dashed border-border bg-card/95 p-10 text-center shadow-[var(--shadow-soft)]">
+          <section className="dashboard-surface border-dashed p-10 text-center">
             <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-primary/10 text-primary">
               <BriefcaseBusiness className="size-8" aria-hidden="true" />
             </div>

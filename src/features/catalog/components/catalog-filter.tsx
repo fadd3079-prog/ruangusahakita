@@ -284,14 +284,14 @@ export function CatalogFilter({
   return (
     <div
       className={cn(
-        "grid gap-8 lg:items-start",
+        "grid gap-6 lg:items-start",
         isFilterCollapsed
           ? "lg:grid-cols-[48px_minmax(0,1fr)]"
-          : "lg:grid-cols-[260px_minmax(0,1fr)]",
+          : "lg:grid-cols-[248px_minmax(0,1fr)]",
       )}
     >
       <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
-        <div className="flex items-center justify-between gap-2 pb-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
           <div
             className={cn(
               "flex items-center gap-2 transition-opacity duration-200",
@@ -317,12 +317,12 @@ export function CatalogFilter({
           </Button>
         </div>
         {!isFilterCollapsed ? (
-          <div className="space-y-6 pr-2">{renderFilterPanel()}</div>
+          <div>{renderFilterPanel()}</div>
         ) : null}
       </aside>
 
-      <div className="min-w-0 space-y-8">
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 space-y-6">
+        <section className="marketplace-card flex flex-col gap-4 p-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 items-center gap-3">
             <div className="flex-1 lg:max-w-md">
               <CatalogSearch
@@ -418,7 +418,7 @@ function FilterPanel({
   onRatingChange,
 }: FilterPanelProps) {
   return (
-    <div className="grid gap-4">
+    <div className="marketplace-card grid gap-4 p-4">
       <FilterSelect
         label="Kategori layanan"
         value={filterState.categoryId}
@@ -484,12 +484,12 @@ function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
   );
 
   return (
-    <label>
+    <label className="block">
       <span className="mb-2 block text-sm font-medium text-foreground">
         {label}
       </span>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-11 w-full bg-background">
+        <SelectTrigger className="h-10 w-full rounded-xl bg-background">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -506,17 +506,17 @@ function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
 
 function CatalogGuidanceStrip() {
   return (
-    <section className="rounded-2xl border border-primary/15 bg-[linear-gradient(135deg,rgba(12,41,73,0.96),rgba(17,73,85,0.94))] p-5 text-primary-foreground shadow-[0_18px_45px_rgba(12,41,73,0.16)] sm:p-6">
+    <section className="rounded-2xl border border-primary/15 bg-[linear-gradient(135deg,rgba(12,41,73,0.96),rgba(17,73,85,0.94))] p-5 text-primary-foreground shadow-[0_18px_45px_rgba(12,41,73,0.12)] sm:p-6">
       <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
         <div>
           <p className="text-sm font-semibold text-primary-foreground/75">
             Panduan memilih kreator
           </p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
-            Pilih berdasarkan kebutuhan campaign, bukan hanya harga.
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl">
+            Pilih berdasarkan kebutuhan campaign.
           </h2>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           {guidanceItems.map((item) => {
             const Icon = item.icon;
 
@@ -525,7 +525,7 @@ function CatalogGuidanceStrip() {
                 <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-white/10 text-primary-foreground ring-1 ring-white/15">
                   <Icon className="size-4" aria-hidden="true" />
                 </div>
-                <p className="pt-1 text-sm leading-6 text-primary-foreground/80">
+                <p className="pt-1 text-sm leading-5 text-primary-foreground/80">
                   {item.title}
                 </p>
               </div>

@@ -50,8 +50,8 @@ export function HowItWorksSection() {
       <PageContainer>
         <SectionHeading
           eyebrow="Cara kerja"
-          title="Alur sederhana dari menemukan kreator sampai menerima hasil konten."
-          description="Platform kami dirancang untuk memastikan kolaborasi yang transparan, aman, dan tepat sasaran antara UMKM dan kreator digital."
+          title="Alur kerja yang jelas untuk jasa digital."
+          description="Dari pencarian kreator sampai review hasil konten."
         />
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {steps.map((step, index) => {
@@ -60,10 +60,10 @@ export function HowItWorksSection() {
             return (
               <article
                 key={step.title}
-                className="rounded-lg border border-border/70 bg-card p-5 shadow-xs"
+                className="marketplace-card p-5"
               >
                 <div className="flex items-center gap-3">
-                  <div className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <div className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary">
                     <Icon className="size-5" aria-hidden="true" />
                   </div>
                   <p className="text-sm font-semibold text-primary">
@@ -80,7 +80,7 @@ export function HowItWorksSection() {
             );
           })}
         </div>
-        <div className="mt-8 rounded-lg border border-primary/20 bg-primary/5 p-5 text-sm leading-7 text-muted-foreground">
+        <div className="mt-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-sm leading-7 text-muted-foreground">
           <FileCheck2 className="mb-3 size-5 text-primary" aria-hidden="true" />
           Status pesanan dan pembayaran dipisahkan agar UMKM, kreator, dan admin
           dapat membaca progress layanan digital dengan lebih jelas.

@@ -36,7 +36,7 @@ export async function markSandboxPaymentAsPaid(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data: orderId, error } = await supabase.rpc("mark_dummy_payment_as_paid", {
+  const { data: orderId, error } = await supabase.rpc("mark_sandbox_payment_as_paid", {
     target_payment_id: paymentId,
   });
 

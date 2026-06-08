@@ -80,7 +80,7 @@ export default async function CatalogPage() {
         categoryCount={categories.length}
         serviceCount={services.length}
       />
-      <section className="bg-muted/30 py-10 sm:py-12 lg:py-14">
+      <section className="bg-background py-8 sm:py-10 lg:py-12">
         <PageContainer>
           <CatalogFilter
             items={catalogCreators}

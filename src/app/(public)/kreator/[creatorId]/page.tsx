@@ -70,7 +70,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
       <section className="bg-muted/30 py-12 sm:py-16">
         <PageContainer>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <article className="rounded-lg border border-border/70 bg-card p-5 shadow-xs sm:p-6">
+            <article className="marketplace-card p-5 sm:p-6">
               <p className="text-sm font-semibold text-primary">
                 Tentang kreator
               </p>
@@ -82,14 +82,14 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {creator.skills.map((skill: string) => (
-                  <Badge key={skill} variant="secondary" className="rounded-lg">
+                  <Badge key={skill} variant="secondary" className="rounded-full">
                     {skill}
                   </Badge>
                 ))}
               </div>
             </article>
 
-            <aside className="rounded-lg border border-border/70 bg-card p-5 shadow-xs">
+            <aside className="marketplace-card p-5 lg:sticky lg:top-24">
               <Sparkles className="size-5 text-primary" aria-hidden="true" />
               <h2 className="mt-4 text-xl font-semibold tracking-tight text-foreground">
                 Cocok untuk UMKM yang butuh arahan jelas.
@@ -99,7 +99,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
                 agar kreator dapat memahami tujuan promosi sejak awal.
               </p>
               {primaryService ? (
-                <Button asChild className="mt-5 w-full">
+                <Button asChild className="mt-5 h-11 w-full rounded-full">
                   <Link href={`/layanan/${primaryService.id}`}>
                     Pilih Layanan
                     <ArrowRight aria-hidden="true" />
@@ -194,7 +194,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
 
       <section className="bg-primary/5 py-12 sm:py-16">
         <PageContainer>
-          <div className="flex flex-col gap-5 rounded-lg border border-primary/20 bg-background p-5 shadow-xs sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="marketplace-card flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
                 <CheckCircle2 className="size-4" aria-hidden="true" />
@@ -205,7 +205,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
               </h2>
             </div>
             {primaryService ? (
-              <Button asChild size="lg" className="h-11 px-5">
+              <Button asChild size="lg" className="h-11 rounded-full px-5">
                 <Link href={`/layanan/${primaryService.id}`}>
                   Pilih Paket Jasa
                   <ArrowRight aria-hidden="true" />
@@ -226,7 +226,7 @@ type EmptyPanelProps = {
 
 function EmptyPanel({ title, description }: EmptyPanelProps) {
   return (
-    <div className="mt-8 rounded-lg border border-dashed border-border bg-card p-6 text-center">
+    <div className="mt-8 rounded-2xl border border-dashed border-border bg-card p-6 text-center">
       <h3 className="text-lg font-semibold tracking-tight text-foreground">
         {title}
       </h3>

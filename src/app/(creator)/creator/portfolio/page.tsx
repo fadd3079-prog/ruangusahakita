@@ -77,17 +77,20 @@ export default async function CreatorPortfolioPage({
 
   return (
     <PageContainer>
-      <div className="space-y-8 pb-10">
-        <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">
+      <div className="space-y-6 pb-10">
+        <section className="rounded-[22px] border border-primary/15 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-6 text-white shadow-[0_20px_56px_rgba(12,41,73,0.16)] sm:p-7">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white/70">
+              Creator Portfolio
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
               Portofolio Saya
             </h1>
-            <p className="mt-2 text-muted-foreground">
-              Tampilkan karya terbaik Anda untuk membantu UMKM menilai gaya dan kualitas pekerjaan.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/72">
+              Tampilkan karya terbaik agar UMKM cepat memahami gaya dan kualitas pekerjaan.
             </p>
           </div>
-        </div>
+        </section>
 
         {successMessage ? (
           <Alert>
@@ -103,7 +106,7 @@ export default async function CreatorPortfolioPage({
           </Alert>
         ) : null}
 
-        <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-[var(--shadow-soft)]">
+        <section className="dashboard-surface p-5 sm:p-6">
           <div className="mb-6 flex items-center gap-3">
             <div className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
               <PlusCircle className="size-5" aria-hidden="true" />
@@ -113,7 +116,7 @@ export default async function CreatorPortfolioPage({
                 Tambah portofolio
               </h2>
               <p className="text-sm text-muted-foreground">
-                Gunakan URL gambar atau link eksternal. Upload file akan masuk fase storage.
+                Gunakan URL gambar atau link eksternal untuk sementara.
               </p>
             </div>
           </div>
@@ -125,7 +128,7 @@ export default async function CreatorPortfolioPage({
         </section>
 
         {data.portfolios.length > 0 ? (
-          <div className="grid gap-6 xl:grid-cols-2">
+          <div className="grid gap-5 xl:grid-cols-2">
             {data.portfolios.map((item) => (
               <PortfolioEditor
                 key={item.id}
@@ -135,7 +138,7 @@ export default async function CreatorPortfolioPage({
             ))}
           </div>
         ) : (
-          <section className="rounded-2xl border border-dashed border-border bg-card p-12 text-center shadow-sm">
+          <section className="dashboard-surface border-dashed p-12 text-center">
             <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-primary/10 text-primary">
               <ImageIcon className="size-8" aria-hidden="true" />
             </div>
@@ -160,7 +163,7 @@ function PortfolioEditor({
   item: CreatorPortfolioItem;
 }) {
   return (
-    <article className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
+    <article className="marketplace-card overflow-hidden">
       <div className="grid gap-0 lg:grid-cols-[220px_1fr]">
         <div
           className="grid min-h-56 place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
@@ -189,7 +192,7 @@ function PortfolioEditor({
                 </Badge>
               ) : null}
               {item.external_url ? (
-                <Button asChild size="sm" variant="outline">
+                <Button asChild size="sm" variant="outline" className="rounded-full">
                   <a href={item.external_url} target="_blank" rel="noreferrer">
                     <ExternalLink className="size-4" />
                     Buka
@@ -208,7 +211,7 @@ function PortfolioEditor({
 
           <form action={deleteCreatorPortfolioAction}>
             <input type="hidden" name="portfolioId" value={item.id} />
-            <Button type="submit" variant="outline" className="text-destructive">
+            <Button type="submit" variant="outline" className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive">
               <Trash2 className="size-4" />
               Hapus dari portofolio aktif
             </Button>
@@ -243,7 +246,7 @@ function PortfolioForm({
             id={item ? `category-${item.id}` : "categoryId"}
             name="categoryId"
             defaultValue={item?.category_id ?? ""}
-            className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <option value="">Belum dipilih</option>
             {categories.map((category) => (
@@ -281,7 +284,7 @@ function PortfolioForm({
             id={item ? `isFeatured-${item.id}` : "isFeatured"}
             name="isFeatured"
             defaultValue={item?.is_featured ? "true" : "false"}
-            className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <option value="false">Biasa</option>
             <option value="true">Unggulan</option>
@@ -289,7 +292,7 @@ function PortfolioForm({
         </div>
       </div>
 
-      <Button type="submit">
+      <Button type="submit" className="rounded-full">
         <Save className="size-4" />
         {submitLabel}
       </Button>

@@ -55,8 +55,8 @@ export function UmkmBenefitsSection() {
       <PageContainer>
         <SectionHeading
           eyebrow="Untuk UMKM"
-          title="Fondasi yang dirancang untuk membantu keputusan promosi lebih tenang."
-          description="Ruang Usaha Kita dibuat sebagai marketplace jasa digital yang menampilkan informasi penting sebelum UMKM membuat pesanan."
+          title="Keputusan promosi lebih mudah dibaca."
+          description="Informasi layanan dibuat ringkas agar UMKM bisa memilih dengan tenang."
           align="center"
         />
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -66,13 +66,13 @@ export function UmkmBenefitsSection() {
             return (
               <article
                 key={benefit.title}
-                className="rounded-lg border border-border/70 bg-card p-5 shadow-xs"
+                className="marketplace-card p-5"
               >
                 <Icon className="size-5 text-primary" aria-hidden="true" />
                 <h3 className="mt-4 text-base font-semibold tracking-tight text-foreground">
                   {benefit.title}
                 </h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
                   {benefit.description}
                 </p>
               </article>

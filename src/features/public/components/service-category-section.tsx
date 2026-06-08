@@ -32,8 +32,8 @@ export async function ServiceCategorySection() {
       <PageContainer>
         <SectionHeading
           eyebrow="Kategori layanan"
-          title="Pilih kebutuhan promosi digital yang paling dekat dengan tujuan UMKM."
-          description="Setiap kategori membantu UMKM memahami bentuk output sebelum memilih kreator dan paket jasa yang sesuai."
+          title="Pilih layanan sesuai kebutuhan campaign."
+          description="Kategori membantu UMKM memahami output sebelum memilih kreator."
           action={
             <Link
               href="/katalog"
@@ -52,33 +52,30 @@ export async function ServiceCategorySection() {
               return (
                 <article
                   key={category.id}
-                  className="group rounded-lg border border-border/70 bg-card p-5 shadow-xs transition-colors hover:border-primary/35"
+                  className="marketplace-card group flex min-h-56 flex-col p-5 transition-colors hover:border-primary/35"
                 >
-                  <div className="grid size-11 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <div className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
                     <Icon className="size-5" aria-hidden="true" />
                   </div>
-                  <h3 className="mt-5 text-lg font-semibold tracking-tight text-foreground">
+                  <h3 className="mt-5 line-clamp-2 text-lg font-semibold tracking-tight text-foreground">
                     {category.name}
                   </h3>
-                  <p className="mt-3 min-h-18 text-sm leading-6 text-muted-foreground">
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground">
                     {category.description}
                   </p>
                   <Link
                     href="/katalog"
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary"
+                    className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-primary"
                   >
                     Cari paket jasa
-                    <ArrowRight
-                      className="size-4 transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
+                    <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                 </article>
               );
             })}
           </div>
         ) : (
-          <div className="mt-10 rounded-lg border border-dashed border-border bg-card p-8 text-center">
+          <div className="mt-10 rounded-2xl border border-dashed border-border bg-card p-8 text-center">
             <h3 className="text-lg font-semibold tracking-tight text-foreground">
               Kategori layanan belum tersedia.
             </h3>

@@ -20,14 +20,14 @@ export function ServiceTierOptions({ tiers }: ServiceTierOptionsProps) {
       {tiers.map((tier) => (
         <Card
           key={tier.id}
-          className="rounded-lg border-border/70 bg-card/85 shadow-xs"
+          className="marketplace-card h-full"
         >
-          <CardHeader>
+          <CardHeader className="p-5 pb-3">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <Badge
                   variant={tier.name === "Standard" ? "default" : "secondary"}
-                  className="mb-3 rounded-lg"
+                  className="mb-3 rounded-full"
                 >
                   {tier.name}
                 </Badge>
@@ -38,8 +38,8 @@ export function ServiceTierOptions({ tiers }: ServiceTierOptionsProps) {
               </p>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm leading-6 text-muted-foreground">
+          <CardContent className="space-y-4 p-5 pt-0">
+            <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
               {tier.description}
             </p>
             <div className="grid gap-2 text-sm text-muted-foreground">

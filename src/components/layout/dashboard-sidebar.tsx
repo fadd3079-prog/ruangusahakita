@@ -96,12 +96,12 @@ export function DashboardSidebar({
       className={cn(
         isDrawer
           ? "h-full bg-background"
-          : "h-dvh shrink-0 border-r border-border/70 bg-background/90 transition-[width] duration-200 ease-out",
-        !isDrawer && (collapsed ? "w-[84px]" : "w-[280px]"),
+          : "h-dvh shrink-0 border-r border-border/70 bg-background/92 transition-[width] duration-200 ease-out",
+        !isDrawer && (collapsed ? "w-[80px]" : "w-[264px]"),
         className,
       )}
     >
-      <div className="flex h-full flex-col p-4">
+      <div className="flex h-full flex-col p-3">
         <div className="mb-6 flex min-h-12 items-center justify-between gap-2">
           <AppLogo showText={!collapsed || isDrawer} />
           {!isDrawer && onToggleCollapsed ? (
@@ -122,12 +122,12 @@ export function DashboardSidebar({
           ) : null}
         </div>
 
-        <div className={cn("mb-4", collapsed && !isDrawer && "sr-only")}>
+        <div className={cn("mb-4 rounded-2xl bg-muted/45 p-3", collapsed && !isDrawer && "sr-only")}>
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Dashboard {roleLabel}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Kelola aktivitas marketplace layanan digital.
+            Marketplace layanan digital.
           </p>
         </div>
 
@@ -152,7 +152,7 @@ export function DashboardSidebar({
                     ? "justify-center px-2"
                     : "gap-2 px-3 py-2.5",
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(12,41,73,0.14)]"
+                    ? "bg-brand-navy text-white shadow-[0_12px_28px_rgba(12,41,73,0.16)]"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >

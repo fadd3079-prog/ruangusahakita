@@ -73,8 +73,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         <PageContainer>
           <SectionHeading
             eyebrow="Pilihan tier"
-            title="Bandingkan Basic, Standard, dan Premium sebelum memilih."
-            description="Setiap tier menampilkan harga, estimasi pengerjaan, revisi, dan output agar UMKM dapat menyesuaikan kebutuhan campaign."
+            title="Bandingkan tier sebelum memilih."
+            description="Harga, estimasi, revisi, dan output terlihat sejak awal."
           />
           <div className="mt-8">
             <ServiceTierOptions tiers={tiers} />
@@ -85,7 +85,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
       <section className="bg-background py-12 sm:py-16">
         <PageContainer>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <article className="rounded-lg border border-border/70 bg-card p-5 shadow-xs sm:p-6">
+            <article className="marketplace-card p-5 sm:p-6">
               <p className="text-sm font-semibold text-primary">
                 Detail paket jasa
               </p>
@@ -104,14 +104,14 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               </div>
               <div className="mt-6 flex flex-wrap gap-2">
                 {service.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="rounded-lg">
+                  <Badge key={tag} variant="secondary" className="rounded-full">
                     {tag}
                   </Badge>
                 ))}
               </div>
             </article>
 
-            <aside className="rounded-lg border border-border/70 bg-card p-5 shadow-xs">
+            <aside className="marketplace-card p-5">
               <PlusCircle className="size-5 text-primary" aria-hidden="true" />
               <h2 className="mt-4 text-xl font-semibold tracking-tight text-foreground">
                 Add-on layanan
@@ -125,7 +125,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   {addons.map((addon: PublicServiceAddon) => (
                     <div
                       key={addon.id}
-                      className="rounded-lg border border-border/70 bg-muted/35 p-3"
+                      className="rounded-2xl border border-border/70 bg-muted/35 p-3"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <p className="text-sm font-semibold text-foreground">
@@ -142,7 +142,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   ))}
                 </div>
               ) : (
-                <p className="mt-5 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                <p className="mt-5 rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
                   Belum ada add-on untuk paket jasa ini.
                 </p>
               )}
@@ -207,7 +207,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
       <section className="bg-primary/5 py-12 sm:py-16">
         <PageContainer>
-          <div className="flex flex-col gap-5 rounded-lg border border-primary/20 bg-background p-5 shadow-xs sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="marketplace-card flex flex-col gap-5 p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
                 <CheckCircle2 className="size-4" aria-hidden="true" />
@@ -224,7 +224,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   <input type="hidden" name="tierId" value={primaryTier.id} />
                 ) : null}
                 <input type="hidden" name="redirectTo" value="/umkm/cart" />
-                <Button type="submit" size="lg" className="h-11 w-full px-5">
+                <Button type="submit" size="lg" className="h-11 w-full rounded-full px-5">
                   Tambah ke Keranjang
                 </Button>
               </form>
@@ -238,7 +238,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   type="submit"
                   size="lg"
                   variant="outline"
-                  className="h-11 w-full px-5"
+                  className="h-11 w-full rounded-full px-5"
                 >
                   Pesan Sekarang
                   <ArrowRight aria-hidden="true" />
@@ -289,7 +289,7 @@ type EmptyPanelProps = {
 
 function EmptyPanel({ title, description }: EmptyPanelProps) {
   return (
-    <div className="mt-8 rounded-lg border border-dashed border-border bg-card p-6 text-center">
+    <div className="mt-8 rounded-2xl border border-dashed border-border bg-card p-6 text-center">
       <h3 className="text-lg font-semibold tracking-tight text-foreground">
         {title}
       </h3>

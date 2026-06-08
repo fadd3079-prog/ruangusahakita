@@ -20,7 +20,7 @@ type CreatorGridProps = {
 
 export function CreatorGrid({ items }: CreatorGridProps) {
   return (
-    <div className="grid auto-rows-fr gap-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid auto-rows-fr gap-5 md:grid-cols-2 2xl:grid-cols-3">
       {items.map((item) => (
         <CreatorCard
           key={item.creator.id}

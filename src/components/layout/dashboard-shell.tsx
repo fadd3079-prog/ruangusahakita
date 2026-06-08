@@ -16,7 +16,7 @@ export function DashboardShell({ children, variant }: DashboardShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="h-dvh overflow-hidden bg-surface">
+    <div className="h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--surface),var(--background))]">
       <div className="flex h-full min-w-0">
         <DashboardSidebar
           variant={variant}
@@ -30,7 +30,7 @@ export function DashboardShell({ children, variant }: DashboardShellProps) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <DashboardTopbar variant={variant} />
-          <main className="min-h-0 flex-1 overflow-y-auto py-6 lg:py-10">
+          <main className="min-h-0 flex-1 overflow-y-auto py-5 lg:py-8">
             {children}
           </main>
         </div>

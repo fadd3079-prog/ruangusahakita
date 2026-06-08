@@ -14,9 +14,28 @@ type EditServicePageProps = {
     serviceId: string;
   }>;
   searchParams: Promise<{
+    addon_created?: string;
+    addon_deleted?: string;
+    addon_updated?: string;
     error?: string;
   }>;
 };
+
+function getSuccess(params: Awaited<EditServicePageProps["searchParams"]>) {
+  if (params.addon_created) {
+    return "addon_created";
+  }
+
+  if (params.addon_updated) {
+    return "addon_updated";
+  }
+
+  if (params.addon_deleted) {
+    return "addon_deleted";
+  }
+
+  return undefined;
+}
 
 export async function generateMetadata({
   params,
@@ -36,7 +55,7 @@ export default async function EditServicePage({
   params,
   searchParams,
 }: EditServicePageProps) {
-  const [{ serviceId }, { error }, categories] = await Promise.all([
+  const [{ serviceId }, currentSearchParams, categories] = await Promise.all([
     params,
     searchParams,
     getCreatorServiceCategories(),
@@ -53,9 +72,10 @@ export default async function EditServicePage({
         action={updateCreatorServiceAction}
         categories={categories}
         description="Perbarui detail paket jasa digital tanpa mengubah data transaksi atau order."
-        error={error}
+        error={currentSearchParams.error}
         service={service}
         submitLabel="Simpan Perubahan"
+        success={getSuccess(currentSearchParams)}
         title="Edit Paket Layanan"
       />
     </PageContainer>

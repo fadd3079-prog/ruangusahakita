@@ -384,9 +384,9 @@ function NextStepCard() {
         Tahap berikutnya
       </h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Setelah order dibuat, tahap payment sandbox server-side dapat
-        dilanjutkan pada fase berikutnya. Kreator mulai mengerjakan konten
-        setelah pembayaran tervalidasi oleh server.
+        Setelah order dibuat, lanjutkan pembayaran sandbox dari halaman
+        pembayaran. Kreator mulai mengerjakan konten setelah pembayaran
+        tervalidasi oleh server.
       </p>
       <Button asChild variant="outline" className="mt-5 w-full">
         <Link href="/umkm/orders">Kembali ke daftar pesanan</Link>

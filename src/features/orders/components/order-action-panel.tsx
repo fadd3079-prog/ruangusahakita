@@ -12,7 +12,7 @@ export function OrderActionPanel({ actions, note, title }: OrderActionPanelProps
       aria-labelledby="order-action-panel-title"
       className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]"
     >
-      <p className="text-sm font-semibold text-primary">Aksi placeholder</p>
+      <p className="text-sm font-semibold text-primary">Aksi status pesanan</p>
       <h2
         id="order-action-panel-title"
         className="mt-2 text-xl font-semibold tracking-tight text-foreground"

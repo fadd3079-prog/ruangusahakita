@@ -15,8 +15,8 @@ export async function FeaturedCreatorsSection() {
       <PageContainer>
         <SectionHeading
           eyebrow="Kreator pilihan"
-          title="Kreator dan marketer yang siap membantu campaign UMKM."
-          description="Gunakan data awal ini untuk melihat bagaimana profil kreator, harga mulai, rating, dan ketersediaan dapat ditampilkan nanti."
+          title="Kreator yang siap membantu promosi UMKM."
+          description="Lihat niche, rating, harga mulai, dan ketersediaan dalam satu kartu."
           action={
             <Link
               href="/katalog"
@@ -28,13 +28,13 @@ export async function FeaturedCreatorsSection() {
           }
         />
         {featuredCreators.length > 0 ? (
-          <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-10 grid auto-rows-fr gap-5 md:grid-cols-2 xl:grid-cols-4">
             {featuredCreators.map((creator) => (
               <CreatorCard key={creator.id} creator={creator} />
             ))}
           </div>
         ) : (
-          <div className="mt-10 rounded-lg border border-dashed border-border bg-card p-8 text-center">
+          <div className="mt-10 rounded-2xl border border-dashed border-border bg-card p-8 text-center">
             <h3 className="text-lg font-semibold tracking-tight text-foreground">
               Belum ada kreator pilihan.
             </h3>

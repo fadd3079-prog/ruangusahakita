@@ -52,16 +52,16 @@ export function DashboardHero({
   title,
 }: DashboardHeroProps) {
   return (
-    <section className="overflow-hidden rounded-3xl border border-primary/15 bg-[linear-gradient(135deg,rgba(12,41,73,0.98),rgba(17,73,85,0.94))] text-primary-foreground shadow-[0_24px_70px_rgba(12,41,73,0.18)]">
-      <div className="grid gap-8 p-6 sm:p-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
+    <section className="overflow-hidden rounded-[22px] border border-primary/15 bg-[linear-gradient(135deg,rgba(12,41,73,0.98),rgba(17,73,85,0.94))] text-primary-foreground shadow-[0_20px_56px_rgba(12,41,73,0.16)]">
+      <div className="grid gap-7 p-6 sm:p-7 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
             {eyebrow}
           </p>
-          <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
+          <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
             {title}
           </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-primary-foreground/78 sm:text-base">
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-primary-foreground/74 sm:text-base">
             {description}
           </p>
           {actions.length > 0 ? (
@@ -89,11 +89,11 @@ export function DashboardHero({
         </div>
 
         {highlights.length > 0 ? (
-          <div className="grid gap-3 rounded-2xl border border-white/12 bg-white/8 p-4 backdrop-blur-sm">
+          <div className="grid gap-2 rounded-2xl border border-white/12 bg-white/8 p-3 backdrop-blur-sm">
             {highlights.map((highlight) => (
               <div
                 key={highlight.label}
-                className="flex items-center justify-between gap-4 rounded-2xl bg-white/8 px-4 py-3"
+                className="flex items-center justify-between gap-4 rounded-xl bg-white/8 px-3 py-2.5"
               >
                 <span className="text-sm text-primary-foreground/70">
                   {highlight.label}
@@ -128,8 +128,8 @@ function DashboardMetricCard({ metric }: { metric: DashboardMetric }) {
   const Icon = metric.icon;
 
   return (
-    <Card className="rounded-2xl border-border/70 bg-card/90 shadow-[var(--shadow-soft)]">
-      <CardContent className="space-y-5">
+    <Card className="dashboard-surface">
+      <CardContent className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-muted-foreground">
@@ -143,7 +143,7 @@ function DashboardMetricCard({ metric }: { metric: DashboardMetric }) {
             <Icon className="size-5" aria-hidden="true" />
           </div>
         </div>
-        <p className="text-sm leading-6 text-muted-foreground">
+        <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
           {metric.description}
         </p>
       </CardContent>
@@ -169,15 +169,15 @@ export function DashboardPanel({
   return (
     <Card
       className={cn(
-        "rounded-2xl border-border/70 bg-card/90 shadow-[var(--shadow-soft)]",
+        "dashboard-surface",
         className,
       )}
     >
-      <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between">
+      <CardHeader className="gap-3 p-5 pb-3 sm:flex sm:flex-row sm:items-start sm:justify-between">
         <div>
           <CardTitle className="text-lg">{title}</CardTitle>
           {description ? (
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
               {description}
             </p>
           ) : null}
@@ -191,7 +191,7 @@ export function DashboardPanel({
           </Button>
         ) : null}
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="p-5 pt-0">{children}</CardContent>
     </Card>
   );
 }

@@ -80,6 +80,21 @@ function getValidationError(formData: FormData) {
   return null;
 }
 
+function getAddonValidationError(formData: FormData) {
+  const name = getText(formData, "addonName");
+  const price = getNumber(formData, "addonPrice");
+
+  if (!name) {
+    return "addon_required";
+  }
+
+  if (price < 0) {
+    return "addon_price";
+  }
+
+  return null;
+}
+
 async function getCreatorContext(): Promise<CreatorContext> {
   const supabase = await createClient();
   const {
@@ -117,6 +132,32 @@ async function getCreatorContext(): Promise<CreatorContext> {
   }
 
   return { creator, supabase };
+}
+
+async function ensureOwnedService(context: CreatorContext, serviceId: string) {
+  if (!serviceId) {
+    redirect("/creator/services?error=missing");
+  }
+
+  const { data: service, error } = await context.supabase
+    .from("service_packages")
+    .select("id")
+    .eq("id", serviceId)
+    .eq("creator_id", context.creator.id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error || !service) {
+    redirect("/creator/services?error=not_found");
+  }
+
+  return service.id;
+}
+
+function revalidateServicePaths(serviceId: string) {
+  revalidatePath("/creator/services");
+  revalidatePath(`/creator/services/${serviceId}/edit`);
+  revalidatePath(`/layanan/${serviceId}`);
 }
 
 export async function createCreatorServiceAction(formData: FormData) {
@@ -265,8 +306,7 @@ export async function updateCreatorServiceAction(formData: FormData) {
     redirect(`/creator/services/${serviceId}/edit?error=tier`);
   }
 
-  revalidatePath("/creator/services");
-  revalidatePath(`/creator/services/${serviceId}/edit`);
+  revalidateServicePaths(serviceId);
   redirect("/creator/services?updated=1");
 }
 
@@ -300,6 +340,132 @@ export async function toggleCreatorServiceStatusAction(formData: FormData) {
     redirect("/creator/services?error=toggle");
   }
 
-  revalidatePath("/creator/services");
+  revalidateServicePaths(serviceId);
   redirect("/creator/services?toggled=1");
+}
+
+export async function createCreatorServiceAddonAction(formData: FormData) {
+  const serviceId = getText(formData, "serviceId");
+
+  if (!serviceId) {
+    redirect("/creator/services?error=missing");
+  }
+
+  const editPath = `/creator/services/${serviceId}/edit`;
+  const validationError = getAddonValidationError(formData);
+
+  if (validationError) {
+    redirect(`${editPath}?error=${validationError}`);
+  }
+
+  const context = await getCreatorContext();
+  const ownedServiceId = await ensureOwnedService(context, serviceId);
+  const { error } = await context.supabase.from("service_addons").insert({
+    description: getNullableText(formData, "addonDescription"),
+    is_active: getText(formData, "addonIsActive") !== "false",
+    name: getText(formData, "addonName"),
+    price: getNumber(formData, "addonPrice"),
+    service_package_id: ownedServiceId,
+  });
+
+  if (error) {
+    redirect(`${editPath}?error=addon_save`);
+  }
+
+  revalidateServicePaths(serviceId);
+  redirect(`${editPath}?addon_created=1`);
+}
+
+export async function updateCreatorServiceAddonAction(formData: FormData) {
+  const serviceId = getText(formData, "serviceId");
+  const addonId = getText(formData, "addonId");
+
+  if (!serviceId) {
+    redirect("/creator/services?error=missing");
+  }
+
+  const editPath = `/creator/services/${serviceId}/edit`;
+  const validationError = getAddonValidationError(formData);
+
+  if (!addonId) {
+    redirect(`${editPath}?error=addon_missing`);
+  }
+
+  if (validationError) {
+    redirect(`${editPath}?error=${validationError}`);
+  }
+
+  const context = await getCreatorContext();
+  await ensureOwnedService(context, serviceId);
+
+  const { data: addon, error: addonError } = await context.supabase
+    .from("service_addons")
+    .select("id")
+    .eq("id", addonId)
+    .eq("service_package_id", serviceId)
+    .maybeSingle();
+
+  if (addonError || !addon) {
+    redirect(`${editPath}?error=addon_not_found`);
+  }
+
+  const { error } = await context.supabase
+    .from("service_addons")
+    .update({
+      description: getNullableText(formData, "addonDescription"),
+      is_active: getText(formData, "addonIsActive") !== "false",
+      name: getText(formData, "addonName"),
+      price: getNumber(formData, "addonPrice"),
+    })
+    .eq("id", addon.id)
+    .eq("service_package_id", serviceId);
+
+  if (error) {
+    redirect(`${editPath}?error=addon_update`);
+  }
+
+  revalidateServicePaths(serviceId);
+  redirect(`${editPath}?addon_updated=1`);
+}
+
+export async function deleteCreatorServiceAddonAction(formData: FormData) {
+  const serviceId = getText(formData, "serviceId");
+  const addonId = getText(formData, "addonId");
+
+  if (!serviceId) {
+    redirect("/creator/services?error=missing");
+  }
+
+  const editPath = `/creator/services/${serviceId}/edit`;
+
+  if (!addonId) {
+    redirect(`${editPath}?error=addon_missing`);
+  }
+
+  const context = await getCreatorContext();
+  await ensureOwnedService(context, serviceId);
+
+  const { data: addon, error: addonError } = await context.supabase
+    .from("service_addons")
+    .select("id")
+    .eq("id", addonId)
+    .eq("service_package_id", serviceId)
+    .maybeSingle();
+
+  if (addonError || !addon) {
+    redirect(`${editPath}?error=addon_not_found`);
+  }
+
+  const { error } = await context.supabase
+    .from("service_addons")
+    .delete()
+    .eq("id", addon.id)
+    .eq("service_package_id", serviceId);
+
+  if (error) {
+    redirect(`${editPath}?error=addon_delete`);
+  }
+
+  revalidateServicePaths(serviceId);
+  redirect(`${editPath}?addon_deleted=1`);
 }

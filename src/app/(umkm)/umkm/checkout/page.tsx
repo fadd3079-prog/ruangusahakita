@@ -149,7 +149,7 @@ function CreateOrderPanel({ hasBrief }: { hasBrief: boolean }) {
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/72">
             Sistem akan menghitung ulang total dari database, membuat status
-            pesanan awal, pembayaran pending sandbox, dan invoice placeholder.
+            pesanan awal, pembayaran pending sandbox, dan invoice awal.
           </p>
         </div>
       </div>

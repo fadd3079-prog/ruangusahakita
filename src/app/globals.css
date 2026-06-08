@@ -95,6 +95,10 @@
     0 8px 24px -16px rgb(6 17 31 / 18%);
   --shadow-card: inset 0 0 0 1px rgb(12 41 73 / 7%),
     0 1px 1px rgb(6 17 31 / 3%), 0 12px 32px -24px rgb(6 17 31 / 22%);
+  --shadow-marketplace: 0 1px 2px rgb(12 41 73 / 5%),
+    0 18px 44px -32px rgb(12 41 73 / 26%);
+  --shadow-dashboard: 0 1px 2px rgb(12 41 73 / 5%),
+    0 14px 34px -28px rgb(12 41 73 / 24%);
   --selection: color-mix(in srgb, var(--brand-teal-600) 22%, white);
   --selection-foreground: var(--brand-navy-950);
   --sidebar: #f7faf9;
@@ -143,6 +147,10 @@
     0 16px 40px -24px rgb(0 0 0 / 55%);
   --shadow-card: inset 0 0 0 1px rgb(238 247 246 / 8%),
     0 1px 1px rgb(0 0 0 / 20%), 0 18px 44px -28px rgb(0 0 0 / 62%);
+  --shadow-marketplace: 0 1px 2px rgb(0 0 0 / 24%),
+    0 18px 48px -32px rgb(0 0 0 / 70%);
+  --shadow-dashboard: 0 1px 2px rgb(0 0 0 / 20%),
+    0 16px 42px -30px rgb(0 0 0 / 64%);
   --selection: color-mix(in srgb, var(--primary) 34%, transparent);
   --selection-foreground: #ffffff;
   --sidebar: #0a1d2d;
@@ -249,6 +257,28 @@
     background: var(--surface-elevated);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-soft);
+  }
+
+  .marketplace-card {
+    background: var(--card);
+    border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+    border-radius: 18px;
+    box-shadow: var(--shadow-marketplace);
+  }
+
+  .dashboard-surface {
+    background: color-mix(in srgb, var(--card) 94%, var(--surface-soft));
+    border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+    border-radius: 18px;
+    box-shadow: var(--shadow-dashboard);
+  }
+
+  .premium-focus {
+    outline: none;
+  }
+
+  .premium-focus:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 28%, transparent);
   }
 
   .text-brand-gradient {

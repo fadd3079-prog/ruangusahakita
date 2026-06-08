@@ -1,6 +1,6 @@
 export async function GET() {
   return Response.json({
-    ok: true,
-    route: "payments/create",
-  });
+    message: "Endpoint pembuatan pembayaran belum aktif. Gunakan flow pembayaran sandbox server-side yang tersedia.",
+    status: "not_implemented",
+  }, { status: 501 });
 }

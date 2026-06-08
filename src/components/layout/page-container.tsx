@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const maxWidthClasses = {
-  content: "max-w-[1520px]", // 1320px content + 200px padding
-  narrow: "max-w-[968px]", // 768px content + 200px padding
-  wide: "max-w-[1640px]", // 1440px content + 200px padding
+  content: "max-w-[1440px]",
+  narrow: "max-w-[960px]",
+  wide: "max-w-[1600px]",
   full: "max-w-none",
 } as const;
 

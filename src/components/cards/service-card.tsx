@@ -11,7 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { PublicServiceCategory, PublicServicePackage } from "@/features/catalog/data/catalog-types";
+import type {
+  PublicServiceCategory,
+  PublicServicePackage,
+} from "@/features/catalog/data/catalog-types";
 
 type ServiceCardProps = {
   service: PublicServicePackage;
@@ -24,27 +27,37 @@ export function ServiceCard({
   category,
   ctaLabel = "Lihat Detail",
 }: ServiceCardProps) {
+  const visualUrl = service.coverImageUrl || "/images/image (10).webp";
+
   return (
-    <Card className="rounded-lg border-border/70 bg-card/85 shadow-xs transition-colors hover:border-primary/30">
-      <CardHeader>
+    <Card className="marketplace-card h-full overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
+      <div
+        className="aspect-[16/9] bg-cover bg-center"
+        style={{ backgroundImage: `url("${visualUrl}")` }}
+      />
+
+      <CardHeader className="px-4 pb-2 pt-4">
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             {category ? (
-              <Badge variant="secondary" className="mb-3 rounded-lg">
+              <Badge variant="secondary" className="mb-3 rounded-full">
                 {category.name}
               </Badge>
             ) : null}
-            <CardTitle className="text-lg">{service.title}</CardTitle>
+            <CardTitle className="line-clamp-2 min-h-11 text-lg">
+              {service.title}
+            </CardTitle>
           </div>
           {service.isFeatured ? (
-            <Badge variant="outline" className="rounded-lg text-primary">
+            <Badge variant="outline" className="shrink-0 rounded-full text-primary">
               Unggulan
             </Badge>
           ) : null}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
+
+      <CardContent className="flex flex-1 flex-col space-y-4 px-4">
+        <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
           {service.shortDescription}
         </p>
         <div className="grid gap-2 text-sm text-muted-foreground">
@@ -61,12 +74,13 @@ export function ServiceCard({
             {service.deliverables.length} output layanan digital
           </span>
         </div>
-        <div className="rounded-lg border border-border/70 bg-muted/40 p-3 text-sm">
+        <div className="mt-auto rounded-2xl border border-border/70 bg-muted/35 p-3 text-sm">
           <PriceText value={service.basePrice} />
         </div>
       </CardContent>
-      <CardFooter className="bg-transparent">
-        <Button asChild className="w-full">
+
+      <CardFooter className="border-t border-border/70 bg-muted/25 p-3">
+        <Button asChild className="h-10 w-full rounded-full">
           <Link href={`/layanan/${service.id}`}>{ctaLabel}</Link>
         </Button>
       </CardFooter>
