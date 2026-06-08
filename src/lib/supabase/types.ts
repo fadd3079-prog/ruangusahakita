@@ -18,6 +18,8 @@ export interface Database {
           phone: string | null
           avatar_url: string | null
           account_status: Database['public']['Enums']['account_status']
+          onboarding_completed: boolean
+          onboarding_skipped_at: string | null
           last_login_at: string | null
           created_at: string
           updated_at: string
@@ -30,6 +32,8 @@ export interface Database {
           phone?: string | null
           avatar_url?: string | null
           account_status?: Database['public']['Enums']['account_status']
+          onboarding_completed?: boolean
+          onboarding_skipped_at?: string | null
           last_login_at?: string | null
           created_at?: string
           updated_at?: string
@@ -42,6 +46,8 @@ export interface Database {
           phone?: string | null
           avatar_url?: string | null
           account_status?: Database['public']['Enums']['account_status']
+          onboarding_completed?: boolean
+          onboarding_skipped_at?: string | null
           last_login_at?: string | null
           created_at?: string
           updated_at?: string

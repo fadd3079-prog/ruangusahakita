@@ -7,6 +7,8 @@ export type CurrentAccountSummary = {
   email: string;
   role: UserRole;
   accountStatus: AccountStatus;
+  onboardingCompleted: boolean;
+  onboardingSkippedAt: string | null;
   displayName: string;
   dashboardHref: string;
   initials: string;
@@ -18,6 +20,8 @@ type ProfileRow = {
   full_name: string;
   role: UserRole;
   account_status: AccountStatus;
+  onboarding_completed: boolean;
+  onboarding_skipped_at: string | null;
 };
 
 function getInitials(value: string) {
@@ -42,7 +46,7 @@ export async function getCurrentAccountSummary(): Promise<CurrentAccountSummary 
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, role, account_status")
+    .select("id, email, full_name, role, account_status, onboarding_completed, onboarding_skipped_at")
     .eq("id", user.id)
     .single<ProfileRow>();
 
@@ -79,6 +83,8 @@ export async function getCurrentAccountSummary(): Promise<CurrentAccountSummary 
     email: profile.email,
     role: profile.role,
     accountStatus: profile.account_status,
+    onboardingCompleted: profile.onboarding_completed,
+    onboardingSkippedAt: profile.onboarding_skipped_at,
     displayName,
     dashboardHref: getDashboardPathByRole(profile.role),
     initials: getInitials(displayName || profile.email) || "RU",

@@ -6,15 +6,15 @@ import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type {
-  DummyCreatorProfile,
-  DummyServiceCategory,
-  DummyServicePackage,
-} from "@/lib/dummy";
+  PublicCreatorProfile,
+  PublicServiceCategory,
+  PublicServicePackage,
+} from "@/features/catalog/data/catalog-types";
 
 type ServiceDetailHeaderProps = {
-  service: DummyServicePackage;
-  creator: DummyCreatorProfile;
-  category?: DummyServiceCategory;
+  service: PublicServicePackage;
+  creator: PublicCreatorProfile;
+  category?: PublicServiceCategory;
 };
 
 export function ServiceDetailHeader({

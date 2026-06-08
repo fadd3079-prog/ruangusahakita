@@ -13,7 +13,7 @@ const checkoutSteps = [
   },
   {
     label: "Pembayaran",
-    description: "Simulasi tahap berikutnya",
+    description: "Tahap berikutnya",
     state: "upcoming",
   },
 ] as const;

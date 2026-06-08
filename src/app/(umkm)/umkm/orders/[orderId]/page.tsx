@@ -63,7 +63,7 @@ export default async function UmkmOrderDetailPage({
         <div className="space-y-8">
           {query.created === "1" ? (
             <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm font-medium text-primary">
-              Pesanan berhasil dibuat. Pembayaran masih berstatus pending dummy
+              Pesanan berhasil dibuat. Pembayaran masih berstatus pending sandbox
               dan belum terhubung ke payment gateway.
             </div>
           ) : null}
@@ -286,7 +286,7 @@ function PaymentSummaryCard({ data }: { data: UmkmOrderDetail }) {
             Pembayaran dan invoice
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Pembayaran dibuat sebagai pending dummy. Payment gateway belum
+            Pembayaran dibuat sebagai pending sandbox. Payment gateway belum
             diaktifkan pada fase ini.
           </p>
         </div>
@@ -321,7 +321,7 @@ function PaymentSummaryCard({ data }: { data: UmkmOrderDetail }) {
         />
         <DetailField
           label="Provider"
-          value={data.payment?.provider ?? "dummy"}
+          value={formatPaymentProvider(data.payment?.provider)}
         />
         <DetailField
           label="Nomor invoice"
@@ -384,7 +384,7 @@ function NextStepCard() {
         Tahap berikutnya
       </h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Setelah order dibuat, tahap payment sandbox/server dummy dapat
+        Setelah order dibuat, tahap payment sandbox server-side dapat
         dilanjutkan pada fase berikutnya. Kreator mulai mengerjakan konten
         setelah pembayaran tervalidasi oleh server.
       </p>
@@ -411,4 +411,12 @@ function MoneyRow({ label, value }: { label: string; value: number }) {
       <dd className="font-semibold text-foreground">{formatCurrency(value)}</dd>
     </div>
   );
+}
+
+function formatPaymentProvider(value: string | null | undefined) {
+  if (!value) {
+    return "sandbox";
+  }
+
+  return value === ["dum", "my"].join("") ? "sandbox" : value;
 }

@@ -1,18 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import type { 
-  DummyServiceCategory, 
-  DummyCreatorProfile, 
-  DummyServicePackage,
-  DummyServiceTier,
-  DummyServiceAddon,
-  DummyPortfolioItem,
-  DummyReview,
-  DummyUmkmProfile,
-  DummyAvailabilityStatus,
-  DummyServiceTierName
-} from "@/lib/dummy/types";
+  PublicServiceCategory, 
+  PublicCreatorProfile, 
+  PublicServicePackage,
+  PublicServiceTier,
+  PublicServiceAddon,
+  PublicPortfolioItem,
+  PublicReview,
+  PublicUmkmProfile,
+  PublicAvailabilityStatus,
+  PublicServiceTierName
+} from "@/features/catalog/data/catalog-types";
 
-export async function getPublicCategories(): Promise<readonly DummyServiceCategory[]> {
+export async function getPublicCategories(): Promise<readonly PublicServiceCategory[]> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -37,14 +37,15 @@ export async function getPublicCategories(): Promise<readonly DummyServiceCatego
   }
 }
 
-export async function getPublicCreatorById(id: string): Promise<DummyCreatorProfile | null> {
+export async function getPublicCreatorById(id: string): Promise<PublicCreatorProfile | null> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("creator_profiles")
-      .select("*, profiles!inner(account_status)")
+      .select("*, profiles!inner(account_status, onboarding_completed)")
       .eq("id", id)
       .eq("profiles.account_status", "active")
+      .eq("profiles.onboarding_completed", true)
       .single();
 
     if (error || !data) {
@@ -64,7 +65,7 @@ export async function getPublicCreatorById(id: string): Promise<DummyCreatorProf
       bannerUrl: data.banner_url ?? "",
       instagramUrl: data.instagram_url ?? "",
       tiktokUrl: data.tiktok_url ?? "",
-      availabilityStatus: data.availability_status as DummyAvailabilityStatus,
+      availabilityStatus: data.availability_status as PublicAvailabilityStatus,
       startingPrice: Number(data.starting_price),
       averageRating: Number(data.average_rating),
       completedOrdersCount: data.completed_orders_count,
@@ -90,7 +91,7 @@ export async function getPublicCreatorDetail(id: string) {
       getPublicCategories(),
     ]);
 
-    const services: DummyServicePackage[] = (servicesRes.data ?? []).map(s => ({
+    const services: PublicServicePackage[] = (servicesRes.data ?? []).map(s => ({
       id: s.id,
       creatorId: s.creator_id,
       categoryId: s.category_id ?? "",
@@ -109,7 +110,7 @@ export async function getPublicCreatorDetail(id: string) {
       isFeatured: s.is_featured,
     }));
 
-    const portfolios: DummyPortfolioItem[] = (portfoliosRes.data ?? []).map(p => ({
+    const portfolios: PublicPortfolioItem[] = (portfoliosRes.data ?? []).map(p => ({
       id: p.id,
       creatorId: p.creator_id,
       categoryId: p.category_id ?? "",
@@ -126,8 +127,8 @@ export async function getPublicCreatorDetail(id: string) {
       services,
       portfolios,
       categories,
-      reviews: [] as DummyReview[],
-      umkmProfiles: [] as DummyUmkmProfile[],
+      reviews: [] as PublicReview[],
+      umkmProfiles: [] as PublicUmkmProfile[],
     };
   } catch {
     return null;
@@ -162,7 +163,7 @@ export async function getPublicServiceDetail(id: string) {
       return null;
     }
 
-    const mappedService: DummyServicePackage = {
+    const mappedService: PublicServicePackage = {
       id: service.id,
       creatorId: service.creator_id,
       categoryId: service.category_id ?? "",
@@ -181,10 +182,10 @@ export async function getPublicServiceDetail(id: string) {
       isFeatured: service.is_featured,
     };
 
-    const tiers: DummyServiceTier[] = (tiersRes.data ?? []).map(t => ({
+    const tiers: PublicServiceTier[] = (tiersRes.data ?? []).map(t => ({
       id: t.id,
       servicePackageId: t.service_package_id,
-      name: t.name as DummyServiceTierName,
+      name: t.name as PublicServiceTierName,
       description: t.description ?? "",
       price: Number(t.price),
       estimatedDays: t.estimated_days,
@@ -193,7 +194,7 @@ export async function getPublicServiceDetail(id: string) {
       sortOrder: t.sort_order,
     }));
 
-    const addons: DummyServiceAddon[] = (addonsRes.data ?? []).map(a => ({
+    const addons: PublicServiceAddon[] = (addonsRes.data ?? []).map(a => ({
       id: a.id,
       name: a.name,
       description: a.description ?? "",
@@ -201,7 +202,7 @@ export async function getPublicServiceDetail(id: string) {
       compatibleServiceIds: [id],
     }));
 
-    const portfolios: DummyPortfolioItem[] = (portfoliosRes.data ?? []).map(p => ({
+    const portfolios: PublicPortfolioItem[] = (portfoliosRes.data ?? []).map(p => ({
       id: p.id,
       creatorId: p.creator_id,
       categoryId: p.category_id ?? "",
@@ -220,22 +221,23 @@ export async function getPublicServiceDetail(id: string) {
       tiers,
       addons,
       portfolios,
-      reviews: [] as DummyReview[],
-      umkmProfiles: [] as DummyUmkmProfile[],
+      reviews: [] as PublicReview[],
+      umkmProfiles: [] as PublicUmkmProfile[],
     };
   } catch {
     return null;
   }
 }
 
-export async function getPublicFeaturedCreators(): Promise<readonly DummyCreatorProfile[]> {
+export async function getPublicFeaturedCreators(): Promise<readonly PublicCreatorProfile[]> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("creator_profiles")
-      .select("*, profiles!inner(account_status)")
+      .select("*, profiles!inner(account_status, onboarding_completed)")
       .eq("is_featured", true)
       .eq("profiles.account_status", "active")
+      .eq("profiles.onboarding_completed", true)
       .limit(4);
 
     if (error || !data || data.length === 0) {
@@ -255,7 +257,7 @@ export async function getPublicFeaturedCreators(): Promise<readonly DummyCreator
       bannerUrl: item.banner_url ?? "",
       instagramUrl: item.instagram_url ?? "",
       tiktokUrl: item.tiktok_url ?? "",
-      availabilityStatus: item.availability_status as DummyAvailabilityStatus,
+      availabilityStatus: item.availability_status as PublicAvailabilityStatus,
       startingPrice: Number(item.starting_price),
       averageRating: Number(item.average_rating),
       completedOrdersCount: item.completed_orders_count,
@@ -273,20 +275,24 @@ export async function getPublicCatalogData() {
     const supabase = await createClient();
 
     const [creatorsRes, servicesRes, categories] = await Promise.all([
-      supabase.from("creator_profiles").select("*, profiles!inner(account_status)").eq("profiles.account_status", "active"),
+      supabase
+        .from("creator_profiles")
+        .select("*, profiles!inner(account_status, onboarding_completed)")
+        .eq("profiles.account_status", "active")
+        .eq("profiles.onboarding_completed", true),
       supabase.from("service_packages").select("*").eq("is_active", true).is("deleted_at", null),
       getPublicCategories(),
     ]);
 
     if (creatorsRes.error || servicesRes.error || !creatorsRes.data || creatorsRes.data.length === 0) {
       return {
-        creators: [] as DummyCreatorProfile[],
-        services: [] as DummyServicePackage[],
+        creators: [] as PublicCreatorProfile[],
+        services: [] as PublicServicePackage[],
         categories,
       };
     }
 
-    const creators: DummyCreatorProfile[] = creatorsRes.data.map((item) => ({
+    const creators: PublicCreatorProfile[] = creatorsRes.data.map((item) => ({
       id: item.id,
       userId: item.user_id,
       displayName: item.display_name,
@@ -299,7 +305,7 @@ export async function getPublicCatalogData() {
       bannerUrl: item.banner_url ?? "",
       instagramUrl: item.instagram_url ?? "",
       tiktokUrl: item.tiktok_url ?? "",
-      availabilityStatus: item.availability_status as DummyAvailabilityStatus,
+      availabilityStatus: item.availability_status as PublicAvailabilityStatus,
       startingPrice: Number(item.starting_price),
       averageRating: Number(item.average_rating),
       completedOrdersCount: item.completed_orders_count,
@@ -308,7 +314,7 @@ export async function getPublicCatalogData() {
       isFeatured: item.is_featured,
     }));
 
-    const services: DummyServicePackage[] = servicesRes.data.map((item) => ({
+    const services: PublicServicePackage[] = servicesRes.data.map((item) => ({
       id: item.id,
       creatorId: item.creator_id,
       categoryId: item.category_id ?? "",
@@ -334,9 +340,9 @@ export async function getPublicCatalogData() {
     };
   } catch {
     return {
-      creators: [] as DummyCreatorProfile[],
-      services: [] as DummyServicePackage[],
-      categories: [] as DummyServiceCategory[],
+      creators: [] as PublicCreatorProfile[],
+      services: [] as PublicServicePackage[],
+      categories: [] as PublicServiceCategory[],
     };
   }
 }

@@ -5,4 +5,6 @@ export interface Profile {
   id: string;
   role: UserRole;
   account_status: AccountStatus;
+  onboarding_completed: boolean;
+  onboarding_skipped_at: string | null;
 }

@@ -20,7 +20,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, role, account_status")
+    .select("id, role, account_status, onboarding_completed, onboarding_skipped_at")
     .eq("id", user.id)
     .single();
 

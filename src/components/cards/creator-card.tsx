@@ -21,11 +21,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type {
-  DummyAvailabilityStatus,
-  DummyCreatorProfile,
-} from "@/lib/dummy";
+  PublicAvailabilityStatus,
+  PublicCreatorProfile,
+} from "@/features/catalog/data/catalog-types";
 
-const availabilityLabels: Record<DummyAvailabilityStatus, string> = {
+const availabilityLabels: Record<PublicAvailabilityStatus, string> = {
   available: "Tersedia",
   limited: "Terbatas",
   busy: "Penuh sementara",
@@ -33,7 +33,7 @@ const availabilityLabels: Record<DummyAvailabilityStatus, string> = {
 };
 
 type CreatorCardProps = {
-  creator: DummyCreatorProfile;
+  creator: PublicCreatorProfile;
   primaryService?: {
     id: string;
     title: string;

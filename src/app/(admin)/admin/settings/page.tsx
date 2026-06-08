@@ -83,7 +83,7 @@ export default function AdminSettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="dummy">Dummy / Lokal (Simulasi UI)</SelectItem>
+                      <SelectItem value="local">Lokal / Sandbox UI</SelectItem>
                       <SelectItem value="sandbox">Sandbox (Testing Midtrans)</SelectItem>
                       <SelectItem value="production">Production (Live)</SelectItem>
                     </SelectContent>

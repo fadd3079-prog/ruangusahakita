@@ -40,12 +40,12 @@ import {
   CreatorGrid,
   type CatalogCreator,
 } from "@/features/catalog/components/creator-grid";
-import type { DummyAvailabilityStatus } from "@/lib/dummy";
+import type { PublicAvailabilityStatus } from "@/features/catalog/data/catalog-types";
 import { cn } from "@/lib/utils";
 
 type PriceFilterValue = "all" | "under_150" | "150_250" | "over_250";
 type RatingFilterValue = "all" | "4_8" | "4_7";
-type AvailabilityFilterValue = DummyAvailabilityStatus | "all";
+type AvailabilityFilterValue = PublicAvailabilityStatus | "all";
 
 type CatalogFilterProps = {
   items: readonly CatalogCreator[];

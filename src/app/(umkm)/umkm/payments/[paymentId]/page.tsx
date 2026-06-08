@@ -27,7 +27,7 @@ const errorMessages = {
   payment_amount_mismatch:
     "Nominal pembayaran tidak cocok dengan total pesanan. Hubungi admin untuk pengecekan.",
   payment_not_payable:
-    "Pembayaran ini tidak dapat disimulasikan karena statusnya sudah berubah atau pesanan tidak lagi menunggu pembayaran.",
+    "Pembayaran ini tidak dapat diproses melalui alur sandbox karena statusnya sudah berubah atau pesanan tidak lagi menunggu pembayaran.",
   payment_update: "Pembayaran belum bisa diproses saat ini.",
 };
 
@@ -54,7 +54,7 @@ export async function generateMetadata({
   return {
     title: `${detail.payment.payment_number} - Pembayaran Ruang Usaha Kita`,
     description:
-      "Detail pembayaran dummy untuk paket jasa digital UMKM, termasuk invoice, status pembayaran, dan ringkasan pesanan.",
+      "Detail pembayaran sandbox untuk paket jasa digital UMKM, termasuk invoice, status pembayaran, dan ringkasan pesanan.",
   };
 }
 

@@ -1,8 +1,8 @@
 import { CreatorCard } from "@/components/cards/creator-card";
-import type { DummyCreatorProfile } from "@/lib/dummy";
+import type { PublicCreatorProfile } from "@/features/catalog/data/catalog-types";
 
 export type CatalogCreator = {
-  readonly creator: DummyCreatorProfile;
+  readonly creator: PublicCreatorProfile;
   readonly primaryService: {
     readonly id: string;
     readonly title: string;

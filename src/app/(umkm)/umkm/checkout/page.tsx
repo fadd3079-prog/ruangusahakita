@@ -86,7 +86,7 @@ export default async function UmkmCheckoutPage({
                   {[
                     "Pastikan detail layanan sudah sesuai.",
                     "Isi brief campaign secara natural dan jelas.",
-                    "Order dan pembayaran pending dummy dibuat setelah brief siap.",
+                    "Order dan pembayaran pending sandbox dibuat setelah brief siap.",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <CheckCircle2
@@ -149,7 +149,7 @@ function CreateOrderPanel({ hasBrief }: { hasBrief: boolean }) {
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/72">
             Sistem akan menghitung ulang total dari database, membuat status
-            pesanan awal, pembayaran pending dummy, dan invoice placeholder.
+            pesanan awal, pembayaran pending sandbox, dan invoice placeholder.
           </p>
         </div>
       </div>

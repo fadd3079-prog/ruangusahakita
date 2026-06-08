@@ -1,61 +1,137 @@
 import type { Metadata } from "next";
-import { PlusCircle, Image as ImageIcon, ExternalLink } from "lucide-react";
+import { ExternalLink, Image as ImageIcon, PlusCircle, Save, Trash2 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { dummyCreators, dummyPortfolios } from "@/lib/dummy";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  createCreatorPortfolioAction,
+  deleteCreatorPortfolioAction,
+  updateCreatorPortfolioAction,
+} from "@/features/creator/portfolio/actions/creator-portfolio-actions";
+import {
+  getCurrentCreatorPortfolioData,
+  type CreatorPortfolioCategory,
+  type CreatorPortfolioItem,
+} from "@/features/creator/portfolio/data/creator-portfolio-queries";
 
 export const metadata: Metadata = {
   title: "Portofolio Saya — Ruang Usaha Kita",
   description: "Kelola portofolio karya terbaik Anda.",
 };
 
-export default function CreatorPortfolioPage() {
-  const currentCreator = dummyCreators.find((creator) => creator.id === "creator_003") ?? dummyCreators[0];
-  const portfolios = dummyPortfolios.filter(
-    (port) => port.creatorId === currentCreator.id
-  );
+type CreatorPortfolioPageProps = {
+  searchParams: Promise<{
+    created?: string;
+    deleted?: string;
+    error?: string;
+    updated?: string;
+  }>;
+};
+
+const errorMessages = {
+  delete: "Portofolio belum bisa dihapus.",
+  profile: "Profil kreator belum tersedia.",
+  required: "Judul portofolio wajib diisi.",
+  save: "Portofolio belum bisa disimpan.",
+  unauthorized: "Akun ini tidak memiliki akses kreator aktif.",
+};
+
+function getErrorMessage(error?: string) {
+  if (!error) {
+    return null;
+  }
+
+  return errorMessages[error as keyof typeof errorMessages] ?? "Terjadi kendala pada portofolio.";
+}
+
+function getSuccessMessage(params: Awaited<CreatorPortfolioPageProps["searchParams"]>) {
+  if (params.created) {
+    return "Portofolio baru berhasil ditambahkan.";
+  }
+
+  if (params.updated) {
+    return "Portofolio berhasil diperbarui.";
+  }
+
+  if (params.deleted) {
+    return "Portofolio berhasil dihapus dari daftar aktif.";
+  }
+
+  return null;
+}
+
+export default async function CreatorPortfolioPage({
+  searchParams,
+}: CreatorPortfolioPageProps) {
+  const [params, data] = await Promise.all([
+    searchParams,
+    getCurrentCreatorPortfolioData(),
+  ]);
+  const errorMessage = getErrorMessage(params.error);
+  const successMessage = getSuccessMessage(params);
 
   return (
     <PageContainer>
       <div className="space-y-8 pb-10">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border pb-6">
+        <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-end">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">Portofolio Saya</h1>
-            <p className="mt-2 text-muted-foreground">Tampilkan karya terbaik Anda untuk meyakinkan klien UMKM.</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">
+              Portofolio Saya
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              Tampilkan karya terbaik Anda untuk membantu UMKM menilai gaya dan kualitas pekerjaan.
+            </p>
           </div>
-          <Button>
-            <PlusCircle className="mr-2 size-4" />
-            Tambah Portofolio
-          </Button>
         </div>
 
-        {portfolios.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {portfolios.map(item => (
-              <div key={item.id} className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm hover:shadow-md transition-all">
-                <div className="aspect-[4/3] w-full bg-muted/50 flex items-center justify-center relative overflow-hidden">
-                  <ImageIcon className="size-10 text-muted-foreground/30" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button variant="secondary" size="sm" className="gap-2">
-                      <ExternalLink className="size-4" />
-                      Lihat Detail
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-4 space-y-2">
-                  <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-semibold text-foreground line-clamp-1">{item.title}</h3>
-                    {item.isFeatured && (
-                      <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                        Featured
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Klien: {item.clientName}</p>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mt-2">{item.description}</p>
-                </div>
-              </div>
+        {successMessage ? (
+          <Alert>
+            <AlertTitle>Perubahan tersimpan</AlertTitle>
+            <AlertDescription>{successMessage}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {errorMessage ? (
+          <Alert variant="destructive">
+            <AlertTitle>Portofolio belum diproses</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <section className="rounded-3xl border border-border/70 bg-card p-6 shadow-[var(--shadow-soft)]">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary">
+              <PlusCircle className="size-5" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">
+                Tambah portofolio
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Gunakan URL gambar atau link eksternal. Upload file akan masuk fase storage.
+              </p>
+            </div>
+          </div>
+          <PortfolioForm
+            action={createCreatorPortfolioAction}
+            categories={data.categories}
+            submitLabel="Tambah Portofolio"
+          />
+        </section>
+
+        {data.portfolios.length > 0 ? (
+          <div className="grid gap-6 xl:grid-cols-2">
+            {data.portfolios.map((item) => (
+              <PortfolioEditor
+                key={item.id}
+                categories={data.categories}
+                item={item}
+              />
             ))}
           </div>
         ) : (
@@ -66,16 +142,185 @@ export default function CreatorPortfolioPage() {
             <h2 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
               Belum ada portofolio
             </h2>
-            <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-              Unggah contoh hasil konten digital Anda agar UMKM tahu gaya dan kualitas pekerjaan Anda.
+            <p className="mx-auto mt-2 max-w-md text-muted-foreground">
+              Tambahkan contoh hasil konten digital agar UMKM dapat melihat gaya kerja Anda.
             </p>
-            <Button className="mt-6">
-              <PlusCircle className="mr-2 size-4" />
-              Tambah Karya Pertama
-            </Button>
           </section>
         )}
       </div>
     </PageContainer>
+  );
+}
+
+function PortfolioEditor({
+  categories,
+  item,
+}: {
+  categories: readonly CreatorPortfolioCategory[];
+  item: CreatorPortfolioItem;
+}) {
+  return (
+    <article className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
+      <div className="grid gap-0 lg:grid-cols-[220px_1fr]">
+        <div
+          className="grid min-h-56 place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
+          style={
+            item.thumbnail_url
+              ? { backgroundImage: `url(${item.thumbnail_url})` }
+              : undefined
+          }
+        >
+          {item.thumbnail_url ? null : <ImageIcon className="size-10 opacity-40" />}
+        </div>
+        <div className="space-y-5 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                {item.title}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {item.category?.name ?? "Kategori belum dipilih"}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {item.is_featured ? (
+                <Badge variant="secondary" className="rounded-lg">
+                  Unggulan
+                </Badge>
+              ) : null}
+              {item.external_url ? (
+                <Button asChild size="sm" variant="outline">
+                  <a href={item.external_url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="size-4" />
+                    Buka
+                  </a>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          <PortfolioForm
+            action={updateCreatorPortfolioAction}
+            categories={categories}
+            item={item}
+            submitLabel="Simpan Perubahan"
+          />
+
+          <form action={deleteCreatorPortfolioAction}>
+            <input type="hidden" name="portfolioId" value={item.id} />
+            <Button type="submit" variant="outline" className="text-destructive">
+              <Trash2 className="size-4" />
+              Hapus dari portofolio aktif
+            </Button>
+          </form>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function PortfolioForm({
+  action,
+  categories,
+  item,
+  submitLabel,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  categories: readonly CreatorPortfolioCategory[];
+  item?: CreatorPortfolioItem;
+  submitLabel: string;
+}) {
+  return (
+    <form action={action} className="space-y-5">
+      {item ? <input type="hidden" name="portfolioId" value={item.id} /> : null}
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field id="title" label="Judul" required value={item?.title} />
+        <div className="space-y-2">
+          <Label htmlFor={item ? `category-${item.id}` : "categoryId"}>
+            Kategori
+          </Label>
+          <select
+            id={item ? `category-${item.id}` : "categoryId"}
+            name="categoryId"
+            defaultValue={item?.category_id ?? ""}
+            className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <option value="">Belum dipilih</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={item ? `description-${item.id}` : "description"}>
+          Deskripsi
+        </Label>
+        <Textarea
+          id={item ? `description-${item.id}` : "description"}
+          name="description"
+          defaultValue={item?.description ?? ""}
+          className="min-h-24 resize-y"
+        />
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field id="clientType" label="Jenis klien" value={item?.client_type} />
+        <Field id="thumbnailUrl" label="URL thumbnail" value={item?.thumbnail_url} />
+        <Field id="mediaUrl" label="URL media" value={item?.media_url} />
+        <Field id="externalUrl" label="URL eksternal" value={item?.external_url} />
+        <Field id="sortOrder" label="Urutan" type="number" value={String(item?.sort_order ?? 0)} />
+        <div className="space-y-2">
+          <Label htmlFor={item ? `isFeatured-${item.id}` : "isFeatured"}>
+            Status unggulan
+          </Label>
+          <select
+            id={item ? `isFeatured-${item.id}` : "isFeatured"}
+            name="isFeatured"
+            defaultValue={item?.is_featured ? "true" : "false"}
+            className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <option value="false">Biasa</option>
+            <option value="true">Unggulan</option>
+          </select>
+        </div>
+      </div>
+
+      <Button type="submit">
+        <Save className="size-4" />
+        {submitLabel}
+      </Button>
+    </form>
+  );
+}
+
+function Field({
+  id,
+  label,
+  required,
+  type = "text",
+  value,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  type?: string;
+  value?: string | null;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        name={id}
+        required={required}
+        type={type}
+        defaultValue={value ?? ""}
+        className="h-11"
+      />
+    </div>
   );
 }

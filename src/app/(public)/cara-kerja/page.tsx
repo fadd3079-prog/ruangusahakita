@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Search, Package, FileText, CreditCard, PenTool, Star, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Search, Layers3, FileText, CreditCard, PenTool, Star, ArrowRight, CheckCircle2 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ const steps = [
     description: "Jelajahi katalog kreator terverifikasi. Filter berdasarkan niche, rating, lokasi, atau harga untuk menemukan mitra yang tepat untuk campaign Anda."
   },
   {
-    icon: Package,
+    icon: Layers3,
     title: "2. Memilih Paket Jasa",
     description: "Pilih paket layanan digital yang sesuai (Basic, Standard, Premium). Tiap paket memiliki kejelasan output (deliverables) dan estimasi pengerjaan."
   },
@@ -29,8 +29,8 @@ const steps = [
   },
   {
     icon: CreditCard,
-    title: "4. Pembayaran (Simulasi)",
-    description: "UMKM melakukan pembayaran melalui sistem yang aman. Dana ditahan oleh sistem (escrow) sampai hasil konten disetujui. (Tahap ini masih menggunakan dummy gateway)."
+    title: "4. Pembayaran Sandbox",
+    description: "UMKM melakukan pembayaran melalui sistem yang aman. Dana ditahan oleh sistem sampai hasil konten disetujui. Pada tahap MVP, alur ini masih memakai mode sandbox."
   },
   {
     icon: PenTool,
@@ -47,7 +47,6 @@ const steps = [
 export default function CaraKerjaPage() {
   return (
     <main className="min-h-screen bg-background">
-      {/* Hero Section */}
       <section className="relative overflow-hidden bg-brand-navy pt-24 pb-32 text-white">
         <div className="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-teal via-brand-navy to-transparent"></div>
         <PageContainer className="relative z-10 text-center">
@@ -61,7 +60,6 @@ export default function CaraKerjaPage() {
         </PageContainer>
       </section>
 
-      {/* Main Flow Section */}
       <section className="py-20">
         <PageContainer>
           <div className="text-center mb-16">
@@ -85,7 +83,6 @@ export default function CaraKerjaPage() {
         </PageContainer>
       </section>
 
-      {/* Roles Section */}
       <section className="py-24 bg-surface-soft border-y border-border/50">
         <PageContainer>
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
@@ -142,7 +139,6 @@ export default function CaraKerjaPage() {
         </PageContainer>
       </section>
 
-      {/* Final CTA */}
       <section className="py-24 text-center">
         <PageContainer>
           <h2 className="text-3xl font-bold tracking-tight text-brand-navy max-w-2xl mx-auto">

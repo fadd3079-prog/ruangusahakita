@@ -369,8 +369,8 @@ function CreatorPaymentCard({ data }: { data: CreatorOrderDetail }) {
             Ringkasan order
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Order ini sudah melewati tahap pembayaran dummy dan siap diproses
-            sesuai status pesanan.
+            Order ini sudah melewati tahap pembayaran dan siap diproses sesuai
+            status pesanan.
           </p>
         </div>
       </div>

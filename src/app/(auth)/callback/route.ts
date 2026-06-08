@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+  getOnboardingPathByRole,
+  shouldStartOnboarding,
+} from "@/features/onboarding/lib/profile-completion";
 import { getDashboardPathByRole } from "@/lib/auth/guards";
 import type { UserRole } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
@@ -31,7 +35,7 @@ export async function GET(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, account_status")
+    .select("id, role, account_status, onboarding_completed, onboarding_skipped_at")
     .eq("id", user.id)
     .single();
 
@@ -43,6 +47,10 @@ export async function GET(request: Request) {
   if (profile.account_status !== "active") {
     await supabase.auth.signOut();
     return redirectTo(url.origin, "/login?error=inactive");
+  }
+
+  if (shouldStartOnboarding(profile)) {
+    return redirectTo(url.origin, getOnboardingPathByRole(profile.role as UserRole));
   }
 
   if (next && next.startsWith("/") && !next.startsWith("//")) {

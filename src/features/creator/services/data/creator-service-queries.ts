@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
-import { dummyServiceCategories } from "@/lib/dummy";
 
 type Tables = Database["public"]["Tables"];
 
@@ -69,21 +68,13 @@ export async function getCreatorServiceCategories() {
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return dummyServiceCategories.map((category) => ({
-        id: category.id,
-        name: category.name,
-        slug: category.slug,
-      }));
+    if (error || !data) {
+      return [];
     }
 
     return data;
   } catch {
-    return dummyServiceCategories.map((category) => ({
-      id: category.id,
-      name: category.name,
-      slug: category.slug,
-    }));
+    return [];
   }
 }
 

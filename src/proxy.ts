@@ -3,8 +3,11 @@ import { createServerClient } from "@supabase/ssr";
 
 type AppRole = "admin" | "creator" | "umkm";
 type AuthProfile = {
+  id: string;
   role: AppRole;
   account_status: string;
+  onboarding_completed: boolean;
+  onboarding_skipped_at: string | null;
 };
 
 const authRoutes = new Set(["/login", "/register", "/forgot-password"]);
@@ -13,6 +16,21 @@ function getDashboardPath(role: AppRole) {
   if (role === "admin") return "/admin/dashboard";
   if (role === "creator") return "/creator/dashboard";
   return "/umkm/dashboard";
+}
+
+function getOnboardingPath(role: AppRole) {
+  if (role === "creator") return "/creator/onboarding";
+  if (role === "umkm") return "/umkm/onboarding";
+  return getDashboardPath(role);
+}
+
+function shouldStartOnboarding(profile: AuthProfile) {
+  return (
+    profile.role !== "admin" &&
+    profile.account_status === "active" &&
+    !profile.onboarding_completed &&
+    !profile.onboarding_skipped_at
+  );
 }
 
 function isProtectedRoute(path: string) {
@@ -90,12 +108,16 @@ export async function proxy(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, account_status")
+    .select("id, role, account_status, onboarding_completed, onboarding_skipped_at")
     .eq("id", user.id)
     .single<AuthProfile>();
 
   if (authRoutes.has(path)) {
     if (profile?.account_status === "active") {
+      if (shouldStartOnboarding(profile)) {
+        return redirectTo(getOnboardingPath(profile.role));
+      }
+
       return redirectTo(getDashboardPath(profile.role));
     }
 
@@ -113,7 +135,21 @@ export async function proxy(request: NextRequest) {
   const requiredRole = getRequiredRole(path);
 
   if (requiredRole && profile.role !== requiredRole) {
+    if (shouldStartOnboarding(profile)) {
+      return redirectTo(getOnboardingPath(profile.role));
+    }
+
     return redirectTo(getDashboardPath(profile.role));
+  }
+
+  const onboardingPath = getOnboardingPath(profile.role);
+
+  if (path === onboardingPath && profile.onboarding_completed) {
+    return redirectTo(getDashboardPath(profile.role));
+  }
+
+  if (path !== onboardingPath && shouldStartOnboarding(profile)) {
+    return redirectTo(onboardingPath);
   }
 
   return supabaseResponse;

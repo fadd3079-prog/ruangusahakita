@@ -180,8 +180,8 @@ function EmptyCreatorOrdersState() {
         Belum ada order berbayar
       </h2>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-        Order akan muncul setelah UMKM menyelesaikan pembayaran dummy dan status
-        pesanan menunggu konfirmasi kreator.
+        Order akan muncul setelah pembayaran UMKM berhasil dan status pesanan
+        menunggu konfirmasi kreator.
       </p>
       <Button asChild className="mt-5">
         <Link href="/creator/dashboard">Kembali ke Dashboard</Link>

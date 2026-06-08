@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, FileText, Info, ReceiptText, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { markDummyPaymentAsPaid } from "@/features/payments/actions/payment-actions";
+import { markSandboxPaymentAsPaid } from "@/features/payments/actions/payment-actions";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import type { CurrentUmkmPaymentDetail } from "@/features/payments/data/payment-queries";
@@ -23,7 +23,7 @@ export function PaymentDetailSummary({ detail }: PaymentDetailSummaryProps) {
         <div>
           <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
             <ReceiptText className="size-4" aria-hidden="true" />
-            Detail pembayaran dummy
+            Detail pembayaran sandbox
           </p>
           <h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
             {detail.payment.payment_number}
@@ -118,16 +118,17 @@ export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
         <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
           <p className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
             <Info className="mt-1 size-4 shrink-0 text-primary" aria-hidden="true" />
-            Pembayaran pada halaman ini masih dummy. Status paid hanya dibuat
-            lewat Server Action, bukan perubahan langsung dari client.
+            Pembayaran pada halaman ini masih memakai alur sandbox. Status paid
+            hanya dibuat lewat Server Action, bukan perubahan langsung dari
+            client.
           </p>
         </div>
 
         <div className="mt-5 grid gap-2">
-          <form action={markDummyPaymentAsPaid}>
+          <form action={markSandboxPaymentAsPaid}>
             <input type="hidden" name="paymentId" value={detail.payment.id} />
             <Button type="submit" disabled={!canPay} className="h-11 w-full">
-              Simulasikan Pembayaran Berhasil
+              Tandai Pembayaran Berhasil
             </Button>
           </form>
           <Button asChild variant="outline" className="h-11 w-full">
@@ -140,8 +141,8 @@ export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
 
         {!canPay ? (
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            Simulasi hanya tersedia untuk payment pending pada pesanan yang masih
-            menunggu pembayaran dan nominalnya sesuai.
+            Aksi sandbox hanya tersedia untuk payment pending pada pesanan yang
+            masih menunggu pembayaran dan nominalnya sesuai.
           </p>
         ) : null}
       </div>
@@ -165,7 +166,7 @@ export function PaymentContextCard({ detail }: PaymentDetailSummaryProps) {
       </div>
       <p className="mt-4 text-sm leading-6 text-muted-foreground">
         Pada integrasi nyata, perubahan status pembayaran hanya boleh berasal
-        dari server atau webhook. Halaman ini memakai simulasi server-side agar
+        dari server atau webhook. Halaman ini memakai alur sandbox server-side agar
         pola keamanan tetap benar.
       </p>
     </section>

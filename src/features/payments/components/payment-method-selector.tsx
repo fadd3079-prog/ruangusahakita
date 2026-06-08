@@ -21,27 +21,27 @@ const paymentMethodOptions: readonly {
   method: PaymentMethod;
 }[] = [
   {
-    description: "Simulasi kode bayar QR untuk alur pembayaran cepat.",
+    description: "Kode bayar QR untuk alur pembayaran sandbox.",
     icon: QrCode,
     method: "qris",
   },
   {
-    description: "Simulasi nomor virtual untuk pembayaran dummy.",
+    description: "Nomor virtual untuk alur pembayaran sandbox.",
     icon: CreditCard,
     method: "virtual_account",
   },
   {
-    description: "Simulasi instruksi transfer untuk kebutuhan presentasi.",
+    description: "Instruksi transfer untuk kebutuhan presentasi.",
     icon: Building2,
     method: "bank_transfer",
   },
   {
-    description: "Simulasi dompet digital untuk tahap MVP.",
+    description: "Dompet digital untuk tahap MVP.",
     icon: WalletCards,
     method: "ewallet",
   },
   {
-    description: "Simulasi verifikasi manual untuk pembayaran dummy.",
+    description: "Verifikasi manual untuk alur pembayaran sandbox.",
     icon: WalletCards,
     method: "manual",
   },
@@ -64,7 +64,7 @@ export function PaymentMethodSelector({
         id="payment-method-selector-title"
         className="mt-2 text-2xl font-semibold tracking-tight text-foreground"
       >
-        Pilih metode simulasi
+        Pilih metode sandbox
       </h2>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
         Pilihan ini hanya tampilan UI. Integrasi gateway pembayaran akan

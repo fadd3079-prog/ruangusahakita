@@ -6,11 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { DummyReview, DummyUmkmProfile } from "@/lib/dummy";
+import type { PublicReview, PublicUmkmProfile } from "@/features/catalog/data/catalog-types";
 
 type ReviewCardProps = {
-  review: DummyReview;
-  umkm?: DummyUmkmProfile;
+  review: PublicReview;
+  umkm?: PublicUmkmProfile;
 };
 
 export function ReviewCard({ review, umkm }: ReviewCardProps) {

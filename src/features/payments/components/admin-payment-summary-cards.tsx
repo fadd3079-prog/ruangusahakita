@@ -57,7 +57,7 @@ export function AdminPaymentSummaryCards({
         accent="dark"
         icon={TrendingUp}
         label="Platform revenue"
-        meta="Dari dummy reports"
+        meta="Dari data pembayaran dan pesanan"
         value={formatCurrency(platformRevenue)}
       />
     </section>

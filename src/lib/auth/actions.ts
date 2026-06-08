@@ -6,6 +6,10 @@ import { createClient } from "../supabase/server";
 import { createAdminClient } from "../supabase/admin";
 import { getDashboardPathByRole } from "./guards";
 import type { UserRole } from "./roles";
+import {
+  getOnboardingPathByRole,
+  shouldStartOnboarding,
+} from "@/features/onboarding/lib/profile-completion";
 
 type PublicRegisterRole = Exclude<UserRole, "admin">;
 type RegisterStep =
@@ -77,7 +81,7 @@ export async function loginAction(formData: FormData) {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role, account_status")
+    .select("id, role, account_status, onboarding_completed, onboarding_skipped_at")
     .eq("id", data.user.id)
     .single();
 
@@ -97,6 +101,10 @@ export async function loginAction(formData: FormData) {
     .eq("id", data.user.id);
 
   revalidatePath("/", "layout");
+  if (shouldStartOnboarding(profile)) {
+    redirect(getOnboardingPathByRole(profile.role));
+  }
+
   redirect(getDashboardPathByRole(profile.role));
 }
 
@@ -205,7 +213,7 @@ export async function registerAction(formData: FormData) {
 
   revalidatePath("/", "layout");
 
-  redirect(getDashboardPathByRole(role));
+  redirect(getOnboardingPathByRole(role));
 }
 
 export async function logoutAction() {

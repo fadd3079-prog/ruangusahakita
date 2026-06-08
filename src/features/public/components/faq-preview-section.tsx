@@ -23,7 +23,7 @@ const faqs = [
   {
     question: "Apakah pembayaran sudah langsung menggunakan payment gateway?",
     answer:
-      "Pada tahap MVP, pembayaran dapat menggunakan simulasi atau sandbox. Integrasi payment gateway seperti Midtrans disiapkan sebagai pengembangan lanjutan.",
+      "Pada tahap MVP, pembayaran menggunakan alur sandbox. Integrasi payment gateway seperti Midtrans disiapkan sebagai pengembangan lanjutan.",
   },
   {
     question: "Bagaimana jika hasil konten perlu direvisi?",

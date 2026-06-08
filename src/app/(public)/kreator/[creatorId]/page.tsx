@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreatorProfileHeader } from "@/features/creators/components/creator-profile-header";
 import { getPublicCreatorDetail } from "@/features/catalog/data/catalog-queries";
-import type { DummyPortfolioItem, DummyServicePackage } from "@/lib/dummy/types";
+import type { PublicPortfolioItem, PublicServicePackage } from "@/features/catalog/data/catalog-types";
 
 type CreatorPageProps = {
   params: Promise<{
@@ -120,7 +120,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
           />
           {portfolios.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {portfolios.map((portfolio: DummyPortfolioItem) => (
+              {portfolios.map((portfolio: PublicPortfolioItem) => (
                 <PortfolioCard
                   key={portfolio.id}
                   portfolio={portfolio}
@@ -146,7 +146,7 @@ export default async function CreatorDetailPage({ params }: CreatorPageProps) {
           />
           {services.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {services.map((service: DummyServicePackage) => (
+              {services.map((service: PublicServicePackage) => (
                 <ServiceCard
                   key={service.id}
                   service={service}

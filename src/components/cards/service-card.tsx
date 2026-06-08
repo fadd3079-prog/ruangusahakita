@@ -11,11 +11,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { DummyServiceCategory, DummyServicePackage } from "@/lib/dummy";
+import type { PublicServiceCategory, PublicServicePackage } from "@/features/catalog/data/catalog-types";
 
 type ServiceCardProps = {
-  service: DummyServicePackage;
-  category?: DummyServiceCategory;
+  service: PublicServicePackage;
+  category?: PublicServiceCategory;
   ctaLabel?: string;
 };
 

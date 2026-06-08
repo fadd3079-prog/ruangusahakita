@@ -134,7 +134,7 @@ export function CampaignBriefForm({
           <TextField
             id="deadline"
             label="Deadline"
-            helperText="Tanggal ini hanya tampil sebagai dummy data pada tahap fondasi."
+            helperText="Tanggal ini disimpan sebagai arahan waktu untuk kreator."
             type="date"
             defaultValue={brief?.deadline ?? ""}
           />
@@ -160,8 +160,8 @@ export function CampaignBriefForm({
                     Aset campaign akan ditambahkan pada tahap integrasi storage.
                   </p>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Untuk sementara, contoh aset dari dummy data hanya menjadi
-                    referensi visual bagi halaman checkout.
+                    Untuk sementara, tuliskan tautan aset atau referensi pada
+                    catatan tambahan sampai integrasi storage tersedia.
                   </p>
                 </div>
               </div>

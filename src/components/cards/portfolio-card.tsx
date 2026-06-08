@@ -7,11 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { DummyPortfolioItem, DummyServiceCategory } from "@/lib/dummy";
+import type { PublicPortfolioItem, PublicServiceCategory } from "@/features/catalog/data/catalog-types";
 
 type PortfolioCardProps = {
-  portfolio: DummyPortfolioItem;
-  category?: DummyServiceCategory;
+  portfolio: PublicPortfolioItem;
+  category?: PublicServiceCategory;
 };
 
 export function PortfolioCard({ portfolio, category }: PortfolioCardProps) {

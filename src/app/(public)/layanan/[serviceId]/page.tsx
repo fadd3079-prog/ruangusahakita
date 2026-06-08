@@ -13,7 +13,7 @@ import { ServiceDetailHeader } from "@/features/services/components/service-deta
 import { ServiceTierOptions } from "@/features/services/components/service-tier-options";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { getPublicServiceDetail } from "@/features/catalog/data/catalog-queries";
-import type { DummyServiceAddon, DummyPortfolioItem } from "@/lib/dummy/types";
+import type { PublicServiceAddon, PublicPortfolioItem } from "@/features/catalog/data/catalog-types";
 
 type ServicePageProps = {
   params: Promise<{
@@ -122,7 +122,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               </p>
               {addons.length > 0 ? (
                 <div className="mt-5 space-y-3">
-                  {addons.map((addon: DummyServiceAddon) => (
+                  {addons.map((addon: PublicServiceAddon) => (
                     <div
                       key={addon.id}
                       className="rounded-lg border border-border/70 bg-muted/35 p-3"
@@ -160,7 +160,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           />
           {portfolios.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {portfolios.map((portfolio: DummyPortfolioItem) => (
+              {portfolios.map((portfolio: PublicPortfolioItem) => (
                 <PortfolioCard
                   key={portfolio.id}
                   portfolio={portfolio}

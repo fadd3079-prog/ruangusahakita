@@ -35,11 +35,9 @@ import {
 import {
   getAdminDashboardOverview,
   type DashboardComplaintStatus,
-  type DashboardPaymentStatus,
 } from "@/features/dashboard/data/dashboard-queries";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
-import type { DummyPaymentStatus } from "@/lib/dummy";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 import { cn } from "@/lib/utils";
@@ -67,10 +65,6 @@ const complaintStatusClasses = {
   waiting_creator: "border-cyan-200 bg-cyan-50 text-cyan-700",
   waiting_umkm: "border-indigo-200 bg-indigo-50 text-indigo-700",
 } satisfies Record<DashboardComplaintStatus, string>;
-
-function getPaymentBadgeStatus(status: DashboardPaymentStatus): DummyPaymentStatus {
-  return status === "partially_refunded" ? "refunded" : status;
-}
 
 function getPaymentMethodLabel(value: string | null) {
   if (!value) {
@@ -276,7 +270,7 @@ export default async function AdminDashboardPage() {
                         </TableCell>
                         <TableCell>
                           <PaymentStatusBadge
-                            status={getPaymentBadgeStatus(payment.status)}
+                            status={payment.status}
                           />
                         </TableCell>
                         <TableCell className="text-right font-medium">

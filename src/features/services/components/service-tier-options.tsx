@@ -8,10 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { DummyServiceTier } from "@/lib/dummy";
+import type { PublicServiceTier } from "@/features/catalog/data/catalog-types";
 
 type ServiceTierOptionsProps = {
-  tiers: readonly DummyServiceTier[];
+  tiers: readonly PublicServiceTier[];
 };
 
 export function ServiceTierOptions({ tiers }: ServiceTierOptionsProps) {

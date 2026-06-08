@@ -23,7 +23,10 @@ import {
   type DashboardMetric,
 } from "@/features/dashboard/components/dashboard-overview";
 import { getCreatorDashboardOverview } from "@/features/dashboard/data/dashboard-queries";
+import { ProfileCompletionCard } from "@/features/onboarding/components/profile-completion-card";
+import { isCreatorProfileComplete } from "@/features/onboarding/lib/profile-completion";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
+import { getCurrentAccountSummary } from "@/lib/auth/account";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 
@@ -58,8 +61,14 @@ function getAvailabilityLabel(value: string | null | undefined) {
 }
 
 export default async function CreatorDashboardPage() {
-  const dashboard = await getCreatorDashboardOverview();
+  const [dashboard, account] = await Promise.all([
+    getCreatorDashboardOverview(),
+    getCurrentAccountSummary(),
+  ]);
   const currentCreator = dashboard.profile;
+  const profileComplete =
+    Boolean(account?.onboardingCompleted) &&
+    isCreatorProfileComplete(currentCreator);
   const displayName = currentCreator?.display_name ?? "Profil kreator belum lengkap";
   const niche = currentCreator?.niche ?? "Belum diisi";
   const completedOrders =
@@ -214,6 +223,14 @@ export default async function CreatorDashboardPage() {
             },
           ]}
         />
+
+        {!profileComplete ? (
+          <ProfileCompletionCard
+            title="Profil kreator belum lengkap"
+            description="Lengkapi niche, bio, lokasi, dan ketersediaan agar profil kreator siap dinilai UMKM. Profil yang belum lengkap tidak dianggap siap tampil di katalog publik."
+            href="/creator/onboarding"
+          />
+        ) : null}
 
         <DashboardMetricGrid metrics={metrics} />
 

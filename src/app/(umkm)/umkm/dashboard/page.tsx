@@ -27,11 +27,12 @@ import {
 } from "@/features/dashboard/components/dashboard-overview";
 import {
   getUmkmDashboardOverview,
-  type DashboardPaymentStatus,
 } from "@/features/dashboard/data/dashboard-queries";
+import { ProfileCompletionCard } from "@/features/onboarding/components/profile-completion-card";
+import { isUmkmProfileComplete } from "@/features/onboarding/lib/profile-completion";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
-import type { DummyPaymentStatus } from "@/lib/dummy";
+import { getCurrentAccountSummary } from "@/lib/auth/account";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 
@@ -45,16 +46,15 @@ function formatOptionalDate(value: string | null) {
   return value ? formatDate(value) : "Belum diatur";
 }
 
-function getPaymentBadgeStatus(status: DashboardPaymentStatus): DummyPaymentStatus {
-  return status === "partially_refunded" ? "refunded" : status;
-}
-
 export default async function UmkmDashboardPage() {
-  const [dashboard, catalog] = await Promise.all([
+  const [dashboard, catalog, account] = await Promise.all([
     getUmkmDashboardOverview(),
     getPublicCatalogData(),
+    getCurrentAccountSummary(),
   ]);
   const currentUmkm = dashboard.profile;
+  const profileComplete =
+    Boolean(account?.onboardingCompleted) && isUmkmProfileComplete(currentUmkm);
   const businessName = currentUmkm?.business_name ?? "Profil UMKM belum lengkap";
   const businessCategory = currentUmkm?.business_category ?? "Belum diisi";
   const city = currentUmkm?.city ?? "Belum diisi";
@@ -136,7 +136,7 @@ export default async function UmkmDashboardPage() {
       meta: formatCurrency(order.totalAmount),
       href: `/umkm/orders/${order.id}`,
       badge: (
-        <PaymentStatusBadge status={getPaymentBadgeStatus(order.paymentStatus)} />
+        <PaymentStatusBadge status={order.paymentStatus} />
       ),
     }));
 
@@ -191,6 +191,14 @@ export default async function UmkmDashboardPage() {
             },
           ]}
         />
+
+        {!profileComplete ? (
+          <ProfileCompletionCard
+            title="Profil UMKM belum lengkap"
+            description="Lengkapi data usaha agar brief campaign lebih mudah dipahami kreator dan dashboard dapat memberi konteks yang lebih tepat."
+            href="/umkm/onboarding"
+          />
+        ) : null}
 
         <DashboardMetricGrid metrics={metrics} />
 

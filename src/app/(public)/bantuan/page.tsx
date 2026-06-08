@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Search, LifeBuoy, MessageCircle, HelpCircle, FileQuestion, FileText } from "lucide-react";
+import {
+  AlertTriangle,
+  FileQuestion,
+  FileText,
+  HelpCircle,
+  LifeBuoy,
+  MessageCircle,
+  Search,
+  ShieldCheck,
+  UserCircle,
+} from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
@@ -50,7 +60,7 @@ const faqs = [
       },
       {
         q: "Apakah data transaksi saya aman?",
-        a: "Ya. Saat ini platform menggunakan sistem pembayaran simulasi (dummy) untuk tujuan MVP. Di tahap produksi, kami akan bekerjasama dengan payment gateway resmi (misal: Midtrans)."
+        a: "Ya. Saat ini platform menggunakan alur pembayaran sandbox untuk tujuan MVP. Di tahap produksi, integrasi payment gateway resmi seperti Midtrans dapat disiapkan."
       }
     ]
   },
@@ -73,7 +83,6 @@ const faqs = [
 export default function BantuanPage() {
   return (
     <main className="min-h-screen bg-background pb-20">
-      {/* Hero Search Section */}
       <section className="bg-brand-navy pt-20 pb-24 text-center">
         <PageContainer>
           <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-white/10 text-white mb-6 backdrop-blur-sm">
@@ -98,7 +107,6 @@ export default function BantuanPage() {
 
       <section className="relative -mt-10">
         <PageContainer>
-          {/* Quick Links */}
           <div className="grid md:grid-cols-3 gap-6 mb-20 max-w-5xl mx-auto">
             <Link href="/cara-kerja" className="rounded-2xl bg-white p-6 shadow-md border border-border/50 hover:border-primary/30 transition-all flex items-center gap-4 group">
                <div className="bg-primary/10 p-3 rounded-xl text-primary group-hover:bg-primary group-hover:text-white transition-colors">
@@ -131,7 +139,6 @@ export default function BantuanPage() {
             </div>
           </div>
 
-          {/* FAQ Sections */}
           <div className="max-w-4xl mx-auto space-y-16">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-brand-navy tracking-tight">Pertanyaan Populer (FAQ)</h2>
@@ -161,7 +168,6 @@ export default function BantuanPage() {
             ))}
           </div>
 
-          {/* Support CTA */}
           <div className="mt-24 max-w-3xl mx-auto rounded-3xl bg-[linear-gradient(135deg,rgba(22,113,99,0.1),rgba(12,41,73,0.05))] border border-primary/20 p-8 sm:p-12 text-center">
              <h2 className="text-2xl font-bold text-brand-navy mb-4">Masih Butuh Bantuan?</h2>
              <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
@@ -178,6 +184,3 @@ export default function BantuanPage() {
     </main>
   );
 }
-
-// Icons for FAQ
-import { UserCircle, ShieldCheck, AlertTriangle } from "lucide-react";

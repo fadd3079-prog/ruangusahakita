@@ -28,7 +28,7 @@ function getText(formData: FormData, key: string) {
   return value.trim();
 }
 
-export async function markDummyPaymentAsPaid(formData: FormData) {
+export async function markSandboxPaymentAsPaid(formData: FormData) {
   const paymentId = getText(formData, "paymentId");
 
   if (!paymentId) {

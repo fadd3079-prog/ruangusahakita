@@ -13,12 +13,12 @@ import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type {
-  DummyAvailabilityStatus,
-  DummyCreatorProfile,
-  DummyServicePackage,
-} from "@/lib/dummy";
+  PublicAvailabilityStatus,
+  PublicCreatorProfile,
+  PublicServicePackage,
+} from "@/features/catalog/data/catalog-types";
 
-const availabilityLabels: Record<DummyAvailabilityStatus, string> = {
+const availabilityLabels: Record<PublicAvailabilityStatus, string> = {
   available: "Tersedia",
   limited: "Jadwal terbatas",
   busy: "Penuh sementara",
@@ -26,8 +26,8 @@ const availabilityLabels: Record<DummyAvailabilityStatus, string> = {
 };
 
 type CreatorProfileHeaderProps = {
-  creator: DummyCreatorProfile;
-  primaryService?: DummyServicePackage;
+  creator: PublicCreatorProfile;
+  primaryService?: PublicServicePackage;
 };
 
 export function CreatorProfileHeader({
