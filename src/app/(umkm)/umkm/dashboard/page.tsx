@@ -15,6 +15,7 @@ import { ServiceCard } from "@/components/cards/service-card";
 import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getPublicCatalogData } from "@/features/catalog/data/catalog-queries";
 import {
   DashboardHero,
   DashboardList,
@@ -30,11 +31,6 @@ import {
 } from "@/features/dashboard/data/dashboard-queries";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
-import {
-  dummyCreators,
-  dummyServiceCategories,
-  dummyServicePackages,
-} from "@/lib/dummy";
 import type { DummyPaymentStatus } from "@/lib/dummy";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
@@ -54,7 +50,10 @@ function getPaymentBadgeStatus(status: DashboardPaymentStatus): DummyPaymentStat
 }
 
 export default async function UmkmDashboardPage() {
-  const dashboard = await getUmkmDashboardOverview();
+  const [dashboard, catalog] = await Promise.all([
+    getUmkmDashboardOverview(),
+    getPublicCatalogData(),
+  ]);
   const currentUmkm = dashboard.profile;
   const businessName = currentUmkm?.business_name ?? "Profil UMKM belum lengkap";
   const businessCategory = currentUmkm?.business_category ?? "Belum diisi";
@@ -62,14 +61,14 @@ export default async function UmkmDashboardPage() {
   const activeBrief = dashboard.recentBriefs[0] ?? null;
 
   const categoryById = new Map(
-    dummyServiceCategories.map((category) => [category.id, category]),
+    catalog.categories.map((category) => [category.id, category]),
   );
-  const recommendedCreators = dummyCreators
+  const recommendedCreators = catalog.creators
     .filter((creator) => creator.isFeatured)
     .slice(0, 2)
     .map((creator) => {
       const service =
-        dummyServicePackages.find((item) => item.creatorId === creator.id) ?? null;
+        catalog.services.find((item) => item.creatorId === creator.id) ?? null;
       const category = service ? categoryById.get(service.categoryId) : null;
 
       return {
@@ -85,9 +84,11 @@ export default async function UmkmDashboardPage() {
             : null,
       };
     });
-  const recommendedServices = dummyServicePackages
+  const recommendedServices = catalog.services
     .filter((service) => service.isFeatured)
     .slice(0, 2);
+  const hasRecommendations =
+    recommendedCreators.length > 0 || recommendedServices.length > 0;
 
   const metrics: readonly DashboardMetric[] = [
     {
@@ -276,30 +277,37 @@ export default async function UmkmDashboardPage() {
 
         <DashboardPanel
           title="Rekomendasi kreator dan layanan digital"
-          description="Pilihan awal dari katalog untuk membantu UMKM memulai pencarian."
+          description="Pilihan awal dari katalog aktif untuk membantu UMKM memulai pencarian."
           action={{ href: "/katalog", label: "Jelajahi katalog" }}
         >
-          <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-            <div className="grid gap-5 sm:grid-cols-2">
-              {recommendedCreators.map((item) => (
-                <CreatorCard
-                  key={item.creator.id}
-                  creator={item.creator}
-                  primaryService={item.primaryService}
-                />
-              ))}
+          {hasRecommendations ? (
+            <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
+              <div className="grid gap-5 sm:grid-cols-2">
+                {recommendedCreators.map((item) => (
+                  <CreatorCard
+                    key={item.creator.id}
+                    creator={item.creator}
+                    primaryService={item.primaryService}
+                  />
+                ))}
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                {recommendedServices.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    category={categoryById.get(service.categoryId)}
+                    ctaLabel="Lihat paket"
+                  />
+                ))}
+              </div>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2">
-              {recommendedServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  category={categoryById.get(service.categoryId)}
-                  ctaLabel="Lihat paket"
-                />
-              ))}
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-5 text-sm text-muted-foreground">
+              Belum ada kreator atau paket jasa aktif yang terbaca dari katalog.
+              Jelajahi katalog kembali setelah data layanan tersedia.
             </div>
-          </div>
+          )}
         </DashboardPanel>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">

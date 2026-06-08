@@ -13,9 +13,6 @@ import { ServiceDetailHeader } from "@/features/services/components/service-deta
 import { ServiceTierOptions } from "@/features/services/components/service-tier-options";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { getPublicServiceDetail } from "@/features/catalog/data/catalog-queries";
-import {
-  dummyServicePackages,
-} from "@/lib/dummy";
 import type { DummyServiceAddon, DummyPortfolioItem } from "@/lib/dummy/types";
 
 type ServicePageProps = {
@@ -23,12 +20,6 @@ type ServicePageProps = {
     serviceId: string;
   }>;
 };
-
-export function generateStaticParams() {
-  return dummyServicePackages.map((service) => ({
-    serviceId: service.id,
-  }));
-}
 
 export async function generateMetadata({
   params,

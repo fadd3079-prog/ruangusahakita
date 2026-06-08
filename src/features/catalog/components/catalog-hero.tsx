@@ -46,8 +46,9 @@ export function CatalogHero({
             Anda.
           </p>
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
-            Data pada katalog ini masih menggunakan dummy data agar alur UI dapat
-            diuji sebelum integrasi Supabase dan pembayaran tahap lanjutan.
+            Katalog menampilkan data layanan digital yang sudah tersedia di
+            database. Jika belum ada kreator aktif, halaman akan menampilkan
+            empty state.
           </p>
         </div>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

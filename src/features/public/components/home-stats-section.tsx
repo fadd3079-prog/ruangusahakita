@@ -1,39 +1,33 @@
 import { PageContainer } from "@/components/layout/page-container";
-import {
-  dummyCreators,
-  dummyMonthlyReports,
-  dummyServiceCategories,
-} from "@/lib/dummy";
+import { getPublicCatalogData } from "@/features/catalog/data/catalog-queries";
 
-const simulatedOrders = dummyMonthlyReports.reduce(
-  (total, report) => total + report.orders,
-  0,
-);
+export async function HomeStatsSection() {
+  const { creators, services, categories } = await getPublicCatalogData();
+  const averageCreatorRating =
+    creators.length > 0
+      ? creators.reduce((total, creator) => total + creator.averageRating, 0) /
+        creators.length
+      : 0;
 
-const averageCreatorRating =
-  dummyCreators.reduce((total, creator) => total + creator.averageRating, 0) /
-  dummyCreators.length;
+  const stats = [
+    {
+      value: `${creators.length}`,
+      label: "Kreator aktif",
+    },
+    {
+      value: `${services.length}`,
+      label: "Paket jasa tersedia",
+    },
+    {
+      value: `${categories.length}`,
+      label: "Kategori layanan digital",
+    },
+    {
+      value: creators.length > 0 ? `${averageCreatorRating.toFixed(1)}/5.0` : "-",
+      label: "Rata-rata rating kreator",
+    },
+  ] as const;
 
-const stats = [
-  {
-    value: `${dummyCreators.length}`,
-    label: "Kreator terverifikasi",
-  },
-  {
-    value: `${simulatedOrders}+`,
-    label: "Pesanan berhasil diselesaikan",
-  },
-  {
-    value: `${dummyServiceCategories.length}`,
-    label: "Kategori layanan digital",
-  },
-  {
-    value: `${averageCreatorRating.toFixed(1)}/5.0`,
-    label: "Rata-rata kepuasan UMKM",
-  },
-] as const;
-
-export function HomeStatsSection() {
   return (
     <section className="border-b border-border/70 bg-muted/30 py-8">
       <PageContainer>

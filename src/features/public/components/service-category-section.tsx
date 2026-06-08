@@ -44,38 +44,50 @@ export async function ServiceCategorySection() {
             </Link>
           }
         />
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => {
-            const Icon = categoryIcons[category.iconName] ?? Megaphone;
+        {categories.length > 0 ? (
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {categories.map((category) => {
+              const Icon = categoryIcons[category.iconName] ?? Megaphone;
 
-            return (
-              <article
-                key={category.id}
-                className="group rounded-lg border border-border/70 bg-card p-5 shadow-xs transition-colors hover:border-primary/35"
-              >
-                <div className="grid size-11 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="size-5" aria-hidden="true" />
-                </div>
-                <h3 className="mt-5 text-lg font-semibold tracking-tight text-foreground">
-                  {category.name}
-                </h3>
-                <p className="mt-3 min-h-18 text-sm leading-6 text-muted-foreground">
-                  {category.description}
-                </p>
-                <Link
-                  href="/katalog"
-                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary"
+              return (
+                <article
+                  key={category.id}
+                  className="group rounded-lg border border-border/70 bg-card p-5 shadow-xs transition-colors hover:border-primary/35"
                 >
-                  Cari paket jasa
-                  <ArrowRight
-                    className="size-4 transition-transform group-hover:translate-x-0.5"
-                    aria-hidden="true"
-                  />
-                </Link>
-              </article>
-            );
-          })}
-        </div>
+                  <div className="grid size-11 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-semibold tracking-tight text-foreground">
+                    {category.name}
+                  </h3>
+                  <p className="mt-3 min-h-18 text-sm leading-6 text-muted-foreground">
+                    {category.description}
+                  </p>
+                  <Link
+                    href="/katalog"
+                    className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary"
+                  >
+                    Cari paket jasa
+                    <ArrowRight
+                      className="size-4 transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-lg border border-dashed border-border bg-card p-8 text-center">
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+              Kategori layanan belum tersedia.
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Kategori akan muncul setelah data layanan digital aktif tersedia
+              di Supabase.
+            </p>
+          </div>
+        )}
       </PageContainer>
     </section>
   );

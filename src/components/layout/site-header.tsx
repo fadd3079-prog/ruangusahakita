@@ -1,8 +1,17 @@
 import Link from "next/link";
 
-import { Menu } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetClose,
@@ -15,9 +24,19 @@ import {
 } from "@/components/ui/sheet";
 import { AppLogo } from "@/components/common/app-logo";
 import { PageContainer } from "@/components/layout/page-container";
+import { getCurrentAccountSummary } from "@/lib/auth/account";
+import { logoutAction } from "@/lib/auth/actions";
 import { authNavigation, publicNavigation } from "@/lib/constants/navigation";
 
-export function SiteHeader() {
+const roleLabels = {
+  umkm: "UMKM",
+  creator: "Kreator",
+  admin: "Admin",
+} as const;
+
+export async function SiteHeader() {
+  const account = await getCurrentAccountSummary();
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
       <PageContainer className="flex h-16 items-center justify-between py-0">
@@ -39,12 +58,62 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button asChild variant="ghost">
-            <Link href="/login">Masuk</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/register">Daftar</Link>
-          </Button>
+          {account ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 gap-3 rounded-full px-2 pr-4"
+                >
+                  <span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    {account.initials}
+                  </span>
+                  <span className="max-w-36 truncate text-sm font-semibold">
+                    {account.displayName}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuLabel>
+                  <span className="block truncate text-sm font-semibold">
+                    {account.displayName}
+                  </span>
+                  <span className="mt-1 block truncate text-xs font-normal text-muted-foreground">
+                    {account.email}
+                  </span>
+                </DropdownMenuLabel>
+                <div className="px-2 pb-2">
+                  <Badge variant="secondary">{roleLabels[account.role]}</Badge>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href={account.dashboardHref}>
+                    <LayoutDashboard className="size-4" aria-hidden="true" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <form action={logoutAction}>
+                  <DropdownMenuItem asChild>
+                    <button type="submit" className="w-full">
+                      <LogOut className="size-4" aria-hidden="true" />
+                      Keluar / ganti akun
+                    </button>
+                  </DropdownMenuItem>
+                </form>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button asChild variant="ghost">
+                <Link href="/login">Masuk</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/register">Daftar</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="md:hidden">
@@ -75,7 +144,18 @@ export function SiteHeader() {
                 aria-label="Navigasi mobile"
                 className="flex flex-col gap-1 px-3 py-2"
               >
-                {[...publicNavigation, ...authNavigation].map((item) => (
+                {[
+                  ...publicNavigation,
+                  ...(account
+                    ? [
+                        {
+                          title: "Dashboard",
+                          href: account.dashboardHref,
+                          icon: "dashboard" as const,
+                        },
+                      ]
+                    : authNavigation),
+                ].map((item) => (
                   <SheetClose key={item.href} asChild>
                     <Link
                       href={item.href}
@@ -88,16 +168,45 @@ export function SiteHeader() {
               </nav>
 
               <SheetFooter className="border-t p-5">
-                <SheetClose asChild>
-                  <Button asChild className="w-full">
-                    <Link href="/register">Daftar</Link>
-                  </Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button asChild variant="outline" className="w-full">
-                    <Link href="/login">Masuk</Link>
-                  </Button>
-                </SheetClose>
+                {account ? (
+                  <div className="w-full space-y-3">
+                    <div className="flex items-center gap-3 rounded-xl border bg-card p-3 text-left">
+                      <div className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                        {account.initials}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">
+                          {account.displayName}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {account.email}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="ml-auto">
+                        {roleLabels[account.role]}
+                      </Badge>
+                    </div>
+                    <form action={logoutAction}>
+                      <Button type="submit" variant="outline" className="w-full">
+                        <UserRound className="size-4" aria-hidden="true" />
+                        Keluar / ganti akun
+                      </Button>
+                    </form>
+                  </div>
+                ) : (
+                  <>
+                    <SheetClose asChild>
+                      <Button asChild className="w-full">
+                        <Link href="/register">Daftar</Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button asChild variant="outline" className="w-full">
+                        <Link href="/login">Masuk</Link>
+                      </Button>
+                    </SheetClose>
+                  </>
+                )}
               </SheetFooter>
             </SheetContent>
           </Sheet>

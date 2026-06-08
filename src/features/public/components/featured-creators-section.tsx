@@ -27,11 +27,23 @@ export async function FeaturedCreatorsSection() {
             </Link>
           }
         />
-        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {featuredCreators.map((creator) => (
-            <CreatorCard key={creator.id} creator={creator} />
-          ))}
-        </div>
+        {featuredCreators.length > 0 ? (
+          <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {featuredCreators.map((creator) => (
+              <CreatorCard key={creator.id} creator={creator} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-lg border border-dashed border-border bg-card p-8 text-center">
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+              Belum ada kreator pilihan.
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Kreator aktif akan tampil setelah data profil dan layanan tersedia
+              di Supabase.
+            </p>
+          </div>
+        )}
       </PageContainer>
     </section>
   );

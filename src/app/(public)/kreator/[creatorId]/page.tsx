@@ -12,9 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreatorProfileHeader } from "@/features/creators/components/creator-profile-header";
 import { getPublicCreatorDetail } from "@/features/catalog/data/catalog-queries";
-import {
-  dummyCreators,
-} from "@/lib/dummy";
 import type { DummyPortfolioItem, DummyServicePackage } from "@/lib/dummy/types";
 
 type CreatorPageProps = {
@@ -22,12 +19,6 @@ type CreatorPageProps = {
     creatorId: string;
   }>;
 };
-
-export function generateStaticParams() {
-  return dummyCreators.map((creator) => ({
-    creatorId: creator.id,
-  }));
-}
 
 export async function generateMetadata({
   params,

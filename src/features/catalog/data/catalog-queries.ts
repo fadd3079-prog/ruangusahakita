@@ -1,12 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { 
-  dummyServiceCategories, 
-  dummyCreators, 
-  dummyServicePackages,
-  dummyServiceTiers,
-  dummyServiceAddons,
-  dummyPortfolios,
-} from "@/lib/dummy";
 import type { 
   DummyServiceCategory, 
   DummyCreatorProfile, 
@@ -20,9 +12,6 @@ import type {
   DummyServiceTierName
 } from "@/lib/dummy/types";
 
-/**
- * Fetches active service categories from Supabase.
- */
 export async function getPublicCategories(): Promise<readonly DummyServiceCategory[]> {
   try {
     const supabase = await createClient();
@@ -33,7 +22,7 @@ export async function getPublicCategories(): Promise<readonly DummyServiceCatego
       .order("sort_order", { ascending: true });
 
     if (error || !data || data.length === 0) {
-      return dummyServiceCategories;
+      return [];
     }
 
     return data.map((item) => ({
@@ -44,13 +33,10 @@ export async function getPublicCategories(): Promise<readonly DummyServiceCatego
       iconName: item.icon_name ?? "Megaphone",
     }));
   } catch {
-    return dummyServiceCategories;
+    return [];
   }
 }
 
-/**
- * Fetches a public creator profile by ID.
- */
 export async function getPublicCreatorById(id: string): Promise<DummyCreatorProfile | null> {
   try {
     const supabase = await createClient();
@@ -62,7 +48,7 @@ export async function getPublicCreatorById(id: string): Promise<DummyCreatorProf
       .single();
 
     if (error || !data) {
-      return dummyCreators.find(c => c.id === id) ?? null;
+      return null;
     }
 
     return {
@@ -87,17 +73,14 @@ export async function getPublicCreatorById(id: string): Promise<DummyCreatorProf
       isFeatured: data.is_featured,
     };
   } catch {
-    return dummyCreators.find(c => c.id === id) ?? null;
+    return null;
   }
 }
 
-/**
- * Fetches full creator details.
- */
 export async function getPublicCreatorDetail(id: string) {
   try {
     const supabase = await createClient();
-    
+
     const creator = await getPublicCreatorById(id);
     if (!creator) return null;
 
@@ -151,13 +134,10 @@ export async function getPublicCreatorDetail(id: string) {
   }
 }
 
-/**
- * Fetches full service details.
- */
 export async function getPublicServiceDetail(id: string) {
   try {
     const supabase = await createClient();
-    
+
     const { data: service, error: sError } = await supabase
       .from("service_packages")
       .select("*")
@@ -167,19 +147,7 @@ export async function getPublicServiceDetail(id: string) {
       .single();
 
     if (sError || !service) {
-      const fallback = dummyServicePackages.find(s => s.id === id);
-      if (!fallback) return null;
-      
-      return {
-        service: fallback,
-        creator: dummyCreators.find(c => c.id === fallback.creatorId)!,
-        category: dummyServiceCategories.find(c => c.id === fallback.categoryId)!,
-        tiers: dummyServiceTiers.filter(t => t.servicePackageId === id),
-        addons: dummyServiceAddons.filter(a => a.compatibleServiceIds.includes(id)),
-        portfolios: dummyPortfolios.filter(p => p.creatorId === fallback.creatorId),
-        reviews: [] as DummyReview[],
-        umkmProfiles: [] as DummyUmkmProfile[],
-      };
+      return null;
     }
 
     const [creator, categories, tiersRes, addonsRes, portfoliosRes] = await Promise.all([
@@ -189,6 +157,10 @@ export async function getPublicServiceDetail(id: string) {
       supabase.from("service_addons").select("*").eq("service_package_id", id).eq("is_active", true),
       supabase.from("portfolios").select("*").eq("creator_id", service.creator_id).is("deleted_at", null),
     ]);
+
+    if (!creator) {
+      return null;
+    }
 
     const mappedService: DummyServicePackage = {
       id: service.id,
@@ -243,8 +215,8 @@ export async function getPublicServiceDetail(id: string) {
 
     return {
       service: mappedService,
-      creator: creator!,
-      category: categories.find(c => c.id === service.category_id)!,
+      creator,
+      category: categories.find((category) => category.id === service.category_id),
       tiers,
       addons,
       portfolios,
@@ -256,9 +228,6 @@ export async function getPublicServiceDetail(id: string) {
   }
 }
 
-/**
- * Fetches featured creators.
- */
 export async function getPublicFeaturedCreators(): Promise<readonly DummyCreatorProfile[]> {
   try {
     const supabase = await createClient();
@@ -270,7 +239,7 @@ export async function getPublicFeaturedCreators(): Promise<readonly DummyCreator
       .limit(4);
 
     if (error || !data || data.length === 0) {
-      return dummyCreators.filter(c => c.isFeatured).slice(0, 4);
+      return [];
     }
 
     return data.map((item) => ({
@@ -295,17 +264,14 @@ export async function getPublicFeaturedCreators(): Promise<readonly DummyCreator
       isFeatured: item.is_featured,
     }));
   } catch {
-    return dummyCreators.filter(c => c.isFeatured).slice(0, 4);
+    return [];
   }
 }
 
-/**
- * Fetches catalog data.
- */
 export async function getPublicCatalogData() {
   try {
     const supabase = await createClient();
-    
+
     const [creatorsRes, servicesRes, categories] = await Promise.all([
       supabase.from("creator_profiles").select("*, profiles!inner(account_status)").eq("profiles.account_status", "active"),
       supabase.from("service_packages").select("*").eq("is_active", true).is("deleted_at", null),
@@ -314,9 +280,9 @@ export async function getPublicCatalogData() {
 
     if (creatorsRes.error || servicesRes.error || !creatorsRes.data || creatorsRes.data.length === 0) {
       return {
-        creators: dummyCreators,
-        services: dummyServicePackages,
-        categories: dummyServiceCategories,
+        creators: [] as DummyCreatorProfile[],
+        services: [] as DummyServicePackage[],
+        categories,
       };
     }
 
@@ -368,9 +334,9 @@ export async function getPublicCatalogData() {
     };
   } catch {
     return {
-      creators: dummyCreators,
-      services: dummyServicePackages,
-      categories: dummyServiceCategories,
+      creators: [] as DummyCreatorProfile[],
+      services: [] as DummyServicePackage[],
+      categories: [] as DummyServiceCategory[],
     };
   }
 }
