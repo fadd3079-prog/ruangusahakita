@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
-import type { DummyOrderStatus } from "@/lib/dummy";
+import type { Database } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
+
+type OrderStatus = Database["public"]["Enums"]["order_status"];
 
 export const orderStatusLabels = {
   awaiting_payment: "Menunggu Pembayaran",
@@ -15,7 +17,7 @@ export const orderStatusLabels = {
   revision_requested: "Revisi Diminta",
   submitted: "Hasil Dikirim",
   waiting_creator_confirmation: "Menunggu Konfirmasi Kreator",
-} satisfies Record<DummyOrderStatus, string>;
+} satisfies Record<OrderStatus, string>;
 
 const orderStatusClasses = {
   awaiting_payment: "border-sky-200 bg-sky-50 text-sky-700",
@@ -30,10 +32,10 @@ const orderStatusClasses = {
   revision_requested: "border-amber-200 bg-amber-50 text-amber-800",
   submitted: "border-indigo-200 bg-indigo-50 text-indigo-700",
   waiting_creator_confirmation: "border-cyan-200 bg-cyan-50 text-cyan-700",
-} satisfies Record<DummyOrderStatus, string>;
+} satisfies Record<OrderStatus, string>;
 
 type OrderStatusBadgeProps = {
-  status: DummyOrderStatus;
+  status: OrderStatus;
 };
 
 export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {

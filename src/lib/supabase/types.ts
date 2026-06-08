@@ -835,6 +835,37 @@ export interface Database {
           }
         ]
       }
+      order_item_addons: {
+        Row: {
+          id: string
+          order_item_id: string
+          addon_name: string
+          price: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_item_id: string
+          addon_name: string
+          price: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_item_id?: string
+          addon_name?: string
+          price?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_item_addons_order_item_id_fkey"
+            columns: ["order_item_id"]
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       payments: {
         Row: {
           id: string
@@ -889,6 +920,113 @@ export interface Database {
             foreignKeyName: "payments_order_id_fkey"
             columns: ["order_id"]
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      invoices: {
+        Row: {
+          id: string
+          order_id: string
+          payment_id: string | null
+          invoice_number: string
+          subtotal_amount: number
+          addon_amount: number
+          admin_fee: number
+          platform_fee: number
+          discount_amount: number
+          total_amount: number
+          issued_at: string
+          paid_at: string | null
+          invoice_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          payment_id?: string | null
+          invoice_number: string
+          subtotal_amount: number
+          addon_amount?: number
+          admin_fee?: number
+          platform_fee?: number
+          discount_amount?: number
+          total_amount: number
+          issued_at?: string
+          paid_at?: string | null
+          invoice_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          payment_id?: string | null
+          invoice_number?: string
+          subtotal_amount?: number
+          addon_amount?: number
+          admin_fee?: number
+          platform_fee?: number
+          discount_amount?: number
+          total_amount?: number
+          issued_at?: string
+          paid_at?: string | null
+          invoice_url?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_payment_id_fkey"
+            columns: ["payment_id"]
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      order_status_history: {
+        Row: {
+          id: string
+          order_id: string
+          previous_status: Database['public']['Enums']['order_status'] | null
+          new_status: Database['public']['Enums']['order_status']
+          changed_by: string | null
+          note: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          previous_status?: Database['public']['Enums']['order_status'] | null
+          new_status: Database['public']['Enums']['order_status']
+          changed_by?: string | null
+          note?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          previous_status?: Database['public']['Enums']['order_status'] | null
+          new_status?: Database['public']['Enums']['order_status']
+          changed_by?: string | null
+          note?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]
@@ -1069,7 +1207,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_order_from_current_cart: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       user_role: 'admin' | 'umkm' | 'creator'

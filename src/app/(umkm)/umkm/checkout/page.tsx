@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BriefcaseBusiness, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { CheckoutGuidanceCard } from "@/features/checkout/components/checkout-gu
 import { CheckoutOrderSummary } from "@/features/checkout/components/checkout-order-summary";
 import { CheckoutStepper } from "@/features/checkout/components/checkout-stepper";
 import { getCurrentCheckoutData } from "@/features/cart/data/cart-queries";
+import { createOrderFromCheckout } from "@/features/orders/actions/order-actions";
 
 export const metadata: Metadata = {
   title: "Checkout Brief Campaign - Ruang Usaha Kita",
@@ -24,8 +25,15 @@ type UmkmCheckoutPageProps = {
 };
 
 const errorMessages = {
+  addon_unavailable: "Add-on layanan tidak tersedia. Periksa ulang keranjang Anda.",
   brief_required: "Nama usaha, kategori usaha, fokus promosi, dan tujuan campaign wajib diisi.",
   brief_save: "Brief campaign belum bisa disimpan.",
+  cart_empty: "Keranjang layanan masih kosong.",
+  not_authenticated: "Silakan masuk terlebih dahulu untuk membuat pesanan.",
+  not_umkm: "Hanya akun UMKM aktif yang dapat membuat pesanan.",
+  order_create: "Pesanan belum bisa dibuat. Periksa kembali keranjang dan brief campaign.",
+  service_unavailable: "Paket jasa atau tier yang dipilih sedang tidak tersedia.",
+  single_creator_required: "Checkout saat ini hanya mendukung layanan dari satu kreator.",
 };
 
 function getErrorMessage(error?: string) {
@@ -78,7 +86,7 @@ export default async function UmkmCheckoutPage({
                   {[
                     "Pastikan detail layanan sudah sesuai.",
                     "Isi brief campaign secara natural dan jelas.",
-                    "Order dan pembayaran belum dibuat pada fase ini.",
+                    "Order dan pembayaran pending dummy dibuat setelah brief siap.",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <CheckCircle2
@@ -119,11 +127,50 @@ export default async function UmkmCheckoutPage({
                 adminFee={checkoutData.cart.adminFee}
                 totalPayment={checkoutData.cart.totalPayment}
               />
+              <CreateOrderPanel hasBrief={Boolean(checkoutData.brief)} />
             </div>
           </div>
         </div>
       </PageContainer>
     </main>
+  );
+}
+
+function CreateOrderPanel({ hasBrief }: { hasBrief: boolean }) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-primary/20 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white shadow-[var(--shadow-card)]">
+      <div className="flex items-start gap-3">
+        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-white">
+          <ShieldCheck className="size-5" aria-hidden="true" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Buat pesanan dari brief ini
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-white/72">
+            Sistem akan menghitung ulang total dari database, membuat status
+            pesanan awal, pembayaran pending dummy, dan invoice placeholder.
+          </p>
+        </div>
+      </div>
+
+      <form action={createOrderFromCheckout} className="mt-5">
+        <Button
+          type="submit"
+          disabled={!hasBrief}
+          className="w-full bg-white text-primary hover:bg-white/90"
+        >
+          Buat Pesanan
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </Button>
+      </form>
+
+      {!hasBrief ? (
+        <p className="mt-3 text-xs leading-5 text-white/64">
+          Simpan brief campaign terlebih dahulu sebelum membuat pesanan.
+        </p>
+      ) : null}
+    </section>
   );
 }
 

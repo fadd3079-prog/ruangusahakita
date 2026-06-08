@@ -31,7 +31,7 @@ export function OrderFilterBar({ showPaymentFilter = false }: OrderFilterBarProp
             Pilih status untuk monitoring
           </h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Filter ini masih tampilan dummy dan belum terhubung ke query data.
+            Filter ini masih tampilan awal dan belum mengubah query data.
           </p>
         </div>
         <div className="space-y-3">
