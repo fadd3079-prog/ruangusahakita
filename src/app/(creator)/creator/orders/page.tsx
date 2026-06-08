@@ -1,25 +1,35 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Inbox } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
-import {
-  getOrderListItems,
-  getOrdersForRole,
-} from "@/features/orders/components/order-data";
+import { Button } from "@/components/ui/button";
 import { OrderFilterBar } from "@/features/orders/components/order-filter-bar";
-import { OrderListTable } from "@/features/orders/components/order-list-table";
 import { OrderPageHero } from "@/features/orders/components/order-page-hero";
+import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
+import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
+import {
+  getCurrentCreatorOrders,
+  type CreatorOrderListItem,
+} from "@/features/orders/data/order-queries";
+import { formatCurrency } from "@/lib/formatters/currency";
+import { formatDate } from "@/lib/formatters/date";
 
 export const metadata: Metadata = {
   title: "Order Masuk - Kreator Ruang Usaha Kita",
   description:
-    "Daftar order dummy untuk kreator, termasuk brief campaign, status pesanan, pembayaran, deadline, dan CTA placeholder.",
+    "Daftar order kreator yang sudah dibayar untuk membaca brief campaign, memantau status pesanan, dan memulai pekerjaan jasa digital.",
 };
 
-const orders = getOrdersForRole("creator");
-const orderItems = getOrderListItems(orders, "creator");
+export default async function CreatorOrdersPage() {
+  const orders = await getCurrentCreatorOrders();
+  const activeOrders = orders.filter(
+    (order) =>
+      order.orderStatus === "waiting_creator_confirmation" ||
+      order.orderStatus === "brief_accepted" ||
+      order.orderStatus === "in_progress",
+  );
 
-export default function CreatorOrdersPage() {
   return (
     <main>
       <PageContainer>
@@ -27,15 +37,155 @@ export default function CreatorOrdersPage() {
           <OrderPageHero
             icon={Inbox}
             eyebrow="Order kreator"
-            title="Order masuk dan proses konten aktif."
-            description="Kreator dapat membaca brief, melihat scope layanan, memantau pembayaran, dan menyiapkan hasil konten pada UI dummy ini."
+            title="Order berbayar yang siap diproses."
+            description="Baca brief campaign dari UMKM, cek scope layanan, lalu terima brief atau mulai pengerjaan sesuai status pesanan."
             metricLabel="Order aktif"
-            metricValue={`${orders.length} pesanan`}
+            metricValue={`${activeOrders.length} pesanan`}
           />
           <OrderFilterBar showPaymentFilter />
-          <OrderListTable items={orderItems} role="creator" />
+          {orders.length > 0 ? (
+            <CreatorOrderList orders={orders} />
+          ) : (
+            <EmptyCreatorOrdersState />
+          )}
         </div>
       </PageContainer>
     </main>
+  );
+}
+
+function CreatorOrderList({
+  orders,
+}: {
+  orders: readonly CreatorOrderListItem[];
+}) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-card)]">
+      <div className="border-b border-border/70 bg-muted/30 px-5 py-4">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
+          Daftar order
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Hanya order dengan pembayaran paid yang ditampilkan untuk kreator.
+        </p>
+      </div>
+
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-border/70 bg-background/60 text-xs uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="px-5 py-3 font-semibold">Order</th>
+              <th className="px-5 py-3 font-semibold">UMKM</th>
+              <th className="px-5 py-3 font-semibold">Status</th>
+              <th className="px-5 py-3 font-semibold">Pembayaran</th>
+              <th className="px-5 py-3 text-right font-semibold">Total</th>
+              <th className="px-5 py-3 font-semibold">Deadline</th>
+              <th className="px-5 py-3 text-right font-semibold">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/70">
+            {orders.map((order) => (
+              <tr key={order.id} className="align-top">
+                <td className="px-5 py-4">
+                  <p className="font-semibold text-foreground">
+                    {order.orderNumber}
+                  </p>
+                  <p className="mt-1 max-w-[260px] truncate text-muted-foreground">
+                    {order.serviceTitle}
+                  </p>
+                  {order.tierName ? (
+                    <p className="mt-1 text-xs font-medium text-primary">
+                      {order.tierName}
+                    </p>
+                  ) : null}
+                </td>
+                <td className="px-5 py-4">
+                  <p className="font-medium text-foreground">
+                    {order.umkmBusinessName}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {order.umkmBusinessCategory ?? "Kategori belum diisi"}
+                  </p>
+                </td>
+                <td className="px-5 py-4">
+                  <OrderStatusBadge status={order.orderStatus} />
+                </td>
+                <td className="px-5 py-4">
+                  <PaymentStatusBadge status={order.paymentStatus} />
+                </td>
+                <td className="px-5 py-4 text-right font-semibold text-foreground">
+                  {formatCurrency(order.totalAmount)}
+                </td>
+                <td className="px-5 py-4 text-muted-foreground">
+                  {order.deadline ? formatDate(order.deadline) : "Belum tersedia"}
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <Button asChild variant="outline">
+                    <Link href={`/creator/orders/${order.id}`}>Buka Brief</Link>
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="grid gap-4 p-4 lg:hidden">
+        {orders.map((order) => (
+          <article
+            key={order.id}
+            className="rounded-2xl border border-border/70 bg-background p-4"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-semibold text-foreground">
+                  {order.orderNumber}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {order.serviceTitle}
+                </p>
+              </div>
+              <p className="text-right text-sm font-semibold text-foreground">
+                {formatCurrency(order.totalAmount)}
+              </p>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <OrderStatusBadge status={order.orderStatus} />
+              <PaymentStatusBadge status={order.paymentStatus} />
+            </div>
+            <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
+              <p>UMKM: {order.umkmBusinessName}</p>
+              <p>
+                Deadline:{" "}
+                {order.deadline ? formatDate(order.deadline) : "Belum tersedia"}
+              </p>
+            </div>
+            <Button asChild variant="outline" className="mt-4 w-full">
+              <Link href={`/creator/orders/${order.id}`}>Buka Brief</Link>
+            </Button>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function EmptyCreatorOrdersState() {
+  return (
+    <section className="rounded-2xl border border-dashed border-border bg-card p-8 text-center shadow-xs">
+      <div className="mx-auto grid size-12 place-items-center rounded-xl bg-primary/10 text-primary">
+        <Inbox className="size-6" aria-hidden="true" />
+      </div>
+      <h2 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+        Belum ada order berbayar
+      </h2>
+      <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
+        Order akan muncul setelah UMKM menyelesaikan pembayaran dummy dan status
+        pesanan menunggu konfirmasi kreator.
+      </p>
+      <Button asChild className="mt-5">
+        <Link href="/creator/dashboard">Kembali ke Dashboard</Link>
+      </Button>
+    </section>
   );
 }

@@ -66,9 +66,38 @@ export type UmkmOrderDetail = {
   payment: PaymentRow | null;
 };
 
+export type CreatorOrderListItem = {
+  createdAt: string;
+  deadline: string | null;
+  id: string;
+  orderNumber: string;
+  orderStatus: OrderRow["order_status"];
+  paymentStatus: OrderRow["payment_status"];
+  serviceTitle: string;
+  tierName: string | null;
+  totalAmount: number;
+  umkmBusinessCategory: string | null;
+  umkmBusinessName: string;
+};
+
+export type CreatorOrderDetail = {
+  brief: UmkmOrderBrief | null;
+  history: readonly OrderStatusHistoryRow[];
+  items: readonly UmkmOrderDetailItem[];
+  order: OrderRow;
+  payment: PaymentRow | null;
+  umkmBusinessCategory: string | null;
+  umkmBusinessName: string;
+};
+
 type CurrentUmkmContext = {
   supabase: Awaited<ReturnType<typeof createClient>>;
   umkm: UmkmRow;
+};
+
+type CurrentCreatorContext = {
+  creator: CreatorRow;
+  supabase: Awaited<ReturnType<typeof createClient>>;
 };
 
 function toNumber(value: number | string | null | undefined) {
@@ -113,6 +142,42 @@ async function getCurrentUmkmContext(): Promise<CurrentUmkmContext | null> {
   }
 
   return { supabase, umkm };
+}
+
+async function getCurrentCreatorContext(): Promise<CurrentCreatorContext | null> {
+  const supabase = await createClient();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData.user) {
+    return null;
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role, account_status")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+
+  if (
+    profileError ||
+    !profile ||
+    profile.role !== "creator" ||
+    profile.account_status !== "active"
+  ) {
+    return null;
+  }
+
+  const { data: creator, error: creatorError } = await supabase
+    .from("creator_profiles")
+    .select("*")
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+
+  if (creatorError || !creator) {
+    return null;
+  }
+
+  return { creator, supabase };
 }
 
 export async function getCurrentUmkmOrders(): Promise<readonly UmkmOrderListItem[]> {
@@ -259,6 +324,144 @@ export async function getCurrentUmkmOrderDetail(
       items: items.map((item) => mapOrderItem(item, addonsByItemId.get(item.id) ?? [])),
       order,
       payment: paymentResult.data ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getCurrentCreatorOrders(): Promise<readonly CreatorOrderListItem[]> {
+  try {
+    const context = await getCurrentCreatorContext();
+
+    if (!context) {
+      return [];
+    }
+
+    const { data: orders, error: orderError } = await context.supabase
+      .from("orders")
+      .select("*")
+      .eq("creator_id", context.creator.id)
+      .eq("payment_status", "paid")
+      .order("created_at", { ascending: false });
+
+    if (orderError || !orders || orders.length === 0) {
+      return [];
+    }
+
+    const orderIds = orders.map((order) => order.id);
+    const umkmIds = unique(orders.map((order) => order.umkm_id));
+
+    const [itemsResult, umkmResult] = await Promise.all([
+      context.supabase.from("order_items").select("*").in("order_id", orderIds),
+      umkmIds.length > 0
+        ? context.supabase.from("umkm_profiles").select("*").in("id", umkmIds)
+        : Promise.resolve({ data: [] as UmkmRow[], error: null }),
+    ]);
+
+    const itemsByOrderId = groupByOrderId(itemsResult.data ?? []);
+    const umkmById = new Map((umkmResult.data ?? []).map((umkm) => [umkm.id, umkm]));
+
+    return orders.map((order): CreatorOrderListItem => {
+      const firstItem = itemsByOrderId.get(order.id)?.[0] ?? null;
+      const umkm = umkmById.get(order.umkm_id);
+
+      return {
+        createdAt: order.created_at,
+        deadline: order.deadline,
+        id: order.id,
+        orderNumber: order.order_number,
+        orderStatus: order.order_status,
+        paymentStatus: order.payment_status,
+        serviceTitle: firstItem?.service_title ?? "Paket jasa digital",
+        tierName: firstItem?.tier_name ?? null,
+        totalAmount: toNumber(order.total_amount),
+        umkmBusinessCategory: umkm?.business_category ?? null,
+        umkmBusinessName: umkm?.business_name ?? "UMKM",
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function getCurrentCreatorOrderDetail(
+  orderId: string,
+): Promise<CreatorOrderDetail | null> {
+  try {
+    const context = await getCurrentCreatorContext();
+
+    if (!context) {
+      return null;
+    }
+
+    const { data: order, error: orderError } = await context.supabase
+      .from("orders")
+      .select("*")
+      .eq("id", orderId)
+      .eq("creator_id", context.creator.id)
+      .eq("payment_status", "paid")
+      .maybeSingle();
+
+    if (orderError || !order) {
+      return null;
+    }
+
+    const [umkmResult, itemsResult, briefResult, paymentResult, historyResult] =
+      await Promise.all([
+        context.supabase
+          .from("umkm_profiles")
+          .select("*")
+          .eq("id", order.umkm_id)
+          .maybeSingle(),
+        context.supabase
+          .from("order_items")
+          .select("*")
+          .eq("order_id", order.id)
+          .order("created_at", { ascending: true }),
+        order.campaign_brief_id
+          ? context.supabase
+              .from("campaign_briefs")
+              .select("*")
+              .eq("id", order.campaign_brief_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null as BriefRow | null, error: null }),
+        context.supabase
+          .from("payments")
+          .select("*")
+          .eq("order_id", order.id)
+          .eq("payment_status", "paid")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        context.supabase
+          .from("order_status_history")
+          .select("*")
+          .eq("order_id", order.id)
+          .order("created_at", { ascending: true }),
+      ]);
+
+    const items = itemsResult.data ?? [];
+    const itemIds = items.map((item) => item.id);
+    const { data: addons } =
+      itemIds.length > 0
+        ? await context.supabase
+            .from("order_item_addons")
+            .select("*")
+            .in("order_item_id", itemIds)
+        : { data: [] as OrderItemAddonRow[] };
+
+    const addonsByItemId = groupAddonsByOrderItemId(addons ?? []);
+    const umkm = umkmResult.data;
+
+    return {
+      brief: briefResult.data ? mapBrief(briefResult.data) : null,
+      history: historyResult.data ?? [],
+      items: items.map((item) => mapOrderItem(item, addonsByItemId.get(item.id) ?? [])),
+      order,
+      payment: paymentResult.data ?? null,
+      umkmBusinessCategory: umkm?.business_category ?? null,
+      umkmBusinessName: umkm?.business_name ?? "UMKM",
     };
   } catch {
     return null;

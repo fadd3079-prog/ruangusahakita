@@ -1207,6 +1207,12 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      accept_creator_order: {
+        Args: {
+          target_order_id: string
+        }
+        Returns: string
+      }
       create_order_from_current_cart: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1214,6 +1220,12 @@ export interface Database {
       mark_dummy_payment_as_paid: {
         Args: {
           target_payment_id: string
+        }
+        Returns: string
+      }
+      start_creator_order: {
+        Args: {
+          target_order_id: string
         }
         Returns: string
       }
