@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, FileCheck2, Layers3 } from "lucide-react";
+import { Clock, FileCheck2, Image as ImageIcon, Layers3 } from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
 import { Badge } from "@/components/ui/badge";
@@ -27,14 +27,16 @@ export function ServiceCard({
   category,
   ctaLabel = "Lihat Detail",
 }: ServiceCardProps) {
-  const visualUrl = service.coverImageUrl || "/images/image (10).webp";
+  const visualUrl = service.coverImageUrl;
 
   return (
     <Card className="marketplace-card h-full overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
       <div
-        className="aspect-[16/9] bg-cover bg-center"
-        style={{ backgroundImage: `url("${visualUrl}")` }}
-      />
+        className="grid aspect-[16/9] place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
+        style={visualUrl ? { backgroundImage: `url("${visualUrl}")` } : undefined}
+      >
+        {visualUrl ? null : <ImageIcon className="size-10 opacity-40" aria-hidden="true" />}
+      </div>
 
       <CardHeader className="px-4 pb-2 pt-4">
         <div className="flex items-start justify-between gap-4">

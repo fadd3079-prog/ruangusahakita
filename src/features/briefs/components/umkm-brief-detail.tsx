@@ -1,6 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CalendarDays, ExternalLink, FileText, LockKeyhole, Save } from "lucide-react";
+import {
+  CalendarDays,
+  ExternalLink,
+  FileText,
+  FileUp,
+  Image as ImageIcon,
+  LockKeyhole,
+  Save,
+} from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +144,7 @@ export function UmkmBriefDetailView({
 
 function BriefEditForm({ brief }: { brief: UmkmBriefDetail }) {
   return (
-    <form action={updateUmkmBrief} className="space-y-6">
+    <form action={updateUmkmBrief} encType="multipart/form-data" className="space-y-6">
       <input type="hidden" name="briefId" value={brief.id} />
 
       <FormGroup
@@ -222,6 +230,13 @@ function BriefEditForm({ brief }: { brief: UmkmBriefDetail }) {
         />
       </FormGroup>
 
+      <FormGroup
+        title="Gambar pendukung"
+        description="Kelola gambar referensi kecil yang membantu kreator memahami konteks visual."
+      >
+        <BriefAssetsEditor assets={brief.assetFiles} />
+      </FormGroup>
+
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button asChild variant="outline" className="bg-background">
           <Link href="/umkm/briefs">Kembali</Link>
@@ -274,6 +289,8 @@ function BriefReadOnlyContent({ brief }: { brief: UmkmBriefDetail }) {
           value={brief.additionalNotes ?? "Belum diisi"}
         />
       </div>
+
+      <BriefAssetsReadOnly brief={brief} />
     </div>
   );
 }
@@ -300,7 +317,155 @@ function getErrorMessage(error: string) {
     return "Format deadline tidak valid.";
   }
 
+  if (error === "asset_size") {
+    return "Gambar pendukung maksimal 5 MB per file.";
+  }
+
+  if (error === "asset_type") {
+    return "Gambar pendukung harus berupa JPG, PNG, atau WebP.";
+  }
+
+  if (error === "asset_upload") {
+    return "Gambar pendukung belum dapat diunggah. Coba lagi beberapa saat.";
+  }
+
   return "Brief campaign gagal disimpan. Periksa kembali data lalu coba lagi.";
+}
+
+function BriefAssetsEditor({
+  assets,
+}: {
+  assets: UmkmBriefDetail["assetFiles"];
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <label htmlFor="briefAssetFiles" className="text-sm font-medium leading-none text-foreground">
+          Tambah gambar
+        </label>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          Unggah JPG, PNG, atau WebP. Maksimal 5 MB per gambar.
+        </p>
+        <Input
+          id="briefAssetFiles"
+          name="briefAssetFiles"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          className="mt-2 h-11 bg-card"
+        />
+      </div>
+
+      {assets.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {assets.map((asset) => (
+            <div
+              key={asset.id}
+              className="overflow-hidden rounded-2xl border border-border/70 bg-card"
+            >
+              <div
+                className="grid aspect-[16/9] place-items-center bg-muted/60 bg-cover bg-center text-muted-foreground"
+                style={asset.url ? { backgroundImage: `url("${asset.url}")` } : undefined}
+              >
+                {asset.url ? null : (
+                  <ImageIcon className="size-8 opacity-50" aria-hidden="true" />
+                )}
+              </div>
+              <label className="flex items-start gap-2 p-3 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  name="removeBriefAssetIds"
+                  value={asset.id}
+                  className="mt-0.5 size-4 rounded border-border"
+                />
+                <span>
+                  <span className="block font-medium text-foreground">{asset.name}</span>
+                  Hapus saat menyimpan
+                </span>
+              </label>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <BriefAssetsEmptyState />
+      )}
+    </div>
+  );
+}
+
+function BriefAssetsReadOnly({ brief }: { brief: UmkmBriefDetail }) {
+  if (brief.assetFiles.length === 0 && brief.assetUrls.length === 0) {
+    return (
+      <DetailBlock
+        label="Gambar pendukung"
+        value="Belum ada gambar pendukung."
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-sm font-semibold text-foreground">Gambar pendukung</h2>
+      {brief.assetFiles.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {brief.assetFiles.map((asset) => (
+            <div
+              key={asset.id}
+              className="overflow-hidden rounded-2xl border border-border/70 bg-background"
+            >
+              <div
+                className="grid aspect-[16/9] place-items-center bg-muted/60 bg-cover bg-center text-muted-foreground"
+                style={asset.url ? { backgroundImage: `url("${asset.url}")` } : undefined}
+              >
+                {asset.url ? null : (
+                  <ImageIcon className="size-8 opacity-50" aria-hidden="true" />
+                )}
+              </div>
+              <p className="truncate p-3 text-sm font-medium text-foreground">
+                {asset.name}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {brief.assetUrls.length > 0 ? (
+        <div className="space-y-2 rounded-2xl border border-border/70 bg-background p-4">
+          {brief.assetUrls.map((url) => (
+            <Link
+              key={url}
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              <ExternalLink className="size-4" aria-hidden="true" />
+              {url}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function BriefAssetsEmptyState() {
+  return (
+    <div className="rounded-2xl border border-dashed border-border bg-card p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+          <FileUp className="size-5" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Belum ada gambar pendukung.
+          </p>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Tambahkan gambar referensi jika kreator perlu melihat konteks visual.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 type FormGroupProps = {

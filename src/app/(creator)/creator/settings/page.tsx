@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bell, Save, Shield, Upload, User } from "lucide-react";
+import { Bell, Image as ImageIcon, Save, Shield, Trash2, Upload, User } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -8,8 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  deleteCreatorAvatarAction,
+  deleteCreatorBannerAction,
   updateCreatorProfileAction,
   uploadCreatorAvatarAction,
+  uploadCreatorBannerAction,
 } from "@/features/creator/profile/actions/creator-profile-actions";
 import { getCurrentCreatorProfilePageData } from "@/features/creator/profile/data/creator-profile-queries";
 
@@ -34,6 +37,11 @@ const errorMessages = {
   avatar_size: "Ukuran avatar maksimal 2 MB.",
   avatar_type: "Avatar harus berupa JPG, PNG, atau WebP.",
   avatar_upload: "Avatar belum bisa diunggah ke storage.",
+  banner_required: "Pilih file banner terlebih dahulu.",
+  banner_save: "Banner belum bisa disimpan ke profil kreator.",
+  banner_size: "Ukuran banner maksimal 5 MB.",
+  banner_type: "Banner harus berupa JPG, PNG, atau WebP.",
+  banner_upload: "Banner belum bisa diunggah ke storage.",
   profile: "Profil kreator belum tersedia.",
   required: "Nama tampilan wajib diisi.",
   save: "Profil kreator belum bisa disimpan.",
@@ -74,6 +82,7 @@ export default async function CreatorSettingsPage({
   const errorMessage = getErrorMessage(error);
   const displayName = profile?.display_name ?? account?.full_name ?? "Kreator";
   const avatarUrl = profile?.avatar_url ?? account?.avatar_url ?? null;
+  const bannerUrl = profile?.banner_url ?? null;
   const initials = getInitials(displayName) || "KR";
 
   return (
@@ -120,6 +129,13 @@ export default async function CreatorSettingsPage({
               >
                 <User className="size-4" />
                 Profil Publik
+              </a>
+              <a
+                href="#banner"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <ImageIcon className="size-4" />
+                Banner
               </a>
               <a
                 href="#availability"
@@ -180,6 +196,73 @@ export default async function CreatorSettingsPage({
                     Unggah Avatar
                   </Button>
                 </form>
+              </div>
+              {avatarUrl ? (
+                <form action={deleteCreatorAvatarAction} className="mt-4 flex justify-end">
+                  <input type="hidden" name="redirectTo" value="/creator/settings" />
+                  <Button type="submit" variant="outline" className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive">
+                    <Trash2 className="size-4" />
+                    Hapus Avatar
+                  </Button>
+                </form>
+              ) : null}
+            </section>
+
+            <section
+              id="banner"
+              className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm"
+            >
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+                <div>
+                  <div
+                    className="grid aspect-[16/6] min-h-44 place-items-center rounded-2xl bg-muted/50 bg-cover bg-center text-muted-foreground ring-1 ring-border"
+                    style={
+                      bannerUrl
+                        ? { backgroundImage: `url("${bannerUrl}")` }
+                        : undefined
+                    }
+                  >
+                    {bannerUrl ? null : (
+                      <div className="text-center">
+                        <ImageIcon className="mx-auto size-9 opacity-50" />
+                        <p className="mt-2 text-sm">Banner belum tersedia</p>
+                      </div>
+                    )}
+                  </div>
+                  <h2 className="mt-5 text-xl font-semibold">Banner profil</h2>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    {bannerUrl
+                      ? "Banner ini tampil pada profil publik kreator."
+                      : "Unggah banner jika ingin memberi konteks visual pada profil publik."}
+                  </p>
+                </div>
+                <div className="grid gap-3">
+                  <form action={uploadCreatorBannerAction} className="grid gap-3">
+                    <input type="hidden" name="redirectTo" value="/creator/settings" />
+                    <Label htmlFor="bannerFile">File banner</Label>
+                    <Input
+                      id="bannerFile"
+                      name="bannerFile"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="h-11"
+                      required
+                    />
+                    <Button type="submit" className="rounded-full">
+                      <Upload className="size-4" />
+                      Unggah Banner
+                    </Button>
+                  </form>
+                  {bannerUrl ? (
+                    <form action={deleteCreatorBannerAction}>
+                      <input type="hidden" name="redirectTo" value="/creator/settings" />
+                      <Button type="submit" variant="outline" className="w-full rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive">
+                        <Trash2 className="size-4" />
+                        Hapus Banner
+                      </Button>
+                    </form>
+                  ) : null}
+                </div>
               </div>
             </section>
 
@@ -334,7 +417,6 @@ export default async function CreatorSettingsPage({
                     <UrlField id="tiktokUrl" label="TikTok" value={profile?.tiktok_url} />
                     <UrlField id="youtubeUrl" label="YouTube" value={profile?.youtube_url} />
                     <UrlField id="portfolioUrl" label="Portofolio eksternal" value={profile?.portfolio_url} />
-                    <UrlField id="bannerUrl" label="URL banner" value={profile?.banner_url} />
                   </div>
 
                   <Button type="submit">

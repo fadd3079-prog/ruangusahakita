@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 
 import { getDashboardPathByRole } from "@/lib/auth/guards";
 import type { UserRole } from "@/lib/auth/roles";
+import type { StorageBucket } from "@/lib/storage/buckets";
+import { createStorageSignedUrl } from "@/lib/storage/urls";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -20,6 +22,7 @@ export type OnboardingAccount = Pick<
 
 export type UmkmOnboardingData = {
   account: OnboardingAccount;
+  logoPreviewUrl: string | null;
   profile: Tables["umkm_profiles"]["Row"] | null;
 };
 
@@ -71,9 +74,13 @@ export async function getCurrentUmkmOnboardingData(): Promise<UmkmOnboardingData
     .select("*")
     .eq("user_id", account.id)
     .maybeSingle();
+  const logoPreviewUrl = data
+    ? await getFileAssetPreviewUrl(supabase, data.logo_file_asset_id, data.logo_url)
+    : null;
 
   return {
     account,
+    logoPreviewUrl,
     profile: data ?? null,
   };
 }
@@ -93,4 +100,30 @@ export async function getCurrentCreatorOnboardingData(): Promise<CreatorOnboardi
     account,
     profile: data ?? null,
   };
+}
+
+async function getFileAssetPreviewUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  fileAssetId: string | null,
+  fallbackUrl: string | null,
+) {
+  if (!fileAssetId) {
+    return fallbackUrl;
+  }
+
+  const { data } = await supabase
+    .from("file_assets")
+    .select("bucket_name, storage_path")
+    .eq("id", fileAssetId)
+    .maybeSingle();
+
+  if (!data) {
+    return fallbackUrl;
+  }
+
+  return createStorageSignedUrl(
+    supabase,
+    data.bucket_name as StorageBucket,
+    data.storage_path,
+  );
 }

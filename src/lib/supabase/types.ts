@@ -18,6 +18,7 @@ export interface Database {
           phone: string | null
           avatar_url: string | null
           avatar_storage_path: string | null
+          avatar_file_asset_id: string | null
           account_status: Database['public']['Enums']['account_status']
           onboarding_completed: boolean
           onboarding_skipped_at: string | null
@@ -33,6 +34,7 @@ export interface Database {
           phone?: string | null
           avatar_url?: string | null
           avatar_storage_path?: string | null
+          avatar_file_asset_id?: string | null
           account_status?: Database['public']['Enums']['account_status']
           onboarding_completed?: boolean
           onboarding_skipped_at?: string | null
@@ -48,6 +50,7 @@ export interface Database {
           phone?: string | null
           avatar_url?: string | null
           avatar_storage_path?: string | null
+          avatar_file_asset_id?: string | null
           account_status?: Database['public']['Enums']['account_status']
           onboarding_completed?: boolean
           onboarding_skipped_at?: string | null
@@ -79,6 +82,7 @@ export interface Database {
           tiktok_url: string | null
           whatsapp_number: string | null
           logo_url: string | null
+          logo_file_asset_id: string | null
           target_audience: string | null
           content_preference: string | null
           is_verified: boolean
@@ -99,6 +103,7 @@ export interface Database {
           tiktok_url?: string | null
           whatsapp_number?: string | null
           logo_url?: string | null
+          logo_file_asset_id?: string | null
           target_audience?: string | null
           content_preference?: string | null
           is_verified?: boolean
@@ -119,6 +124,7 @@ export interface Database {
           tiktok_url?: string | null
           whatsapp_number?: string | null
           logo_url?: string | null
+          logo_file_asset_id?: string | null
           target_audience?: string | null
           content_preference?: string | null
           is_verified?: boolean
@@ -152,6 +158,8 @@ export interface Database {
           banner_url: string | null
           avatar_url: string | null
           avatar_storage_path: string | null
+          avatar_file_asset_id: string | null
+          banner_file_asset_id: string | null
           availability_status: Database['public']['Enums']['creator_availability_status']
           starting_price: number | null
           average_rating: number | null
@@ -179,6 +187,8 @@ export interface Database {
           banner_url?: string | null
           avatar_url?: string | null
           avatar_storage_path?: string | null
+          avatar_file_asset_id?: string | null
+          banner_file_asset_id?: string | null
           availability_status?: Database['public']['Enums']['creator_availability_status']
           starting_price?: number | null
           average_rating?: number | null
@@ -206,6 +216,8 @@ export interface Database {
           banner_url?: string | null
           avatar_url?: string | null
           avatar_storage_path?: string | null
+          avatar_file_asset_id?: string | null
+          banner_file_asset_id?: string | null
           availability_status?: Database['public']['Enums']['creator_availability_status']
           starting_price?: number | null
           average_rating?: number | null
@@ -271,6 +283,7 @@ export interface Database {
           short_description: string | null
           description: string | null
           cover_image_url: string | null
+          cover_file_asset_id: string | null
           base_price: number
           estimated_days: number
           revision_count: number
@@ -292,6 +305,7 @@ export interface Database {
           short_description?: string | null
           description?: string | null
           cover_image_url?: string | null
+          cover_file_asset_id?: string | null
           base_price?: number
           estimated_days?: number
           revision_count?: number
@@ -313,6 +327,7 @@ export interface Database {
           short_description?: string | null
           description?: string | null
           cover_image_url?: string | null
+          cover_file_asset_id?: string | null
           base_price?: number
           estimated_days?: number
           revision_count?: number
@@ -441,6 +456,7 @@ export interface Database {
           category_id: string | null
           thumbnail_url: string | null
           thumbnail_storage_path: string | null
+          thumbnail_file_asset_id: string | null
           media_url: string | null
           external_url: string | null
           client_type: string | null
@@ -458,6 +474,7 @@ export interface Database {
           category_id?: string | null
           thumbnail_url?: string | null
           thumbnail_storage_path?: string | null
+          thumbnail_file_asset_id?: string | null
           media_url?: string | null
           external_url?: string | null
           client_type?: string | null
@@ -475,6 +492,7 @@ export interface Database {
           category_id?: string | null
           thumbnail_url?: string | null
           thumbnail_storage_path?: string | null
+          thumbnail_file_asset_id?: string | null
           media_url?: string | null
           external_url?: string | null
           client_type?: string | null
@@ -495,6 +513,160 @@ export interface Database {
             foreignKeyName: "portfolios_category_id_fkey"
             columns: ["category_id"]
             referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      file_assets: {
+        Row: {
+          id: string
+          bucket_name: string
+          storage_path: string
+          original_filename: string | null
+          file_name: string
+          file_extension: string | null
+          mime_type: string | null
+          file_size: number | null
+          visibility: string
+          context: string
+          owner_id: string | null
+          umkm_id: string | null
+          creator_id: string | null
+          service_package_id: string | null
+          portfolio_id: string | null
+          order_id: string | null
+          brief_id: string | null
+          submission_id: string | null
+          revision_id: string | null
+          invoice_id: string | null
+          complaint_id: string | null
+          uploaded_by: string | null
+          created_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          bucket_name: string
+          storage_path: string
+          original_filename?: string | null
+          file_name: string
+          file_extension?: string | null
+          mime_type?: string | null
+          file_size?: number | null
+          visibility?: string
+          context: string
+          owner_id?: string | null
+          umkm_id?: string | null
+          creator_id?: string | null
+          service_package_id?: string | null
+          portfolio_id?: string | null
+          order_id?: string | null
+          brief_id?: string | null
+          submission_id?: string | null
+          revision_id?: string | null
+          invoice_id?: string | null
+          complaint_id?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          bucket_name?: string
+          storage_path?: string
+          original_filename?: string | null
+          file_name?: string
+          file_extension?: string | null
+          mime_type?: string | null
+          file_size?: number | null
+          visibility?: string
+          context?: string
+          owner_id?: string | null
+          umkm_id?: string | null
+          creator_id?: string | null
+          service_package_id?: string | null
+          portfolio_id?: string | null
+          order_id?: string | null
+          brief_id?: string | null
+          submission_id?: string | null
+          revision_id?: string | null
+          invoice_id?: string | null
+          complaint_id?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_assets_owner_id_fkey"
+            columns: ["owner_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_umkm_id_fkey"
+            columns: ["umkm_id"]
+            referencedRelation: "umkm_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_creator_id_fkey"
+            columns: ["creator_id"]
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_service_package_id_fkey"
+            columns: ["service_package_id"]
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_brief_id_fkey"
+            columns: ["brief_id"]
+            referencedRelation: "campaign_briefs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_submission_id_fkey"
+            columns: ["submission_id"]
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_revision_id_fkey"
+            columns: ["revision_id"]
+            referencedRelation: "revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_invoice_id_fkey"
+            columns: ["invoice_id"]
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_complaint_id_fkey"
+            columns: ["complaint_id"]
+            referencedRelation: "complaints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_assets_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]

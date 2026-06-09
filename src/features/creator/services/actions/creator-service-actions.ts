@@ -1,16 +1,29 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { STORAGE_BUCKETS } from "@/lib/storage/buckets";
+import { FILE_SIZE_LIMITS } from "@/lib/storage/file-limits";
+import { createServiceCoverStoragePath } from "@/lib/storage/file-paths";
+import {
+  removeImageAsset,
+  removeImageAssetById,
+  uploadImageAsset,
+} from "@/lib/storage/image-assets";
+import { validateImageFile, type FileValidationErrorCode } from "@/lib/storage/validate-file";
+import { getPublicAssetUrl } from "@/lib/storage/urls";
 
 type CreatorProfile = Database["public"]["Tables"]["creator_profiles"]["Row"];
+type ServicePackageUpdate = Database["public"]["Tables"]["service_packages"]["Update"];
 
 type CreatorContext = {
   creator: CreatorProfile;
   supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
 };
 
 function getText(formData: FormData, key: string) {
@@ -116,6 +129,37 @@ function getTierValidationError(formData: FormData) {
   return null;
 }
 
+function getCoverUploadError(code: FileValidationErrorCode) {
+  switch (code) {
+    case "missing":
+      return "cover_required";
+    case "size":
+      return "cover_size";
+    case "extension":
+    case "type":
+      return "cover_type";
+  }
+}
+
+function validateOptionalCoverFile(formData: FormData, redirectPath: string) {
+  const validation = validateImageFile(formData.get("coverFile"), {
+    maxSizeBytes: FILE_SIZE_LIMITS.serviceCover,
+  });
+
+  if (!validation.ok) {
+    redirect(`${redirectPath}?error=${getCoverUploadError(validation.code)}`);
+  }
+
+  if (validation.file === null || validation.extension === null) {
+    return null;
+  }
+
+  return {
+    extension: validation.extension,
+    file: validation.file,
+  };
+}
+
 async function getCreatorContext(): Promise<CreatorContext> {
   const supabase = await createClient();
   const {
@@ -152,7 +196,7 @@ async function getCreatorContext(): Promise<CreatorContext> {
     redirect("/creator/services?error=profile");
   }
 
-  return { creator, supabase };
+  return { creator, supabase, userId: user.id };
 }
 
 async function ensureOwnedService(context: CreatorContext, serviceId: string) {
@@ -175,10 +219,14 @@ async function ensureOwnedService(context: CreatorContext, serviceId: string) {
   return service.id;
 }
 
-function revalidateServicePaths(serviceId: string) {
+function revalidateServicePaths(serviceId: string, creatorId?: string) {
   revalidatePath("/creator/services");
   revalidatePath(`/creator/services/${serviceId}/edit`);
   revalidatePath(`/layanan/${serviceId}`);
+  revalidatePath("/katalog");
+  if (creatorId) {
+    revalidatePath(`/kreator/${creatorId}`);
+  }
 }
 
 function getTierPayload(formData: FormData) {
@@ -244,7 +292,47 @@ async function canDeactivateTier(
   return !tier?.is_active || count > 1;
 }
 
+async function uploadServiceCover(
+  context: CreatorContext,
+  serviceId: string,
+  validatedFile: ReturnType<typeof validateOptionalCoverFile>,
+) {
+  if (!validatedFile) {
+    return null;
+  }
+
+  const storagePath = createServiceCoverStoragePath(
+    context.creator.id,
+    serviceId,
+    validatedFile.extension,
+  );
+  const uploadResult = await uploadImageAsset({
+    bucket: STORAGE_BUCKETS.PUBLIC_ASSETS,
+    context: "service_cover",
+    creatorId: context.creator.id,
+    extension: validatedFile.extension,
+    file: validatedFile.file,
+    ownerId: context.userId,
+    servicePackageId: serviceId,
+    storagePath,
+    supabase: context.supabase,
+    uploadedBy: context.userId,
+    visibility: "public",
+  });
+
+  if (uploadResult.error || !uploadResult.asset) {
+    redirect(`/creator/services/${serviceId}/edit?error=cover_upload`);
+  }
+
+  return {
+    assetId: uploadResult.asset.id,
+    publicUrl: getPublicAssetUrl(context.supabase, storagePath),
+    storagePath,
+  };
+}
+
 export async function createCreatorServiceAction(formData: FormData) {
+  const coverFile = validateOptionalCoverFile(formData, "/creator/services/new");
   const validationError = getValidationError(formData);
 
   if (validationError) {
@@ -260,10 +348,12 @@ export async function createCreatorServiceAction(formData: FormData) {
   const tierEstimatedDays = getInteger(formData, "tierEstimatedDays") || estimatedDays;
   const tierRevisionCount = getInteger(formData, "tierRevisionCount");
   const slug = `${createSlug(title)}-${Date.now().toString(36)}`;
+  const serviceId = randomUUID();
 
   const { data: service, error: serviceError } = await supabase
     .from("service_packages")
     .insert({
+      id: serviceId,
       base_price: basePrice,
       category_id: getNullableText(formData, "categoryId"),
       creator_id: creator.id,
@@ -304,12 +394,41 @@ export async function createCreatorServiceAction(formData: FormData) {
     redirect(`/creator/services/${service.id}/edit?error=tier`);
   }
 
+  const cover = await uploadServiceCover(
+    { creator, supabase, userId: creator.user_id },
+    service.id,
+    coverFile,
+  );
+
+  if (cover) {
+    const { error: coverError } = await supabase
+      .from("service_packages")
+      .update({
+        cover_file_asset_id: cover.assetId,
+        cover_image_url: cover.publicUrl,
+      })
+      .eq("id", service.id)
+      .eq("creator_id", creator.id);
+
+    if (coverError) {
+      await removeImageAsset(
+        supabase,
+        STORAGE_BUCKETS.PUBLIC_ASSETS,
+        cover.storagePath,
+        cover.assetId,
+      );
+      redirect(`/creator/services/${service.id}/edit?error=cover_save`);
+    }
+  }
+
+  revalidateServicePaths(service.id, creator.id);
   redirect("/creator/services?created=1");
 }
 
 export async function updateCreatorServiceAction(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
   const tierId = getText(formData, "tierId");
+  const editPath = `/creator/services/${serviceId}/edit`;
 
   if (!serviceId) {
     redirect("/creator/services?error=missing");
@@ -318,13 +437,14 @@ export async function updateCreatorServiceAction(formData: FormData) {
   const validationError = getValidationError(formData);
 
   if (validationError) {
-    redirect(`/creator/services/${serviceId}/edit?error=${validationError}`);
+    redirect(`${editPath}?error=${validationError}`);
   }
 
+  const coverFile = validateOptionalCoverFile(formData, editPath);
   const { creator, supabase } = await getCreatorContext();
   const { data: existingService, error: existingError } = await supabase
     .from("service_packages")
-    .select("id")
+    .select("id, cover_file_asset_id")
     .eq("id", serviceId)
     .eq("creator_id", creator.id)
     .is("deleted_at", null)
@@ -341,26 +461,48 @@ export async function updateCreatorServiceAction(formData: FormData) {
   const tierPrice = getNumber(formData, "tierPrice");
   const tierEstimatedDays = getInteger(formData, "tierEstimatedDays") || estimatedDays;
   const tierRevisionCount = getInteger(formData, "tierRevisionCount");
+  const cover = await uploadServiceCover(
+    { creator, supabase, userId: creator.user_id },
+    serviceId,
+    coverFile,
+  );
+  const servicePayload: ServicePackageUpdate = {
+    base_price: basePrice,
+    category_id: getNullableText(formData, "categoryId"),
+    deliverables: getTextList(formData, "deliverables"),
+    description: getNullableText(formData, "description"),
+    estimated_days: estimatedDays,
+    is_active: getText(formData, "isActive") === "true",
+    requirements: getTextList(formData, "requirements"),
+    revision_count: revisionCount,
+    short_description: getNullableText(formData, "shortDescription"),
+    tags: getTextList(formData, "tags"),
+    title,
+  };
+
+  if (cover) {
+    servicePayload.cover_file_asset_id = cover.assetId;
+    servicePayload.cover_image_url = cover.publicUrl;
+  } else if (getText(formData, "removeCoverImage") === "true") {
+    servicePayload.cover_file_asset_id = null;
+    servicePayload.cover_image_url = null;
+  }
 
   const { error: serviceError } = await supabase
     .from("service_packages")
-    .update({
-      base_price: basePrice,
-      category_id: getNullableText(formData, "categoryId"),
-      deliverables: getTextList(formData, "deliverables"),
-      description: getNullableText(formData, "description"),
-      estimated_days: estimatedDays,
-      is_active: getText(formData, "isActive") === "true",
-      requirements: getTextList(formData, "requirements"),
-      revision_count: revisionCount,
-      short_description: getNullableText(formData, "shortDescription"),
-      tags: getTextList(formData, "tags"),
-      title,
-    })
+    .update(servicePayload)
     .eq("id", serviceId)
     .eq("creator_id", creator.id);
 
   if (serviceError) {
+    if (cover) {
+      await removeImageAsset(
+        supabase,
+        STORAGE_BUCKETS.PUBLIC_ASSETS,
+        cover.storagePath,
+        cover.assetId,
+      );
+    }
     redirect(`/creator/services/${serviceId}/edit?error=save`);
   }
 
@@ -390,7 +532,11 @@ export async function updateCreatorServiceAction(formData: FormData) {
     redirect(`/creator/services/${serviceId}/edit?error=tier`);
   }
 
-  revalidateServicePaths(serviceId);
+  if (cover || servicePayload.cover_file_asset_id === null) {
+    await removeImageAssetById(supabase, existingService.cover_file_asset_id);
+  }
+
+  revalidateServicePaths(serviceId, creator.id);
   redirect("/creator/services?updated=1");
 }
 
@@ -424,7 +570,7 @@ export async function toggleCreatorServiceStatusAction(formData: FormData) {
     redirect("/creator/services?error=toggle");
   }
 
-  revalidateServicePaths(serviceId);
+  revalidateServicePaths(serviceId, creator.id);
   redirect("/creator/services?toggled=1");
 }
 

@@ -55,17 +55,32 @@ export function CreatorCtaSection() {
             </Link>
           </Button>
         </div>
-        <div className="marketplace-card overflow-hidden">
-          <div
-            className="aspect-video bg-cover bg-center"
-            style={{ backgroundImage: "url('/images/image (10).webp')" }}
-          />
-          <div className="border-t border-border/70 bg-card p-5">
+        <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+          <div className="grid gap-3">
+            {creatorHighlights.map((highlight) => {
+              const Icon = highlight.icon;
+
+              return (
+                <div
+                  key={highlight.label}
+                  className="flex items-center gap-3 rounded-xl border border-border/70 bg-background px-4 py-3"
+                >
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {highlight.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-5 border-t border-border/70 pt-5">
             <p className="text-sm font-semibold text-foreground">
               Workspace kreator digital
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Satu tempat untuk profil, paket jasa, portofolio, dan order masuk.
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Satu tempat untuk profil, paket jasa, portofolio, dan pesanan masuk.
             </p>
           </div>
         </div>

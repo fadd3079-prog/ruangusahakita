@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   Clock,
   FileCheck2,
+  Image as ImageIcon,
   Layers3,
   Pencil,
   PlusCircle,
@@ -158,11 +159,19 @@ export default async function CreatorServicesPage({
                   className="marketplace-card h-full overflow-hidden p-0"
                 >
                   <div
-                    className="aspect-[16/9] bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url("${item.service.cover_image_url || "/images/image (10).webp"}")`,
-                    }}
-                  />
+                    className="grid aspect-[16/9] place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
+                    style={
+                      item.service.cover_image_url
+                        ? {
+                            backgroundImage: `url("${item.service.cover_image_url}")`,
+                          }
+                        : undefined
+                    }
+                  >
+                    {item.service.cover_image_url ? null : (
+                      <ImageIcon className="size-10 opacity-40" aria-hidden="true" />
+                    )}
+                  </div>
                   <CardHeader className="gap-4 px-4 pb-2 pt-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">

@@ -7,9 +7,18 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { STORAGE_BUCKETS } from "@/lib/storage/buckets";
 import { FILE_SIZE_LIMITS } from "@/lib/storage/file-limits";
-import { createAvatarStoragePath } from "@/lib/storage/file-paths";
+import {
+  createAvatarStoragePath,
+  createCreatorBannerStoragePath,
+} from "@/lib/storage/file-paths";
+import {
+  removeImageAsset,
+  removeImageAssetById,
+  uploadImageAsset,
+} from "@/lib/storage/image-assets";
 import { validateImageFile, type FileValidationErrorCode } from "@/lib/storage/validate-file";
-import { getAvatarPublicUrl } from "@/lib/storage/urls";
+import { getAvatarPublicUrl, getPublicAssetUrl } from "@/lib/storage/urls";
+import { isCreatorProfileComplete } from "@/features/onboarding/lib/profile-completion";
 
 type AvailabilityStatus =
   Database["public"]["Enums"]["creator_availability_status"];
@@ -69,6 +78,18 @@ function getAvatarUploadError(code: FileValidationErrorCode) {
   }
 }
 
+function getBannerUploadError(code: FileValidationErrorCode) {
+  switch (code) {
+    case "missing":
+      return "banner_required";
+    case "size":
+      return "banner_size";
+    case "extension":
+    case "type":
+      return "banner_type";
+  }
+}
+
 async function getCreatorContext() {
   const supabase = await createClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -94,7 +115,7 @@ async function getCreatorContext() {
 
   const { data: creator, error: creatorError } = await supabase
     .from("creator_profiles")
-    .select("id")
+    .select("*")
     .eq("user_id", userData.user.id)
     .maybeSingle();
 
@@ -122,23 +143,34 @@ export async function updateCreatorProfileAction(formData: FormData) {
     redirect(`${redirectTo}?error=availability`);
   }
 
-  const { supabase, userId } = await getCreatorContext();
+  const { creator, supabase, userId } = await getCreatorContext();
   const responseTimeHours = getNumber(formData, "responseTimeHours");
   const startingPrice = getNumber(formData, "startingPrice");
+  const city = getNullableText(formData, "city");
+  const province = getNullableText(formData, "province");
+  const bio = getNullableText(formData, "bio");
+  const niche = getNullableText(formData, "niche");
+  const nextProfileCompletion = isCreatorProfileComplete({
+    availability_status: availabilityStatusValue,
+    bio,
+    city,
+    display_name: displayName,
+    niche,
+    province,
+  });
 
   const { error: creatorError } = await supabase
     .from("creator_profiles")
     .update({
       availability_status: availabilityStatusValue,
-      banner_url: getNullableText(formData, "bannerUrl"),
-      bio: getNullableText(formData, "bio"),
-      city: getNullableText(formData, "city"),
+      bio,
+      city,
       display_name: displayName,
       instagram_url: getNullableText(formData, "instagramUrl"),
       location: getNullableText(formData, "location"),
-      niche: getNullableText(formData, "niche"),
+      niche,
       portfolio_url: getNullableText(formData, "portfolioUrl"),
-      province: getNullableText(formData, "province"),
+      province,
       response_time_hours: responseTimeHours,
       skills: getTextList(formData, "skills"),
       starting_price: startingPrice,
@@ -153,13 +185,19 @@ export async function updateCreatorProfileAction(formData: FormData) {
 
   const fullName = getNullableText(formData, "fullName");
   const phone = getNullableText(formData, "phone");
+  const accountUpdate: Database["public"]["Tables"]["profiles"]["Update"] = {
+    full_name: fullName ?? displayName,
+    phone,
+  };
+
+  if (nextProfileCompletion) {
+    accountUpdate.onboarding_completed = true;
+    accountUpdate.onboarding_skipped_at = null;
+  }
 
   const { error: accountError } = await supabase
     .from("profiles")
-    .update({
-      full_name: fullName ?? displayName,
-      phone,
-    })
+    .update(accountUpdate)
     .eq("id", userId);
 
   if (accountError) {
@@ -169,6 +207,8 @@ export async function updateCreatorProfileAction(formData: FormData) {
   revalidatePath("/creator/profile");
   revalidatePath("/creator/settings");
   revalidatePath("/creator/dashboard");
+  revalidatePath("/katalog");
+  revalidatePath(`/kreator/${creator.id}`);
   redirect(`${redirectTo}?saved=1`);
 }
 
@@ -191,15 +231,20 @@ export async function uploadCreatorAvatarAction(formData: FormData) {
   const avatarExtension = validation.extension;
   const { creator, supabase, userId } = await getCreatorContext();
   const storagePath = createAvatarStoragePath(userId, avatarExtension);
-  const { error: uploadError } = await supabase.storage
-    .from(STORAGE_BUCKETS.AVATARS)
-    .upload(storagePath, avatarFile, {
-      cacheControl: "3600",
-      contentType: avatarFile.type,
-      upsert: false,
-    });
+  const uploadResult = await uploadImageAsset({
+    bucket: STORAGE_BUCKETS.AVATARS,
+    context: "creator_avatar",
+    creatorId: creator.id,
+    extension: avatarExtension,
+    file: avatarFile,
+    ownerId: userId,
+    storagePath,
+    supabase,
+    uploadedBy: userId,
+    visibility: "public",
+  });
 
-  if (uploadError) {
+  if (uploadResult.error || !uploadResult.asset) {
     redirect(`${redirectTo}?error=avatar_upload`);
   }
 
@@ -207,6 +252,7 @@ export async function uploadCreatorAvatarAction(formData: FormData) {
   const { error: creatorError } = await supabase
     .from("creator_profiles")
     .update({
+      avatar_file_asset_id: uploadResult.asset.id,
       avatar_storage_path: storagePath,
       avatar_url: avatarUrl,
     })
@@ -214,13 +260,19 @@ export async function uploadCreatorAvatarAction(formData: FormData) {
     .eq("user_id", userId);
 
   if (creatorError) {
-    await supabase.storage.from(STORAGE_BUCKETS.AVATARS).remove([storagePath]);
+    await removeImageAsset(
+      supabase,
+      STORAGE_BUCKETS.AVATARS,
+      storagePath,
+      uploadResult.asset.id,
+    );
     redirect(`${redirectTo}?error=avatar_save`);
   }
 
   const { error: accountError } = await supabase
     .from("profiles")
     .update({
+      avatar_file_asset_id: uploadResult.asset.id,
       avatar_storage_path: storagePath,
       avatar_url: avatarUrl,
     })
@@ -230,6 +282,147 @@ export async function uploadCreatorAvatarAction(formData: FormData) {
     redirect(`${redirectTo}?error=avatar_account`);
   }
 
+  await removeImageAsset(
+    supabase,
+    STORAGE_BUCKETS.AVATARS,
+    creator.avatar_storage_path,
+    creator.avatar_file_asset_id,
+  );
+  revalidatePath("/creator/profile");
+  revalidatePath("/creator/settings");
+  revalidatePath("/creator/dashboard");
+  revalidatePath("/katalog");
+  revalidatePath(`/kreator/${creator.id}`);
+  redirect(`${redirectTo}?saved=1`);
+}
+
+export async function deleteCreatorAvatarAction(formData: FormData) {
+  const redirectTo = getSafeRedirectPath(formData);
+  const { creator, supabase, userId } = await getCreatorContext();
+  const { error: creatorError } = await supabase
+    .from("creator_profiles")
+    .update({
+      avatar_file_asset_id: null,
+      avatar_storage_path: null,
+      avatar_url: null,
+    })
+    .eq("id", creator.id)
+    .eq("user_id", userId);
+
+  if (creatorError) {
+    redirect(`${redirectTo}?error=avatar_save`);
+  }
+
+  const { error: accountError } = await supabase
+    .from("profiles")
+    .update({
+      avatar_file_asset_id: null,
+      avatar_storage_path: null,
+      avatar_url: null,
+    })
+    .eq("id", userId);
+
+  if (accountError) {
+    redirect(`${redirectTo}?error=avatar_account`);
+  }
+
+  await removeImageAsset(
+    supabase,
+    STORAGE_BUCKETS.AVATARS,
+    creator.avatar_storage_path,
+    creator.avatar_file_asset_id,
+  );
+  revalidatePath("/creator/profile");
+  revalidatePath("/creator/settings");
+  revalidatePath("/creator/dashboard");
+  revalidatePath("/katalog");
+  revalidatePath(`/kreator/${creator.id}`);
+  redirect(`${redirectTo}?saved=1`);
+}
+
+export async function uploadCreatorBannerAction(formData: FormData) {
+  const redirectTo = getSafeRedirectPath(formData);
+  const validation = validateImageFile(formData.get("bannerFile"), {
+    maxSizeBytes: FILE_SIZE_LIMITS.creatorBanner,
+    required: true,
+  });
+
+  if (!validation.ok) {
+    redirect(`${redirectTo}?error=${getBannerUploadError(validation.code)}`);
+  }
+
+  if (validation.file === null || validation.extension === null) {
+    redirect(`${redirectTo}?error=banner_required`);
+  }
+
+  const { creator, supabase, userId } = await getCreatorContext();
+  const storagePath = createCreatorBannerStoragePath(
+    creator.id,
+    validation.extension,
+  );
+  const uploadResult = await uploadImageAsset({
+    bucket: STORAGE_BUCKETS.PUBLIC_ASSETS,
+    context: "creator_banner",
+    creatorId: creator.id,
+    extension: validation.extension,
+    file: validation.file,
+    ownerId: userId,
+    storagePath,
+    supabase,
+    uploadedBy: userId,
+    visibility: "public",
+  });
+
+  if (uploadResult.error || !uploadResult.asset) {
+    redirect(`${redirectTo}?error=banner_upload`);
+  }
+
+  const bannerUrl = getPublicAssetUrl(supabase, storagePath);
+  const { error } = await supabase
+    .from("creator_profiles")
+    .update({
+      banner_file_asset_id: uploadResult.asset.id,
+      banner_url: bannerUrl,
+    })
+    .eq("id", creator.id)
+    .eq("user_id", userId);
+
+  if (error) {
+    await removeImageAsset(
+      supabase,
+      STORAGE_BUCKETS.PUBLIC_ASSETS,
+      storagePath,
+      uploadResult.asset.id,
+    );
+    redirect(`${redirectTo}?error=banner_save`);
+  }
+
+  await removeImageAssetById(supabase, creator.banner_file_asset_id);
+  revalidatePath("/creator/profile");
+  revalidatePath("/creator/settings");
+  revalidatePath("/creator/dashboard");
+  revalidatePath("/katalog");
+  revalidatePath(`/kreator/${creator.id}`);
+  redirect(`${redirectTo}?saved=1`);
+}
+
+export async function deleteCreatorBannerAction(formData: FormData) {
+  const redirectTo = getSafeRedirectPath(formData);
+  const { creator, supabase, userId } = await getCreatorContext();
+  const { error } = await supabase
+    .from("creator_profiles")
+    .update({
+      banner_file_asset_id: null,
+      banner_url: null,
+    })
+    .eq("id", creator.id)
+    .eq("user_id", userId);
+
+  if (error) {
+    redirect(`${redirectTo}?error=banner_save`);
+  }
+
+  await removeImageAssetById(supabase, creator.banner_file_asset_id);
   revalidatePath("/creator/profile");
   revalidatePath("/creator/settings");
   revalidatePath("/creator/dashboard");

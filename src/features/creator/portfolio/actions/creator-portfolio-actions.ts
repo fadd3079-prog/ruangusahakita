@@ -9,6 +9,11 @@ import type { Database } from "@/lib/supabase/types";
 import { STORAGE_BUCKETS } from "@/lib/storage/buckets";
 import { FILE_SIZE_LIMITS } from "@/lib/storage/file-limits";
 import { createPortfolioThumbnailStoragePath } from "@/lib/storage/file-paths";
+import {
+  removeImageAsset,
+  removeImageAssetById,
+  uploadImageAsset,
+} from "@/lib/storage/image-assets";
 import { validateImageFile, type FileValidationErrorCode } from "@/lib/storage/validate-file";
 
 type PortfolioUpdate = Database["public"]["Tables"]["portfolios"]["Update"];
@@ -57,15 +62,15 @@ function revalidateCreatorPortfolioPaths(creatorId: string) {
 async function removeStorageObject(
   supabase: CreatorSupabaseClient,
   storagePath: string | null,
+  assetId?: string | null,
 ) {
-  if (storagePath) {
-    await supabase.storage.from(STORAGE_BUCKETS.PORTFOLIOS).remove([storagePath]);
-  }
+  await removeImageAsset(supabase, STORAGE_BUCKETS.PORTFOLIOS, storagePath, assetId);
 }
 
 async function uploadPortfolioThumbnail(
   supabase: CreatorSupabaseClient,
   creatorId: string,
+  userId: string,
   portfolioId: string,
   formData: FormData,
 ) {
@@ -86,19 +91,28 @@ async function uploadPortfolioThumbnail(
     portfolioId,
     validation.extension,
   );
-  const { error } = await supabase.storage
-    .from(STORAGE_BUCKETS.PORTFOLIOS)
-    .upload(storagePath, validation.file, {
-      cacheControl: "3600",
-      contentType: validation.file.type,
-      upsert: false,
-    });
+  const uploadResult = await uploadImageAsset({
+    bucket: STORAGE_BUCKETS.PORTFOLIOS,
+    context: "portfolio_thumbnail",
+    creatorId,
+    extension: validation.extension,
+    file: validation.file,
+    ownerId: userId,
+    portfolioId,
+    storagePath,
+    supabase,
+    uploadedBy: userId,
+    visibility: "public",
+  });
 
-  if (error) {
+  if (uploadResult.error || !uploadResult.asset) {
     redirect("/creator/portfolio?error=thumbnail_upload");
   }
 
-  return storagePath;
+  return {
+    assetId: uploadResult.asset.id,
+    storagePath,
+  };
 }
 
 async function getCreatorContext() {
@@ -134,7 +148,7 @@ async function getCreatorContext() {
     redirect("/creator/portfolio?error=profile");
   }
 
-  return { creator, supabase };
+  return { creator, supabase, userId: userData.user.id };
 }
 
 export async function createCreatorPortfolioAction(formData: FormData) {
@@ -144,11 +158,12 @@ export async function createCreatorPortfolioAction(formData: FormData) {
     redirect("/creator/portfolio?error=required");
   }
 
-  const { creator, supabase } = await getCreatorContext();
+  const { creator, supabase, userId } = await getCreatorContext();
   const portfolioId = randomUUID();
   const thumbnailStoragePath = await uploadPortfolioThumbnail(
     supabase,
     creator.id,
+    userId,
     portfolioId,
     formData,
   );
@@ -162,12 +177,17 @@ export async function createCreatorPortfolioAction(formData: FormData) {
     is_featured: getBoolean(formData, "isFeatured"),
     media_url: getNullableText(formData, "mediaUrl"),
     sort_order: getInteger(formData, "sortOrder"),
-    thumbnail_storage_path: thumbnailStoragePath,
+    thumbnail_file_asset_id: thumbnailStoragePath?.assetId ?? null,
+    thumbnail_storage_path: thumbnailStoragePath?.storagePath ?? null,
     title,
   });
 
   if (error) {
-    await removeStorageObject(supabase, thumbnailStoragePath);
+    await removeStorageObject(
+      supabase,
+      thumbnailStoragePath?.storagePath ?? null,
+      thumbnailStoragePath?.assetId ?? null,
+    );
     redirect("/creator/portfolio?error=save");
   }
 
@@ -183,10 +203,10 @@ export async function updateCreatorPortfolioAction(formData: FormData) {
     redirect("/creator/portfolio?error=required");
   }
 
-  const { creator, supabase } = await getCreatorContext();
+  const { creator, supabase, userId } = await getCreatorContext();
   const { data: existingPortfolio, error: existingError } = await supabase
     .from("portfolios")
-    .select("id, thumbnail_storage_path")
+    .select("id, thumbnail_storage_path, thumbnail_file_asset_id")
     .eq("id", portfolioId)
     .eq("creator_id", creator.id)
     .is("deleted_at", null)
@@ -199,6 +219,7 @@ export async function updateCreatorPortfolioAction(formData: FormData) {
   const thumbnailStoragePath = await uploadPortfolioThumbnail(
     supabase,
     creator.id,
+    userId,
     portfolioId,
     formData,
   );
@@ -214,7 +235,8 @@ export async function updateCreatorPortfolioAction(formData: FormData) {
   };
 
   if (thumbnailStoragePath) {
-    updatePayload.thumbnail_storage_path = thumbnailStoragePath;
+    updatePayload.thumbnail_file_asset_id = thumbnailStoragePath.assetId;
+    updatePayload.thumbnail_storage_path = thumbnailStoragePath.storagePath;
     updatePayload.thumbnail_url = null;
   }
 
@@ -228,16 +250,20 @@ export async function updateCreatorPortfolioAction(formData: FormData) {
     .maybeSingle();
 
   if (error || !updatedPortfolio) {
-    await removeStorageObject(supabase, thumbnailStoragePath);
+    await removeStorageObject(
+      supabase,
+      thumbnailStoragePath?.storagePath ?? null,
+      thumbnailStoragePath?.assetId ?? null,
+    );
     redirect("/creator/portfolio?error=save");
   }
 
-  if (
-    thumbnailStoragePath &&
-    existingPortfolio.thumbnail_storage_path &&
-    existingPortfolio.thumbnail_storage_path !== thumbnailStoragePath
-  ) {
-    await removeStorageObject(supabase, existingPortfolio.thumbnail_storage_path);
+  if (thumbnailStoragePath) {
+    if (existingPortfolio.thumbnail_file_asset_id) {
+      await removeImageAssetById(supabase, existingPortfolio.thumbnail_file_asset_id);
+    } else if (existingPortfolio.thumbnail_storage_path) {
+      await removeStorageObject(supabase, existingPortfolio.thumbnail_storage_path);
+    }
   }
 
   revalidateCreatorPortfolioPaths(creator.id);
@@ -254,7 +280,7 @@ export async function deleteCreatorPortfolioAction(formData: FormData) {
   const { creator, supabase } = await getCreatorContext();
   const { data: existingPortfolio, error: existingError } = await supabase
     .from("portfolios")
-    .select("id, thumbnail_storage_path")
+    .select("id, thumbnail_storage_path, thumbnail_file_asset_id")
     .eq("id", portfolioId)
     .eq("creator_id", creator.id)
     .is("deleted_at", null)
@@ -277,7 +303,11 @@ export async function deleteCreatorPortfolioAction(formData: FormData) {
     redirect("/creator/portfolio?error=delete");
   }
 
-  await removeStorageObject(supabase, existingPortfolio.thumbnail_storage_path);
+  await removeStorageObject(
+    supabase,
+    existingPortfolio.thumbnail_storage_path,
+    existingPortfolio.thumbnail_file_asset_id,
+  );
   revalidateCreatorPortfolioPaths(creator.id);
   redirect("/creator/portfolio?deleted=1");
 }

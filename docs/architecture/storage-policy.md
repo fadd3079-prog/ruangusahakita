@@ -1837,7 +1837,27 @@ Gambar portofolio disimpan di bucket private `portfolios`. Database menyimpan `p
 
 Trade-off fase ini:
 
-* Belum membuat tabel generik `file_assets`.
-* Metadata file creator disimpan langsung pada row profil dan portofolio.
+* Metadata file creator masih disimpan langsung pada row profil dan portofolio.
 * Pendekatan ini cukup untuk avatar dan thumbnail portofolio, tetapi brief asset, hasil konten, revisi, invoice, dan komplain tetap membutuhkan metadata table atau model file khusus pada fase berikutnya.
+
+## 51. File Assets Foundation Phase
+
+Fase berikutnya menambahkan tabel generik `file_assets` untuk menyimpan metadata upload lintas konteks. Upload image dashboard saat ini mulai menulis metadata ke `file_assets`, lalu menyimpan pointer pada row profil, layanan, portofolio, atau brief yang relevan.
+
+Bucket yang digunakan:
+
+* `avatars`: public, image-only, maksimal 2 MB.
+* `public-assets`: public, image-only, maksimal 5 MB untuk banner kreator dan cover layanan.
+* `business-assets`: private, image-only, maksimal 2 MB untuk logo UMKM.
+* `portfolios`: private, image-only, maksimal 5 MB untuk thumbnail portofolio.
+* `brief-assets`: private, image-only, maksimal 5 MB untuk gambar pendukung brief.
+
+Media public-facing seperti avatar, banner kreator, dan cover layanan boleh memakai URL publik karena memang tampil di katalog dan profil publik. Bucket privat seperti `portfolios`, `business-assets`, dan `brief-assets` tetap disajikan melalui signed URL dari server.
+
+Trade-off fase ini:
+
+* Kolom URL/path lama tetap dipertahankan untuk kompatibilitas UI dan data existing.
+* `file_assets` belum menjadi satu-satunya sumber metadata file; beberapa row masih menyimpan path langsung sebagai pointer cepat.
+* Soft delete metadata dilakukan dengan `deleted_at`, sementara object storage lama dihapus setelah update row berhasil.
+* Upload masih dibatasi untuk image kecil. File video besar dan dokumen hasil konten tetap diarahkan ke fase storage berikutnya.
 

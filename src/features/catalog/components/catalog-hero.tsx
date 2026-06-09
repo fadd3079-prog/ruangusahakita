@@ -45,11 +45,27 @@ export function CatalogHero({
             dan ketersediaan.
           </p>
         </div>
-        <div className="marketplace-card overflow-hidden">
-          <div
-            className="aspect-[16/9] bg-cover bg-center"
-            style={{ backgroundImage: "url('/images/image (1).webp')" }}
-          />
+        <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+          <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                <Search className="size-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Jelajahi layanan digital aktif
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Bandingkan kreator, paket jasa, dan portofolio dari katalog aktif.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <CatalogMetric label="Kreator" value={creatorCount} />
+            <CatalogMetric label="Layanan" value={serviceCount} />
+            <CatalogMetric label="Kategori" value={categoryCount} />
+          </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-4">
           {highlights.map((item) => {
@@ -68,5 +84,14 @@ export function CatalogHero({
         </div>
       </PageContainer>
     </section>
+  );
+}
+
+function CatalogMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-border/70 bg-background p-3 text-center">
+      <p className="text-2xl font-semibold text-foreground">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+    </div>
   );
 }

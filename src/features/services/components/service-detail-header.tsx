@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, FileCheck2, Layers3, MapPin, Star } from "lucide-react";
+import { Clock, FileCheck2, Image as ImageIcon, Layers3, MapPin, Star } from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
 import { PageContainer } from "@/components/layout/page-container";
@@ -44,6 +44,21 @@ export function ServiceDetailHeader({
           <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
             {service.description}
           </p>
+          <div
+            className="mt-8 grid aspect-[16/7] min-h-56 place-items-center rounded-2xl border border-border/70 bg-muted/50 bg-cover bg-center text-muted-foreground"
+            style={
+              service.coverImageUrl
+                ? { backgroundImage: `url("${service.coverImageUrl}")` }
+                : undefined
+            }
+          >
+            {service.coverImageUrl ? null : (
+              <div className="text-center">
+                <ImageIcon className="mx-auto size-10 opacity-40" aria-hidden="true" />
+                <p className="mt-2 text-sm">Cover layanan belum tersedia</p>
+              </div>
+            )}
+          </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Metric icon={Clock} label="Estimasi" value={`${service.estimatedDays} hari`} />
             <Metric icon={FileCheck2} label="Revisi" value={`${service.revisionCount} kali`} />

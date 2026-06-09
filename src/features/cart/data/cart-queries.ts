@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import type { StorageBucket } from "@/lib/storage/buckets";
+import { createStorageSignedUrl } from "@/lib/storage/urls";
 import type { Database } from "@/lib/supabase/types";
 
 type Tables = Database["public"]["Tables"];
@@ -12,6 +14,9 @@ type AddonRow = Tables["service_addons"]["Row"];
 type CreatorRow = Tables["creator_profiles"]["Row"];
 type CategoryRow = Tables["service_categories"]["Row"];
 type BriefRow = Tables["campaign_briefs"]["Row"];
+type FileAssetRow = Tables["file_assets"]["Row"];
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 export type CartAddonDisplay = {
   id: string;
@@ -48,6 +53,7 @@ export type CurrentCart = {
 
 export type CheckoutBriefData = {
   additionalNotes: string | null;
+  assets: readonly CheckoutBriefAsset[];
   businessCategory: string | null;
   businessName: string;
   campaignGoal: string;
@@ -58,6 +64,12 @@ export type CheckoutBriefData = {
   promotedFocus: string;
   referenceLinks: readonly string[];
   targetAudience: string | null;
+};
+
+export type CheckoutBriefAsset = {
+  id: string;
+  name: string;
+  url: string | null;
 };
 
 export type CheckoutUmkmData = {
@@ -212,8 +224,10 @@ export async function getCurrentCheckoutData(): Promise<CurrentCheckoutData> {
       .limit(1)
       .maybeSingle();
 
+    const assets = brief ? await getBriefAssetPreviews(supabase, brief.id) : [];
+
     return {
-      brief: brief ? mapBrief(brief) : null,
+      brief: brief ? mapBrief(brief, assets) : null,
       cart,
       umkm: {
         businessCategory: umkm.business_category,
@@ -319,9 +333,40 @@ async function enrichCartItems(items: readonly CartItemRow[]) {
   });
 }
 
-function mapBrief(brief: BriefRow): CheckoutBriefData {
+async function getBriefAssetPreviews(
+  supabase: Supabase,
+  briefId: string,
+): Promise<CheckoutBriefAsset[]> {
+  const { data } = await supabase
+    .from("file_assets")
+    .select("*")
+    .eq("brief_id", briefId)
+    .eq("context", "brief_asset")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true });
+
+  const assets = (data ?? []) as FileAssetRow[];
+
+  return Promise.all(
+    assets.map(async (asset) => ({
+      id: asset.id,
+      name: asset.original_filename ?? asset.file_name,
+      url: await createStorageSignedUrl(
+        supabase,
+        asset.bucket_name as StorageBucket,
+        asset.storage_path,
+      ),
+    })),
+  );
+}
+
+function mapBrief(
+  brief: BriefRow,
+  assets: readonly CheckoutBriefAsset[],
+): CheckoutBriefData {
   return {
     additionalNotes: brief.additional_notes,
+    assets,
     businessCategory: brief.business_category,
     businessName: brief.business_name,
     campaignGoal: brief.campaign_goal,

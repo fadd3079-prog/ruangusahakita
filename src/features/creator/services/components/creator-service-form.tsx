@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Info, Save } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Info, Save } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,10 @@ const errorMessages = {
   addon_required: "Nama add-on wajib diisi.",
   addon_save: "Add-on belum bisa disimpan.",
   addon_update: "Add-on belum bisa diperbarui.",
+  cover_save: "Cover layanan sudah diunggah, tetapi belum bisa disimpan ke layanan.",
+  cover_size: "Ukuran cover layanan maksimal 5 MB.",
+  cover_type: "Cover layanan harus berupa JPG, PNG, atau WebP.",
+  cover_upload: "Cover layanan belum bisa diunggah ke storage.",
   missing: "Data layanan tidak lengkap.",
   not_found: "Layanan tidak ditemukan atau bukan milik akun kreator ini.",
   price: "Harga layanan dan harga tier wajib lebih dari nol.",
@@ -230,6 +234,55 @@ export function CreatorServiceForm({
                     className="h-11"
                   />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+            <CardHeader>
+              <CardTitle className="text-xl">Cover katalog</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div
+                className="grid aspect-[16/9] place-items-center rounded-2xl bg-muted/50 bg-cover bg-center text-muted-foreground ring-1 ring-border"
+                style={
+                  servicePackage?.cover_image_url
+                    ? { backgroundImage: `url("${servicePackage.cover_image_url}")` }
+                    : undefined
+                }
+              >
+                {servicePackage?.cover_image_url ? null : (
+                  <div className="text-center">
+                    <ImageIcon className="mx-auto size-10 opacity-50" />
+                    <p className="mt-2 text-sm">Cover layanan belum tersedia</p>
+                  </div>
+                )}
+              </div>
+              <div className="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="coverFile">File cover layanan</Label>
+                  <Input
+                    id="coverFile"
+                    name="coverFile"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="h-11"
+                  />
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Kosongkan jika tidak ingin mengganti cover saat menyimpan.
+                  </p>
+                </div>
+                {servicePackage?.cover_image_url ? (
+                  <label className="flex h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      name="removeCoverImage"
+                      value="true"
+                      className="size-4 accent-primary"
+                    />
+                    Hapus cover
+                  </label>
+                ) : null}
               </div>
             </CardContent>
           </Card>

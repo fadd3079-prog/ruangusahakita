@@ -26,6 +26,9 @@ type UmkmCheckoutPageProps = {
 
 const errorMessages = {
   addon_unavailable: "Add-on layanan tidak tersedia. Periksa ulang keranjang Anda.",
+  brief_asset_size: "Gambar aset brief maksimal 5 MB per file.",
+  brief_asset_type: "Aset brief harus berupa gambar JPG, PNG, atau WebP.",
+  brief_asset_upload: "Aset brief belum bisa diunggah. Coba lagi beberapa saat.",
   brief_required: "Nama usaha, kategori usaha, fokus promosi, dan tujuan campaign wajib diisi.",
   brief_save: "Brief campaign belum bisa disimpan.",
   cart_empty: "Keranjang layanan masih kosong.",

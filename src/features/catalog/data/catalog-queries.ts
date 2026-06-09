@@ -311,7 +311,7 @@ export async function getPublicCatalogData() {
       };
     }
 
-    const creators: PublicCreatorProfile[] = creatorsRes.data.map((item) => ({
+    const publicCreators: PublicCreatorProfile[] = creatorsRes.data.map((item) => ({
       id: item.id,
       userId: item.user_id,
       displayName: item.display_name,
@@ -332,25 +332,33 @@ export async function getPublicCatalogData() {
       isVerified: item.is_verified,
       isFeatured: item.is_featured,
     }));
-
-    const services: PublicServicePackage[] = servicesRes.data.map((item) => ({
-      id: item.id,
-      creatorId: item.creator_id,
-      categoryId: item.category_id ?? "",
-      title: item.title,
-      slug: item.slug,
-      shortDescription: item.short_description ?? "",
-      description: item.description ?? "",
-      coverImageUrl: item.cover_image_url ?? "",
-      basePrice: Number(item.base_price),
-      estimatedDays: item.estimated_days,
-      revisionCount: item.revision_count,
-      deliverables: item.deliverables ?? [],
-      requirements: item.requirements ?? [],
-      tags: item.tags ?? [],
-      isActive: item.is_active,
-      isFeatured: item.is_featured,
-    }));
+    const publicCreatorIds = new Set(publicCreators.map((creator) => creator.id));
+    const services: PublicServicePackage[] = servicesRes.data
+      .filter((item) => publicCreatorIds.has(item.creator_id))
+      .map((item) => ({
+        id: item.id,
+        creatorId: item.creator_id,
+        categoryId: item.category_id ?? "",
+        title: item.title,
+        slug: item.slug,
+        shortDescription: item.short_description ?? "",
+        description: item.description ?? "",
+        coverImageUrl: item.cover_image_url ?? "",
+        basePrice: Number(item.base_price),
+        estimatedDays: item.estimated_days,
+        revisionCount: item.revision_count,
+        deliverables: item.deliverables ?? [],
+        requirements: item.requirements ?? [],
+        tags: item.tags ?? [],
+        isActive: item.is_active,
+        isFeatured: item.is_featured,
+      }));
+    const activeServiceCreatorIds = new Set(
+      services.map((service) => service.creatorId),
+    );
+    const creators = publicCreators.filter((item) =>
+      activeServiceCreatorIds.has(item.id),
+    );
 
     return {
       creators,

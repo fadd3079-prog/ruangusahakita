@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { ReactNode } from "react";
+import { Image as ImageIcon } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +44,7 @@ export function UmkmSettingsForm({ data, updated }: UmkmSettingsFormProps) {
   }
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form action={formAction} encType="multipart/form-data" className="space-y-8">
       {state.error ? (
         <Alert variant="destructive">
           <AlertTitle>Pengaturan belum tersimpan</AlertTitle>
@@ -59,6 +60,55 @@ export function UmkmSettingsForm({ data, updated }: UmkmSettingsFormProps) {
           </AlertDescription>
         </Alert>
       ) : null}
+
+      <section id="logo" className="rounded-2xl border border-border/70 bg-card p-6 shadow-[var(--shadow-soft)]">
+        <div className="grid gap-5 md:grid-cols-[180px_1fr] md:items-center">
+          <div
+            className="grid aspect-square w-full max-w-44 place-items-center rounded-2xl bg-muted/60 bg-cover bg-center text-muted-foreground ring-1 ring-border"
+            style={
+              data.logoPreviewUrl
+                ? { backgroundImage: `url("${data.logoPreviewUrl}")` }
+                : undefined
+            }
+          >
+            {data.logoPreviewUrl ? null : (
+              <div className="text-center">
+                <ImageIcon className="mx-auto size-8 opacity-50" aria-hidden="true" />
+                <p className="mt-2 text-xs font-medium">Logo belum tersedia</p>
+              </div>
+            )}
+          </div>
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold">Logo UMKM</h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {data.logoPreviewUrl
+                  ? "Logo ini dipakai sebagai identitas visual pada area UMKM."
+                  : "Unggah logo agar identitas UMKM tampil lebih jelas di dashboard dan brief campaign."}
+              </p>
+            </div>
+            <Field label="File logo" htmlFor="logoFile">
+              <Input
+                id="logoFile"
+                name="logoFile"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="h-11"
+              />
+            </Field>
+            {data.logoPreviewUrl ? (
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  name="removeLogo"
+                  className="size-4 rounded border-border"
+                />
+                Hapus logo saat menyimpan
+              </label>
+            ) : null}
+          </div>
+        </div>
+      </section>
 
       <section id="business" className="rounded-2xl border border-border/70 bg-card p-6 shadow-[var(--shadow-soft)]">
         <h2 className="mb-6 text-xl font-semibold">Profil Bisnis</h2>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { FileUp, Info, Save, Sparkles } from "lucide-react";
+import { FileUp, Image as ImageIcon, Info, Save, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,7 +50,11 @@ export function CampaignBriefForm({
         </div>
       </div>
 
-      <form action={createOrUpdateCampaignBrief} className="space-y-6 p-5 sm:p-6">
+      <form
+        action={createOrUpdateCampaignBrief}
+        encType="multipart/form-data"
+        className="space-y-6 p-5 sm:p-6"
+      >
         <FormGroup
           title="Profil usaha"
           description="Bagian ini membantu kreator memahami konteks UMKM dan fokus promosi."
@@ -129,7 +133,7 @@ export function CampaignBriefForm({
 
         <FormGroup
           title="Waktu, catatan, dan aset"
-          description="Tambahkan deadline, arahan khusus, dan placeholder aset campaign."
+          description="Tambahkan deadline, arahan khusus, dan gambar pendukung campaign."
         >
           <TextField
             id="deadline"
@@ -146,27 +150,7 @@ export function CampaignBriefForm({
             placeholder="Tambahkan arahan khusus untuk kreator."
           />
 
-          <div>
-            <p className="text-sm font-medium leading-none text-foreground">
-              Upload aset placeholder
-            </p>
-            <div className="mt-2 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-                  <FileUp className="size-5" aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Aset campaign akan ditambahkan pada tahap integrasi storage.
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Untuk sementara, tuliskan tautan aset atau referensi pada
-                    catatan tambahan sampai integrasi storage tersedia.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <BriefAssetsField assets={brief?.assets ?? []} />
         </FormGroup>
 
         <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
@@ -191,6 +175,81 @@ export function CampaignBriefForm({
         </div>
       </form>
     </section>
+  );
+}
+
+function BriefAssetsField({
+  assets,
+}: {
+  assets: CheckoutBriefData["assets"];
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <label htmlFor="briefAssetFiles" className="text-sm font-medium leading-none text-foreground">
+          Gambar pendukung brief
+        </label>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          Unggah JPG, PNG, atau WebP. Maksimal 5 MB per gambar.
+        </p>
+        <Input
+          id="briefAssetFiles"
+          name="briefAssetFiles"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          className="mt-2 h-11 bg-card"
+        />
+      </div>
+
+      {assets.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {assets.map((asset) => (
+            <div
+              key={asset.id}
+              className="overflow-hidden rounded-2xl border border-border/70 bg-card"
+            >
+              <div
+                className="grid aspect-[16/9] place-items-center bg-muted/60 bg-cover bg-center text-muted-foreground"
+                style={asset.url ? { backgroundImage: `url("${asset.url}")` } : undefined}
+              >
+                {asset.url ? null : (
+                  <ImageIcon className="size-8 opacity-50" aria-hidden="true" />
+                )}
+              </div>
+              <label className="flex items-start gap-2 p-3 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  name="removeBriefAssetIds"
+                  value={asset.id}
+                  className="mt-0.5 size-4 rounded border-border"
+                />
+                <span>
+                  <span className="block font-medium text-foreground">{asset.name}</span>
+                  Hapus saat menyimpan
+                </span>
+              </label>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+              <FileUp className="size-5" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Belum ada gambar pendukung.
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Tambahkan gambar referensi jika kreator perlu melihat konteks visual.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

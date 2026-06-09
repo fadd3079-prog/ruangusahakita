@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bell, Building2, PenTool, Phone, Shield } from "lucide-react";
+import { Bell, Building2, Image as ImageIcon, PenTool, Phone, Shield } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { getCurrentUmkmOnboardingData } from "@/features/onboarding/data/onboarding-queries";
@@ -41,6 +41,10 @@ export default async function UmkmSettingsPage({
         <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
           <aside className="space-y-2">
             <nav className="flex flex-col gap-1">
+              <a href="#logo" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                <ImageIcon className="size-4" />
+                Logo UMKM
+              </a>
               <a href="#business" className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary">
                 <Building2 className="size-4" />
                 Profil Bisnis
