@@ -1219,6 +1219,37 @@ export interface Database {
         }
         Returns: string
       }
+      admin_set_creator_moderation: {
+        Args: {
+          next_featured: boolean
+          next_verified: boolean
+          target_creator_id: string
+        }
+        Returns: string
+      }
+      admin_set_profile_account_status: {
+        Args: {
+          next_status: Database['public']['Enums']['account_status']
+          target_profile_id: string
+        }
+        Returns: string
+      }
+      admin_set_service_moderation: {
+        Args: {
+          next_active: boolean
+          next_featured: boolean
+          target_service_id: string
+        }
+        Returns: string
+      }
+      admin_update_complaint_status: {
+        Args: {
+          next_resolution_note: string | null
+          next_status: Database['public']['Enums']['complaint_status']
+          target_complaint_id: string
+        }
+        Returns: string
+      }
       create_order_from_current_cart: {
         Args: Record<PropertyKey, never>
         Returns: string

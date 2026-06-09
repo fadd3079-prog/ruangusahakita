@@ -95,6 +95,27 @@ function getAddonValidationError(formData: FormData) {
   return null;
 }
 
+function getTierValidationError(formData: FormData) {
+  const name = getText(formData, "tierName");
+  const price = getNumber(formData, "tierPrice");
+  const estimatedDays = getInteger(formData, "tierEstimatedDays");
+  const revisionCount = getInteger(formData, "tierRevisionCount");
+
+  if (!name) {
+    return "tier_required";
+  }
+
+  if (price <= 0) {
+    return "tier_price";
+  }
+
+  if (estimatedDays < 1 || revisionCount < 0) {
+    return "tier_scope";
+  }
+
+  return null;
+}
+
 async function getCreatorContext(): Promise<CreatorContext> {
   const supabase = await createClient();
   const {
@@ -158,6 +179,69 @@ function revalidateServicePaths(serviceId: string) {
   revalidatePath("/creator/services");
   revalidatePath(`/creator/services/${serviceId}/edit`);
   revalidatePath(`/layanan/${serviceId}`);
+}
+
+function getTierPayload(formData: FormData) {
+  return {
+    deliverables: getTextList(formData, "tierDeliverables"),
+    description: getNullableText(formData, "tierDescription"),
+    estimated_days: getInteger(formData, "tierEstimatedDays"),
+    is_active: getText(formData, "tierIsActive") !== "false",
+    name: getText(formData, "tierName"),
+    price: getNumber(formData, "tierPrice"),
+    revision_count: getInteger(formData, "tierRevisionCount"),
+    sort_order: getInteger(formData, "tierSortOrder"),
+  };
+}
+
+async function ensureOwnedTier(
+  context: CreatorContext,
+  serviceId: string,
+  tierId: string,
+) {
+  if (!tierId) {
+    redirect(`/creator/services/${serviceId}/edit?error=tier_missing`);
+  }
+
+  await ensureOwnedService(context, serviceId);
+
+  const { data: tier, error } = await context.supabase
+    .from("service_package_tiers")
+    .select("id, is_active")
+    .eq("id", tierId)
+    .eq("service_package_id", serviceId)
+    .maybeSingle();
+
+  if (error || !tier) {
+    redirect(`/creator/services/${serviceId}/edit?error=tier_not_found`);
+  }
+
+  return tier;
+}
+
+async function canDeactivateTier(
+  context: CreatorContext,
+  serviceId: string,
+  tierId: string,
+) {
+  const { count, error } = await context.supabase
+    .from("service_package_tiers")
+    .select("id", { count: "exact", head: true })
+    .eq("service_package_id", serviceId)
+    .eq("is_active", true);
+
+  if (error || typeof count !== "number") {
+    return false;
+  }
+
+  const { data: tier } = await context.supabase
+    .from("service_package_tiers")
+    .select("is_active")
+    .eq("id", tierId)
+    .eq("service_package_id", serviceId)
+    .maybeSingle();
+
+  return !tier?.is_active || count > 1;
 }
 
 export async function createCreatorServiceAction(formData: FormData) {
@@ -342,6 +426,103 @@ export async function toggleCreatorServiceStatusAction(formData: FormData) {
 
   revalidateServicePaths(serviceId);
   redirect("/creator/services?toggled=1");
+}
+
+export async function createCreatorServiceTierAction(formData: FormData) {
+  const serviceId = getText(formData, "serviceId");
+
+  if (!serviceId) {
+    redirect("/creator/services?error=missing");
+  }
+
+  const editPath = `/creator/services/${serviceId}/edit`;
+  const validationError = getTierValidationError(formData);
+
+  if (validationError) {
+    redirect(`${editPath}?error=${validationError}`);
+  }
+
+  const context = await getCreatorContext();
+  const ownedServiceId = await ensureOwnedService(context, serviceId);
+  const { error } = await context.supabase.from("service_package_tiers").insert({
+    ...getTierPayload(formData),
+    service_package_id: ownedServiceId,
+  });
+
+  if (error) {
+    redirect(`${editPath}?error=tier_save`);
+  }
+
+  revalidateServicePaths(serviceId);
+  redirect(`${editPath}?tier_created=1`);
+}
+
+export async function updateCreatorServiceTierAction(formData: FormData) {
+  const serviceId = getText(formData, "serviceId");
+  const tierId = getText(formData, "tierId");
+
+  if (!serviceId) {
+    redirect("/creator/services?error=missing");
+  }
+
+  const editPath = `/creator/services/${serviceId}/edit`;
+  const validationError = getTierValidationError(formData);
+
+  if (validationError) {
+    redirect(`${editPath}?error=${validationError}`);
+  }
+
+  const context = await getCreatorContext();
+  await ensureOwnedTier(context, serviceId, tierId);
+  const payload = getTierPayload(formData);
+
+  if (!payload.is_active && !(await canDeactivateTier(context, serviceId, tierId))) {
+    redirect(`${editPath}?error=tier_last_active`);
+  }
+
+  const { error } = await context.supabase
+    .from("service_package_tiers")
+    .update(payload)
+    .eq("id", tierId)
+    .eq("service_package_id", serviceId);
+
+  if (error) {
+    redirect(`${editPath}?error=tier_update`);
+  }
+
+  revalidateServicePaths(serviceId);
+  redirect(`${editPath}?tier_updated=1`);
+}
+
+export async function toggleCreatorServiceTierStatusAction(formData: FormData) {
+  const serviceId = getText(formData, "serviceId");
+  const tierId = getText(formData, "tierId");
+
+  if (!serviceId) {
+    redirect("/creator/services?error=missing");
+  }
+
+  const editPath = `/creator/services/${serviceId}/edit`;
+  const context = await getCreatorContext();
+  const tier = await ensureOwnedTier(context, serviceId, tierId);
+  const nextActive = !tier.is_active;
+
+  if (!nextActive && !(await canDeactivateTier(context, serviceId, tierId))) {
+    redirect(`${editPath}?error=tier_last_active`);
+  }
+
+  const { error } = await context.supabase
+    .from("service_package_tiers")
+    .update({ is_active: nextActive })
+    .eq("id", tier.id)
+    .eq("service_package_id", serviceId);
+
+  if (error) {
+    redirect(`${editPath}?error=tier_toggle`);
+  }
+
+  revalidateServicePaths(serviceId);
+  redirect(`${editPath}?tier_toggled=1`);
 }
 
 export async function createCreatorServiceAddonAction(formData: FormData) {

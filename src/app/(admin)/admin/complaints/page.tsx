@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ExternalLink, FileWarning, Search } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { updateAdminComplaintStatusAction } from "@/features/admin/actions/admin-management-actions";
 import { getAdminComplaints } from "@/features/admin/data/admin-management-queries";
+import type { AdminComplaintRow } from "@/features/admin/data/admin-management-queries";
 import type { Database } from "@/lib/supabase/types";
 import { formatDate } from "@/lib/formatters/date";
 import { cn } from "@/lib/utils";
@@ -50,8 +53,35 @@ const roleLabels = {
   umkm: "UMKM",
 } as const;
 
-export default async function AdminComplaintsPage() {
+const errorMessages = {
+  invalid: "Data komplain tidak valid.",
+  not_found: "Komplain tidak ditemukan.",
+  resolution_required: "Catatan resolusi wajib diisi untuk status selesai atau ditolak.",
+  save: "Status komplain belum bisa diperbarui.",
+  unauthorized: "Akun ini tidak memiliki akses admin aktif.",
+} as const;
+
+type AdminComplaintsPageProps = {
+  searchParams: Promise<{
+    error?: string;
+    updated?: string;
+  }>;
+};
+
+function getErrorMessage(error?: string) {
+  if (!error) {
+    return null;
+  }
+
+  return errorMessages[error as keyof typeof errorMessages] ?? "Status komplain belum bisa diperbarui.";
+}
+
+export default async function AdminComplaintsPage({
+  searchParams,
+}: AdminComplaintsPageProps) {
+  const params = await searchParams;
   const complaints = await getAdminComplaints();
+  const errorMessage = getErrorMessage(params.error);
 
   return (
     <PageContainer>
@@ -64,6 +94,22 @@ export default async function AdminComplaintsPage() {
             Tinjau keluhan pengguna dan fasilitasi penyelesaian masalah layanan digital.
           </p>
         </div>
+
+        {errorMessage ? (
+          <Alert variant="destructive">
+            <AlertTitle>Perubahan belum tersimpan</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {params.updated ? (
+          <Alert>
+            <AlertTitle>Status komplain diperbarui</AlertTitle>
+            <AlertDescription>
+              Perubahan status dan catatan resolusi sudah tersimpan.
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -82,7 +128,7 @@ export default async function AdminComplaintsPage() {
                   <TableHead>Terkait pesanan</TableHead>
                   <TableHead>Dibuka oleh</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px]"></TableHead>
+                  <TableHead className="min-w-[320px] text-right">Moderasi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -128,10 +174,7 @@ export default async function AdminComplaintsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm" className="font-medium text-primary">
-                        Tinjau
-                        <ArrowRight className="ml-1 size-3" />
-                      </Button>
+                      <ComplaintModerationForm complaint={complaint} />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -153,5 +196,40 @@ export default async function AdminComplaintsPage() {
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+function ComplaintModerationForm({
+  complaint,
+}: {
+  complaint: AdminComplaintRow;
+}) {
+  return (
+    <form action={updateAdminComplaintStatusAction} className="ml-auto grid max-w-sm gap-2">
+      <input type="hidden" name="complaintId" value={complaint.id} />
+      <div className="grid gap-2 sm:grid-cols-[150px_1fr]">
+        <select
+          name="complaintStatus"
+          defaultValue={complaint.complaint_status}
+          className="h-9 rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          {Object.entries(complaintStatusLabels).map(([status, label]) => (
+            <option key={status} value={status}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <Input
+          name="resolutionNote"
+          defaultValue={complaint.resolution_note ?? ""}
+          placeholder="Catatan resolusi"
+          className="h-9 bg-background"
+        />
+      </div>
+      <Button type="submit" size="sm" className="ml-auto h-8 rounded-full">
+        Simpan Status
+        <ArrowRight className="ml-1 size-3" />
+      </Button>
+    </form>
   );
 }

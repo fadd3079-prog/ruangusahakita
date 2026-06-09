@@ -1,33 +1,37 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, ExternalLink, FileText, PlusCircle } from "lucide-react";
+import { CalendarDays, Eye, FileText, PencilLine, PlusCircle } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BriefStatusBadge } from "@/features/briefs/components/umkm-brief-detail";
 import { getCurrentUmkmRecentBriefs } from "@/features/dashboard/data/dashboard-queries";
 import { formatDate } from "@/lib/formatters/date";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Brief Campaign — Ruang Usaha Kita",
   description: "Kelola panduan campaign untuk kreator agar konten sesuai ekspektasi.",
 };
 
-const briefStatusLabels: Record<string, string> = {
-  draft: "Draft",
-  linked_to_order: "Aktif di Pesanan",
-  submitted: "Diajukan",
+type UmkmBriefsPageProps = {
+  searchParams?: Promise<{
+    error?: string;
+  }>;
 };
 
-const briefStatusClasses: Record<string, string> = {
-  draft: "border-muted-foreground text-muted-foreground bg-muted",
-  linked_to_order: "border-primary text-primary bg-primary/10",
-  submitted: "border-amber-500/30 text-amber-700 bg-amber-500/10",
-};
+export default async function UmkmBriefsPage({
+  searchParams,
+}: UmkmBriefsPageProps) {
+  const [briefs, params] = await Promise.all([
+    getCurrentUmkmRecentBriefs(50),
+    searchParams ?? Promise.resolve({ error: undefined }),
+  ]);
 
-export default async function UmkmBriefsPage() {
-  const briefs = await getCurrentUmkmRecentBriefs(50);
+  const errorMessage =
+    params.error === "not_found"
+      ? "Brief campaign tidak ditemukan atau bukan milik akun yang sedang login."
+      : null;
 
   return (
     <PageContainer>
@@ -49,6 +53,13 @@ export default async function UmkmBriefsPage() {
           </Button>
         </div>
 
+        {errorMessage ? (
+          <Alert variant="destructive">
+            <AlertTitle>Brief tidak bisa dibuka</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        ) : null}
+
         {briefs.length > 0 ? (
           <div className="grid gap-6">
             {briefs.map((brief) => (
@@ -63,15 +74,7 @@ export default async function UmkmBriefsPage() {
                         <h2 className="text-xl font-bold text-foreground">
                           {brief.promotedFocus}
                         </h2>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "rounded-md",
-                            briefStatusClasses[brief.status] ?? "bg-muted",
-                          )}
-                        >
-                          {briefStatusLabels[brief.status] ?? brief.status}
-                        </Badge>
+                        <BriefStatusBadge status={brief.status} />
                       </div>
                       <p className="text-muted-foreground">
                         {brief.businessName} · {brief.businessCategory ?? "Kategori belum diisi"}
@@ -103,7 +106,7 @@ export default async function UmkmBriefsPage() {
                       />
                       <DetailBlock
                         label="Status"
-                        value={briefStatusLabels[brief.status] ?? brief.status}
+                        value={brief.status === "draft" ? "Draft" : "Tersimpan"}
                       />
                     </div>
                   </div>
@@ -114,9 +117,13 @@ export default async function UmkmBriefsPage() {
                     Brief campaign berasal dari data akun UMKM yang sedang login.
                   </p>
                   <Button asChild variant="outline" size="sm" className="bg-background">
-                    <Link href="/umkm/orders">
-                      Lihat Pesanan
-                      <ExternalLink className="ml-2 size-3" />
+                    <Link href={`/umkm/briefs/${brief.id}`}>
+                      {brief.status === "draft" ? "Edit Brief" : "Buka Detail"}
+                      {brief.status === "draft" ? (
+                        <PencilLine className="ml-2 size-3" />
+                      ) : (
+                        <Eye className="ml-2 size-3" />
+                      )}
                     </Link>
                   </Button>
                 </div>

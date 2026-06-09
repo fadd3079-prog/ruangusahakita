@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CreatorServiceAddonManager } from "@/features/creator/services/components/creator-service-addon-manager";
+import { CreatorServiceTierManager } from "@/features/creator/services/components/creator-service-tier-manager";
 import type {
   CreatorServiceCategory,
   CreatorServiceEditData,
@@ -45,6 +46,15 @@ const errorMessages = {
   save: "Layanan belum bisa disimpan. Coba lagi setelah data diperiksa.",
   scope: "Estimasi hari minimal 1 dan jumlah revisi tidak boleh negatif.",
   tier: "Layanan tersimpan, tetapi tier belum berhasil disimpan.",
+  tier_last_active: "Minimal satu tier aktif harus tersedia untuk layanan ini.",
+  tier_missing: "Data tier tidak lengkap.",
+  tier_not_found: "Tier tidak ditemukan atau bukan bagian dari layanan ini.",
+  tier_price: "Harga tier wajib lebih dari nol.",
+  tier_required: "Nama tier wajib diisi.",
+  tier_save: "Tier belum bisa ditambahkan.",
+  tier_scope: "Estimasi tier minimal 1 hari dan jumlah revisi tidak boleh negatif.",
+  tier_toggle: "Status tier belum bisa diperbarui.",
+  tier_update: "Tier belum bisa diperbarui.",
   toggle: "Status layanan belum bisa diperbarui.",
   unauthorized: "Akun ini tidak memiliki akses kreator aktif.",
 };
@@ -53,6 +63,9 @@ const successMessages = {
   addon_created: "Add-on berhasil ditambahkan.",
   addon_deleted: "Add-on berhasil dihapus.",
   addon_updated: "Add-on berhasil diperbarui.",
+  tier_created: "Tier berhasil ditambahkan.",
+  tier_toggled: "Status tier berhasil diperbarui.",
+  tier_updated: "Tier berhasil diperbarui.",
 };
 
 function getErrorMessage(error?: string) {
@@ -396,22 +409,41 @@ export function CreatorServiceForm({
           </Card>
 
           {servicePackage ? (
-            <CreatorServiceAddonManager
-              addons={service?.addons ?? []}
-              serviceId={servicePackage.id}
-            />
+            <>
+              <CreatorServiceTierManager
+                serviceId={servicePackage.id}
+                tiers={service?.tiers ?? []}
+              />
+              <CreatorServiceAddonManager
+                addons={service?.addons ?? []}
+                serviceId={servicePackage.id}
+              />
+            </>
           ) : (
-            <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
-              <CardHeader>
-                <CardTitle className="text-lg">Add-on layanan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Simpan paket jasa terlebih dahulu, lalu tambahkan add-on dari
-                  halaman edit layanan.
-                </p>
-              </CardContent>
-            </Card>
+            <>
+              <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+                <CardHeader>
+                  <CardTitle className="text-lg">Tier paket jasa</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Simpan paket jasa terlebih dahulu, lalu kelola tier dari halaman
+                    edit layanan.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+                <CardHeader>
+                  <CardTitle className="text-lg">Add-on layanan</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Simpan paket jasa terlebih dahulu, lalu tambahkan add-on dari
+                    halaman edit layanan.
+                  </p>
+                </CardContent>
+              </Card>
+            </>
           )}
         </aside>
       </div>

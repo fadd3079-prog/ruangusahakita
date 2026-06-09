@@ -1,23 +1,28 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Bell, Building2, PenTool, Phone, Shield } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { getCurrentUmkmOnboardingData } from "@/features/onboarding/data/onboarding-queries";
+import { UmkmSettingsForm } from "@/features/umkm/settings/components/umkm-settings-form";
 
 export const metadata: Metadata = {
   title: "Pengaturan UMKM — Ruang Usaha Kita",
   description: "Atur profil bisnis, kontak, dan preferensi konten Anda.",
 };
 
-export default async function UmkmSettingsPage() {
-  const data = await getCurrentUmkmOnboardingData();
-  const profile = data.profile;
+type UmkmSettingsPageProps = {
+  searchParams: Promise<{
+    updated?: string;
+  }>;
+};
+
+export default async function UmkmSettingsPage({
+  searchParams,
+}: UmkmSettingsPageProps) {
+  const [{ updated }, data] = await Promise.all([
+    searchParams,
+    getCurrentUmkmOnboardingData(),
+  ]);
 
   return (
     <PageContainer>
@@ -28,12 +33,9 @@ export default async function UmkmSettingsPage() {
               Pengaturan Akun
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Lihat informasi bisnis, kontak representatif, dan preferensi konten.
+              Perbarui informasi bisnis, kontak representatif, dan preferensi konten.
             </p>
           </div>
-          <Button asChild>
-            <Link href="/umkm/onboarding">Lengkapi atau perbarui profil</Link>
-          </Button>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
@@ -63,60 +65,7 @@ export default async function UmkmSettingsPage() {
           </aside>
 
           <div className="space-y-8">
-            {!profile ? (
-              <section className="rounded-2xl border border-dashed border-border bg-card p-8 text-center shadow-[var(--shadow-soft)]">
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                  Profil belum lengkap
-                </h2>
-                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                  Lengkapi profil UMKM agar brief campaign dan checkout lebih terarah.
-                </p>
-              </section>
-            ) : (
-              <>
-                <section id="business" className="rounded-2xl border border-border/70 bg-card p-6 shadow-[var(--shadow-soft)]">
-                  <h2 className="mb-6 text-xl font-semibold">Profil Bisnis</h2>
-                  <div className="space-y-5">
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <ReadOnlyField label="Nama usaha" value={profile.business_name} />
-                      <ReadOnlyField label="Kategori usaha" value={profile.business_category} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Deskripsi usaha</Label>
-                      <Textarea
-                        readOnly
-                        value={profile.business_description ?? ""}
-                        className="min-h-32 resize-y"
-                      />
-                    </div>
-                  </div>
-                </section>
-
-                <section id="contact" className="rounded-2xl border border-border/70 bg-card p-6 shadow-[var(--shadow-soft)]">
-                  <h2 className="mb-6 text-xl font-semibold">Informasi Kontak & Sosial</h2>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <ReadOnlyField label="Nama pemilik/perwakilan" value={profile.owner_name} />
-                    <ReadOnlyField label="Nomor WhatsApp" value={profile.whatsapp_number} />
-                    <ReadOnlyField label="Kota" value={profile.city} />
-                    <ReadOnlyField label="Provinsi" value={profile.province} />
-                    <ReadOnlyField label="Instagram usaha" value={profile.instagram_url} />
-                    <ReadOnlyField label="TikTok usaha" value={profile.tiktok_url} />
-                  </div>
-                </section>
-
-                <section id="content" className="rounded-2xl border border-border/70 bg-card p-6 shadow-[var(--shadow-soft)]">
-                  <h2 className="mb-6 text-xl font-semibold">Preferensi Konten Default</h2>
-                  <div className="space-y-5">
-                    <Badge variant="secondary" className="rounded-lg">
-                      {profile.target_audience ?? "Target audiens belum diisi"}
-                    </Badge>
-                    <Badge variant="outline" className="rounded-lg">
-                      {profile.content_preference ?? "Preferensi konten belum diisi"}
-                    </Badge>
-                  </div>
-                </section>
-              </>
-            )}
+            <UmkmSettingsForm data={data} updated={updated === "1"} />
 
             <section id="notifications" className="rounded-2xl border border-border/70 bg-card p-6 shadow-[var(--shadow-soft)]">
               <h2 className="mb-3 text-xl font-semibold">Preferensi Notifikasi</h2>
@@ -135,20 +84,5 @@ export default async function UmkmSettingsPage() {
         </div>
       </div>
     </PageContainer>
-  );
-}
-
-function ReadOnlyField({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | null;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <Input readOnly value={value ?? "Belum diisi"} className="h-11" />
-    </div>
   );
 }

@@ -3,7 +3,9 @@ import Link from "next/link";
 import { BriefcaseBusiness, Search } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -13,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { updateAdminServiceModerationAction } from "@/features/admin/actions/admin-management-actions";
 import { getAdminServices } from "@/features/admin/data/admin-management-queries";
+import type { AdminServiceRow } from "@/features/admin/data/admin-management-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 
 export const metadata: Metadata = {
@@ -21,8 +25,34 @@ export const metadata: Metadata = {
   description: "Daftar paket layanan digital yang tersedia di platform.",
 };
 
-export default async function AdminServicesPage() {
+type AdminServicesPageProps = {
+  searchParams: Promise<{
+    error?: string;
+    updated?: string;
+  }>;
+};
+
+const errorMessages = {
+  invalid: "Data layanan tidak valid.",
+  not_found: "Layanan tidak ditemukan.",
+  save: "Status layanan belum bisa diperbarui.",
+  unauthorized: "Akun ini tidak memiliki akses admin aktif.",
+} as const;
+
+function getErrorMessage(error?: string) {
+  if (!error) {
+    return null;
+  }
+
+  return errorMessages[error as keyof typeof errorMessages] ?? "Status layanan belum bisa diperbarui.";
+}
+
+export default async function AdminServicesPage({
+  searchParams,
+}: AdminServicesPageProps) {
+  const params = await searchParams;
   const services = await getAdminServices();
+  const errorMessage = getErrorMessage(params.error);
 
   return (
     <PageContainer>
@@ -35,6 +65,22 @@ export default async function AdminServicesPage() {
             Tinjau paket jasa digital yang dibuat oleh kreator.
           </p>
         </div>
+
+        {errorMessage ? (
+          <Alert variant="destructive">
+            <AlertTitle>Perubahan belum tersimpan</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {params.updated ? (
+          <Alert>
+            <AlertTitle>Status layanan diperbarui</AlertTitle>
+            <AlertDescription>
+              Moderasi layanan sudah tersimpan dan katalog akan memakai status terbaru.
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -50,6 +96,7 @@ export default async function AdminServicesPage() {
                   <TableHead>Kreator & kategori</TableHead>
                   <TableHead>Harga dasar</TableHead>
                   <TableHead className="text-center">Status</TableHead>
+                  <TableHead className="text-right">Moderasi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -100,6 +147,22 @@ export default async function AdminServicesPage() {
                         <Badge variant="secondary">Tidak aktif</Badge>
                       )}
                     </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <ServiceModerationForm
+                          service={service}
+                          field="active"
+                          label={service.is_active ? "Nonaktifkan" : "Aktifkan"}
+                          variant={service.is_active ? "outline" : "default"}
+                        />
+                        <ServiceModerationForm
+                          service={service}
+                          field="featured"
+                          label={service.is_featured ? "Cabut Unggulan" : "Unggulkan"}
+                          variant="secondary"
+                        />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -112,5 +175,31 @@ export default async function AdminServicesPage() {
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+function ServiceModerationForm({
+  field,
+  label,
+  service,
+  variant,
+}: {
+  field: "active" | "featured";
+  label: string;
+  service: AdminServiceRow;
+  variant: "default" | "outline" | "secondary";
+}) {
+  const nextActive = field === "active" ? !service.is_active : service.is_active;
+  const nextFeatured = field === "featured" ? !service.is_featured : service.is_featured;
+
+  return (
+    <form action={updateAdminServiceModerationAction}>
+      <input type="hidden" name="serviceId" value={service.id} />
+      <input type="hidden" name="isActive" value={String(nextActive)} />
+      <input type="hidden" name="isFeatured" value={String(nextFeatured)} />
+      <Button type="submit" variant={variant} size="sm" className="h-8 rounded-full">
+        {label}
+      </Button>
+    </form>
   );
 }

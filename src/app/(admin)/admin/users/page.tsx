@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { CheckCircle2, Search, UserCircle } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -12,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { updateAdminUserStatusAction } from "@/features/admin/actions/admin-management-actions";
 import { getAdminUsers } from "@/features/admin/data/admin-management-queries";
 import { formatDate } from "@/lib/formatters/date";
 
@@ -33,8 +36,33 @@ const statusLabels = {
   suspended: "Dibatasi",
 } as const;
 
-export default async function AdminUsersPage() {
+type AdminUsersPageProps = {
+  searchParams: Promise<{
+    error?: string;
+    updated?: string;
+  }>;
+};
+
+const errorMessages = {
+  invalid: "Data status akun tidak valid.",
+  not_found: "Akun tidak ditemukan.",
+  save: "Status akun belum bisa diperbarui.",
+  self: "Admin tidak dapat mengubah status akunnya sendiri.",
+  unauthorized: "Akun ini tidak memiliki akses admin aktif.",
+} as const;
+
+function getErrorMessage(error?: string) {
+  if (!error) {
+    return null;
+  }
+
+  return errorMessages[error as keyof typeof errorMessages] ?? "Status akun belum bisa diperbarui.";
+}
+
+export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
+  const params = await searchParams;
   const users = await getAdminUsers();
+  const errorMessage = getErrorMessage(params.error);
 
   return (
     <PageContainer>
@@ -47,6 +75,22 @@ export default async function AdminUsersPage() {
             Tinjau akun yang terdaftar di Ruang Usaha Kita.
           </p>
         </div>
+
+        {errorMessage ? (
+          <Alert variant="destructive">
+            <AlertTitle>Perubahan belum tersimpan</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {params.updated ? (
+          <Alert>
+            <AlertTitle>Status akun diperbarui</AlertTitle>
+            <AlertDescription>
+              Perubahan status akun sudah tersimpan di database.
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -62,6 +106,7 @@ export default async function AdminUsersPage() {
                   <TableHead>Peran</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Bergabung Sejak</TableHead>
+                  <TableHead className="text-right">Moderasi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -103,6 +148,33 @@ export default async function AdminUsersPage() {
                     <TableCell className="text-muted-foreground">
                       {formatDate(user.created_at)}
                     </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {user.account_status !== "active" ? (
+                          <StatusForm
+                            profileId={user.id}
+                            status="active"
+                            label="Aktifkan"
+                          />
+                        ) : null}
+                        {user.account_status !== "suspended" ? (
+                          <StatusForm
+                            profileId={user.id}
+                            status="suspended"
+                            label="Batasi"
+                            variant="outline"
+                          />
+                        ) : null}
+                        {user.account_status !== "inactive" ? (
+                          <StatusForm
+                            profileId={user.id}
+                            status="inactive"
+                            label="Nonaktifkan"
+                            variant="secondary"
+                          />
+                        ) : null}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -113,6 +185,28 @@ export default async function AdminUsersPage() {
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+function StatusForm({
+  label,
+  profileId,
+  status,
+  variant = "default",
+}: {
+  label: string;
+  profileId: string;
+  status: keyof typeof statusLabels;
+  variant?: "default" | "outline" | "secondary";
+}) {
+  return (
+    <form action={updateAdminUserStatusAction}>
+      <input type="hidden" name="profileId" value={profileId} />
+      <input type="hidden" name="accountStatus" value={status} />
+      <Button type="submit" variant={variant} size="sm" className="h-8 rounded-full">
+        {label}
+      </Button>
+    </form>
   );
 }
 

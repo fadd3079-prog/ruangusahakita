@@ -190,7 +190,7 @@ export default async function AdminDashboardPage() {
         <DashboardHero
           eyebrow="Dashboard Admin"
           title="Pantau kesehatan marketplace jasa digital dari satu tempat."
-          description="Ringkasan read-only ini membantu admin melihat pengguna, pesanan, pembayaran, komplain, dan pendapatan platform tanpa menjalankan mutasi backend."
+          description="Ringkasan ini membantu admin memantau pengguna, pesanan, pembayaran, komplain, dan pendapatan platform dengan kontrol moderasi yang terbatas."
           actions={[
             { href: "/admin/orders", label: "Pantau Pesanan" },
             { href: "/admin/payments", label: "Pembayaran", variant: "outline" },

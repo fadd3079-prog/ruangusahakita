@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { CheckCircle2, Search, ShieldCheck, Star } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -12,7 +14,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { updateAdminCreatorModerationAction } from "@/features/admin/actions/admin-management-actions";
 import { getAdminCreators } from "@/features/admin/data/admin-management-queries";
+import type { AdminCreatorRow } from "@/features/admin/data/admin-management-queries";
 
 export const metadata: Metadata = {
   title: "Kelola Kreator — Ruang Usaha Kita",
@@ -26,8 +30,34 @@ const availabilityLabels = {
   unavailable: "Belum Tersedia",
 } as const;
 
-export default async function AdminCreatorsPage() {
+type AdminCreatorsPageProps = {
+  searchParams: Promise<{
+    error?: string;
+    updated?: string;
+  }>;
+};
+
+const errorMessages = {
+  invalid: "Data kreator tidak valid.",
+  not_found: "Kreator tidak ditemukan.",
+  save: "Status kreator belum bisa diperbarui.",
+  unauthorized: "Akun ini tidak memiliki akses admin aktif.",
+} as const;
+
+function getErrorMessage(error?: string) {
+  if (!error) {
+    return null;
+  }
+
+  return errorMessages[error as keyof typeof errorMessages] ?? "Status kreator belum bisa diperbarui.";
+}
+
+export default async function AdminCreatorsPage({
+  searchParams,
+}: AdminCreatorsPageProps) {
+  const params = await searchParams;
   const creators = await getAdminCreators();
+  const errorMessage = getErrorMessage(params.error);
 
   return (
     <PageContainer>
@@ -40,6 +70,22 @@ export default async function AdminCreatorsPage() {
             Pantau profil kreator, status unggulan, dan metrik kinerja.
           </p>
         </div>
+
+        {errorMessage ? (
+          <Alert variant="destructive">
+            <AlertTitle>Perubahan belum tersimpan</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {params.updated ? (
+          <Alert>
+            <AlertTitle>Status kreator diperbarui</AlertTitle>
+            <AlertDescription>
+              Verifikasi atau status unggulan kreator sudah tersimpan.
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -58,6 +104,7 @@ export default async function AdminCreatorsPage() {
                   <TableHead>Lokasi</TableHead>
                   <TableHead>Ketersediaan</TableHead>
                   <TableHead>Rating & selesai</TableHead>
+                  <TableHead className="text-right">Moderasi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -113,6 +160,22 @@ export default async function AdminCreatorsPage() {
                         {creator.completed_orders_count} pesanan selesai
                       </p>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <CreatorModerationForm
+                          creator={creator}
+                          field="verified"
+                          label={creator.is_verified ? "Cabut Verifikasi" : "Verifikasi"}
+                          variant={creator.is_verified ? "outline" : "default"}
+                        />
+                        <CreatorModerationForm
+                          creator={creator}
+                          field="featured"
+                          label={creator.is_featured ? "Cabut Unggulan" : "Jadikan Unggulan"}
+                          variant="secondary"
+                        />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -125,5 +188,31 @@ export default async function AdminCreatorsPage() {
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+function CreatorModerationForm({
+  creator,
+  field,
+  label,
+  variant,
+}: {
+  creator: AdminCreatorRow;
+  field: "featured" | "verified";
+  label: string;
+  variant: "default" | "outline" | "secondary";
+}) {
+  const nextVerified = field === "verified" ? !creator.is_verified : creator.is_verified;
+  const nextFeatured = field === "featured" ? !creator.is_featured : creator.is_featured;
+
+  return (
+    <form action={updateAdminCreatorModerationAction}>
+      <input type="hidden" name="creatorId" value={creator.id} />
+      <input type="hidden" name="isVerified" value={String(nextVerified)} />
+      <input type="hidden" name="isFeatured" value={String(nextFeatured)} />
+      <Button type="submit" variant={variant} size="sm" className="h-8 rounded-full">
+        {label}
+      </Button>
+    </form>
   );
 }

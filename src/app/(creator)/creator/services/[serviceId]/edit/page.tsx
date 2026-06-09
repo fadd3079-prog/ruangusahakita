@@ -18,6 +18,9 @@ type EditServicePageProps = {
     addon_deleted?: string;
     addon_updated?: string;
     error?: string;
+    tier_created?: string;
+    tier_toggled?: string;
+    tier_updated?: string;
   }>;
 };
 
@@ -32,6 +35,18 @@ function getSuccess(params: Awaited<EditServicePageProps["searchParams"]>) {
 
   if (params.addon_deleted) {
     return "addon_deleted";
+  }
+
+  if (params.tier_created) {
+    return "tier_created";
+  }
+
+  if (params.tier_updated) {
+    return "tier_updated";
+  }
+
+  if (params.tier_toggled) {
+    return "tier_toggled";
   }
 
   return undefined;
