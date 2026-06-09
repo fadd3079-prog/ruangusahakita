@@ -1824,3 +1824,20 @@ Pada tahap MVP, storage tidak perlu langsung sempurna. Upload besar, signed URL 
 
 Dengan kebijakan ini, Ruang Usaha Kita dapat berkembang dari prototype UI menjadi marketplace jasa digital yang lebih aman, rapi, dan siap diintegrasikan dengan Supabase Storage.
 
+## 50. Creator Storage Phase
+
+Fase implementasi creator storage awal memakai dua bucket:
+
+* `avatars`: public read, image-only, maksimal 2 MB.
+* `portfolios`: private, image-only, maksimal 5 MB.
+
+Avatar kreator disimpan sebagai public media karena tampil pada profil publik, katalog, dan dashboard. Path storage disimpan di `profiles.avatar_storage_path` dan `creator_profiles.avatar_storage_path`, sedangkan URL publik hasil Supabase Storage tetap disimpan di `avatar_url` agar UI existing tidak perlu membuat signed URL untuk avatar.
+
+Gambar portofolio disimpan di bucket private `portfolios`. Database menyimpan `portfolios.thumbnail_storage_path`, dan aplikasi membuat signed URL saat halaman creator/public membutuhkan preview. Signed URL tidak disimpan permanen di database.
+
+Trade-off fase ini:
+
+* Belum membuat tabel generik `file_assets`.
+* Metadata file creator disimpan langsung pada row profil dan portofolio.
+* Pendekatan ini cukup untuk avatar dan thumbnail portofolio, tetapi brief asset, hasil konten, revisi, invoice, dan komplain tetap membutuhkan metadata table atau model file khusus pada fase berikutnya.
+

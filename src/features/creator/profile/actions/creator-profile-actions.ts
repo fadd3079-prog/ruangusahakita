@@ -5,6 +5,11 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { STORAGE_BUCKETS } from "@/lib/storage/buckets";
+import { FILE_SIZE_LIMITS } from "@/lib/storage/file-limits";
+import { createAvatarStoragePath } from "@/lib/storage/file-paths";
+import { validateImageFile, type FileValidationErrorCode } from "@/lib/storage/validate-file";
+import { getAvatarPublicUrl } from "@/lib/storage/urls";
 
 type AvailabilityStatus =
   Database["public"]["Enums"]["creator_availability_status"];
@@ -50,6 +55,18 @@ function getSafeRedirectPath(formData: FormData) {
   }
 
   return "/creator/profile";
+}
+
+function getAvatarUploadError(code: FileValidationErrorCode) {
+  switch (code) {
+    case "missing":
+      return "avatar_required";
+    case "size":
+      return "avatar_size";
+    case "extension":
+    case "type":
+      return "avatar_type";
+  }
 }
 
 async function getCreatorContext() {
@@ -113,7 +130,6 @@ export async function updateCreatorProfileAction(formData: FormData) {
     .from("creator_profiles")
     .update({
       availability_status: availabilityStatusValue,
-      avatar_url: getNullableText(formData, "avatarUrl"),
       banner_url: getNullableText(formData, "bannerUrl"),
       bio: getNullableText(formData, "bio"),
       city: getNullableText(formData, "city"),
@@ -137,12 +153,10 @@ export async function updateCreatorProfileAction(formData: FormData) {
 
   const fullName = getNullableText(formData, "fullName");
   const phone = getNullableText(formData, "phone");
-  const accountAvatarUrl = getNullableText(formData, "avatarUrl");
 
   const { error: accountError } = await supabase
     .from("profiles")
     .update({
-      avatar_url: accountAvatarUrl,
       full_name: fullName ?? displayName,
       phone,
     })
@@ -155,5 +169,71 @@ export async function updateCreatorProfileAction(formData: FormData) {
   revalidatePath("/creator/profile");
   revalidatePath("/creator/settings");
   revalidatePath("/creator/dashboard");
+  redirect(`${redirectTo}?saved=1`);
+}
+
+export async function uploadCreatorAvatarAction(formData: FormData) {
+  const redirectTo = getSafeRedirectPath(formData);
+  const validation = validateImageFile(formData.get("avatarFile"), {
+    maxSizeBytes: FILE_SIZE_LIMITS.avatar,
+    required: true,
+  });
+
+  if (!validation.ok) {
+    redirect(`${redirectTo}?error=${getAvatarUploadError(validation.code)}`);
+  }
+
+  if (validation.file === null || validation.extension === null) {
+    redirect(`${redirectTo}?error=avatar_required`);
+  }
+
+  const avatarFile = validation.file;
+  const avatarExtension = validation.extension;
+  const { creator, supabase, userId } = await getCreatorContext();
+  const storagePath = createAvatarStoragePath(userId, avatarExtension);
+  const { error: uploadError } = await supabase.storage
+    .from(STORAGE_BUCKETS.AVATARS)
+    .upload(storagePath, avatarFile, {
+      cacheControl: "3600",
+      contentType: avatarFile.type,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    redirect(`${redirectTo}?error=avatar_upload`);
+  }
+
+  const avatarUrl = getAvatarPublicUrl(supabase, storagePath);
+  const { error: creatorError } = await supabase
+    .from("creator_profiles")
+    .update({
+      avatar_storage_path: storagePath,
+      avatar_url: avatarUrl,
+    })
+    .eq("id", creator.id)
+    .eq("user_id", userId);
+
+  if (creatorError) {
+    await supabase.storage.from(STORAGE_BUCKETS.AVATARS).remove([storagePath]);
+    redirect(`${redirectTo}?error=avatar_save`);
+  }
+
+  const { error: accountError } = await supabase
+    .from("profiles")
+    .update({
+      avatar_storage_path: storagePath,
+      avatar_url: avatarUrl,
+    })
+    .eq("id", userId);
+
+  if (accountError) {
+    redirect(`${redirectTo}?error=avatar_account`);
+  }
+
+  revalidatePath("/creator/profile");
+  revalidatePath("/creator/settings");
+  revalidatePath("/creator/dashboard");
+  revalidatePath("/katalog");
+  revalidatePath(`/kreator/${creator.id}`);
   redirect(`${redirectTo}?saved=1`);
 }

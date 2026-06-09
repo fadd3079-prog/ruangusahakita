@@ -11,6 +11,7 @@ import type {
   PublicAvailabilityStatus,
   PublicServiceTierName
 } from "@/features/catalog/data/catalog-types";
+import { createPortfolioThumbnailSignedUrl } from "@/lib/storage/urls";
 
 export async function getPublicCategories(): Promise<readonly PublicServiceCategory[]> {
   try {
@@ -110,17 +111,26 @@ export async function getPublicCreatorDetail(id: string) {
       isFeatured: s.is_featured,
     }));
 
-    const portfolios: PublicPortfolioItem[] = (portfoliosRes.data ?? []).map(p => ({
-      id: p.id,
-      creatorId: p.creator_id,
-      categoryId: p.category_id ?? "",
-      title: p.title,
-      description: p.description ?? "",
-      thumbnailUrl: p.thumbnail_url ?? "",
-      externalUrl: p.external_url ?? "",
-      clientName: p.client_type ?? "Client",
-      isFeatured: p.is_featured,
-    }));
+    const portfolios: PublicPortfolioItem[] = await Promise.all(
+      (portfoliosRes.data ?? []).map(async (p) => {
+        const signedThumbnailUrl = await createPortfolioThumbnailSignedUrl(
+          supabase,
+          p.thumbnail_storage_path,
+        );
+
+        return {
+          id: p.id,
+          creatorId: p.creator_id,
+          categoryId: p.category_id ?? "",
+          title: p.title,
+          description: p.description ?? "",
+          thumbnailUrl: signedThumbnailUrl ?? p.thumbnail_url ?? "",
+          externalUrl: p.external_url ?? "",
+          clientName: p.client_type ?? "Client",
+          isFeatured: p.is_featured,
+        };
+      }),
+    );
 
     return {
       creator,
@@ -202,17 +212,26 @@ export async function getPublicServiceDetail(id: string) {
       compatibleServiceIds: [id],
     }));
 
-    const portfolios: PublicPortfolioItem[] = (portfoliosRes.data ?? []).map(p => ({
-      id: p.id,
-      creatorId: p.creator_id,
-      categoryId: p.category_id ?? "",
-      title: p.title,
-      description: p.description ?? "",
-      thumbnailUrl: p.thumbnail_url ?? "",
-      externalUrl: p.external_url ?? "",
-      clientName: p.client_type ?? "Client",
-      isFeatured: p.is_featured,
-    }));
+    const portfolios: PublicPortfolioItem[] = await Promise.all(
+      (portfoliosRes.data ?? []).map(async (p) => {
+        const signedThumbnailUrl = await createPortfolioThumbnailSignedUrl(
+          supabase,
+          p.thumbnail_storage_path,
+        );
+
+        return {
+          id: p.id,
+          creatorId: p.creator_id,
+          categoryId: p.category_id ?? "",
+          title: p.title,
+          description: p.description ?? "",
+          thumbnailUrl: signedThumbnailUrl ?? p.thumbnail_url ?? "",
+          externalUrl: p.external_url ?? "",
+          clientName: p.client_type ?? "Client",
+          isFeatured: p.is_featured,
+        };
+      }),
+    );
 
     return {
       service: mappedService,

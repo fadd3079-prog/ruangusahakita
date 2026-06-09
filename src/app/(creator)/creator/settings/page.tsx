@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bell, Save, Shield, User } from "lucide-react";
+import { Bell, Save, Shield, Upload, User } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { updateCreatorProfileAction } from "@/features/creator/profile/actions/creator-profile-actions";
+import {
+  updateCreatorProfileAction,
+  uploadCreatorAvatarAction,
+} from "@/features/creator/profile/actions/creator-profile-actions";
 import { getCurrentCreatorProfilePageData } from "@/features/creator/profile/data/creator-profile-queries";
 
 export const metadata: Metadata = {
@@ -25,6 +28,12 @@ type CreatorSettingsPageProps = {
 const errorMessages = {
   account: "Profil akun belum bisa diperbarui.",
   availability: "Status ketersediaan tidak valid.",
+  avatar_account: "Avatar sudah diunggah, tetapi profil akun belum bisa diperbarui.",
+  avatar_required: "Pilih file avatar terlebih dahulu.",
+  avatar_save: "Avatar sudah diunggah, tetapi profil kreator belum bisa diperbarui.",
+  avatar_size: "Ukuran avatar maksimal 2 MB.",
+  avatar_type: "Avatar harus berupa JPG, PNG, atau WebP.",
+  avatar_upload: "Avatar belum bisa diunggah ke storage.",
   profile: "Profil kreator belum tersedia.",
   required: "Nama tampilan wajib diisi.",
   save: "Profil kreator belum bisa disimpan.",
@@ -43,6 +52,16 @@ function toListValue(value: readonly string[] | null) {
   return value?.join(", ") ?? "";
 }
 
+function getInitials(value: string) {
+  return value
+    .split(" ")
+    .map((part) => part.at(0))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 export default async function CreatorSettingsPage({
   searchParams,
 }: CreatorSettingsPageProps) {
@@ -53,6 +72,9 @@ export default async function CreatorSettingsPage({
   const profile = data.profile;
   const account = data.account;
   const errorMessage = getErrorMessage(error);
+  const displayName = profile?.display_name ?? account?.full_name ?? "Kreator";
+  const avatarUrl = profile?.avatar_url ?? account?.avatar_url ?? null;
+  const initials = getInitials(displayName) || "KR";
 
   return (
     <PageContainer>
@@ -86,8 +108,15 @@ export default async function CreatorSettingsPage({
           <aside className="space-y-2">
             <nav className="flex flex-col gap-1">
               <a
-                href="#profile"
+                href="#avatar"
                 className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-primary"
+              >
+                <User className="size-4" />
+                Avatar
+              </a>
+              <a
+                href="#profile"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <User className="size-4" />
                 Profil Publik
@@ -110,6 +139,50 @@ export default async function CreatorSettingsPage({
           </aside>
 
           <div className="space-y-8">
+            <section
+              id="avatar"
+              className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm"
+            >
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="grid size-24 shrink-0 place-items-center rounded-2xl bg-primary/10 bg-cover bg-center text-2xl font-semibold text-primary ring-1 ring-border"
+                    style={
+                      avatarUrl
+                        ? { backgroundImage: `url("${avatarUrl}")` }
+                        : undefined
+                    }
+                  >
+                    {avatarUrl ? null : initials}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold">Avatar kreator</h2>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      {avatarUrl
+                        ? "Avatar ini tampil di profil kreator dan dashboard."
+                        : "Belum ada avatar. Unggah gambar agar profil lebih mudah dikenali."}
+                    </p>
+                  </div>
+                </div>
+                <form action={uploadCreatorAvatarAction} className="grid gap-3 sm:min-w-72">
+                  <input type="hidden" name="redirectTo" value="/creator/settings" />
+                  <Label htmlFor="avatarFile">File avatar</Label>
+                  <Input
+                    id="avatarFile"
+                    name="avatarFile"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="h-11"
+                    required
+                  />
+                  <Button type="submit" className="rounded-full">
+                    <Upload className="size-4" />
+                    Unggah Avatar
+                  </Button>
+                </form>
+              </div>
+            </section>
+
             <form
               action={updateCreatorProfileAction}
               className="space-y-8"
@@ -261,7 +334,6 @@ export default async function CreatorSettingsPage({
                     <UrlField id="tiktokUrl" label="TikTok" value={profile?.tiktok_url} />
                     <UrlField id="youtubeUrl" label="YouTube" value={profile?.youtube_url} />
                     <UrlField id="portfolioUrl" label="Portofolio eksternal" value={profile?.portfolio_url} />
-                    <UrlField id="avatarUrl" label="URL avatar" value={profile?.avatar_url ?? account?.avatar_url} />
                     <UrlField id="bannerUrl" label="URL banner" value={profile?.banner_url} />
                   </div>
 

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { createPortfolioThumbnailSignedUrl } from "@/lib/storage/urls";
 
 type Tables = Database["public"]["Tables"];
 
@@ -10,6 +11,7 @@ export type CreatorPortfolioCategory = Pick<
 >;
 export type CreatorPortfolioItem = CreatorPortfolioRow & {
   category: CreatorPortfolioCategory | null;
+  thumbnailPreviewUrl: string | null;
 };
 
 export type CreatorPortfolioPageData = {
@@ -78,15 +80,26 @@ export async function getCurrentCreatorPortfolioData(): Promise<CreatorPortfolio
 
     const categories = categoryResult.data ?? [];
     const categoryById = new Map(categories.map((category) => [category.id, category]));
+    const portfolios = await Promise.all(
+      (portfolioResult.data ?? []).map(async (portfolio) => {
+        const signedThumbnailUrl = await createPortfolioThumbnailSignedUrl(
+          context.supabase,
+          portfolio.thumbnail_storage_path,
+        );
+
+        return {
+          ...portfolio,
+          category: portfolio.category_id
+            ? categoryById.get(portfolio.category_id) ?? null
+            : null,
+          thumbnailPreviewUrl: signedThumbnailUrl ?? portfolio.thumbnail_url,
+        };
+      }),
+    );
 
     return {
       categories,
-      portfolios: (portfolioResult.data ?? []).map((portfolio) => ({
-        ...portfolio,
-        category: portfolio.category_id
-          ? categoryById.get(portfolio.category_id) ?? null
-          : null,
-      })),
+      portfolios,
     };
   } catch {
     return { categories: [], portfolios: [] };

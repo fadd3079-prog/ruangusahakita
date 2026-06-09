@@ -1,9 +1,18 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
+import { STORAGE_BUCKETS } from "@/lib/storage/buckets";
+import { FILE_SIZE_LIMITS } from "@/lib/storage/file-limits";
+import { createPortfolioThumbnailStoragePath } from "@/lib/storage/file-paths";
+import { validateImageFile, type FileValidationErrorCode } from "@/lib/storage/validate-file";
+
+type PortfolioUpdate = Database["public"]["Tables"]["portfolios"]["Update"];
+type CreatorSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 function getText(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -22,6 +31,74 @@ function getBoolean(formData: FormData, key: string) {
 function getInteger(formData: FormData, key: string) {
   const value = getText(formData, key).replace(/[^\d-]/g, "");
   return value.length > 0 ? Number(value) : 0;
+}
+
+function getThumbnailUploadError(code: FileValidationErrorCode) {
+  switch (code) {
+    case "missing":
+      return "thumbnail_required";
+    case "size":
+      return "thumbnail_size";
+    case "extension":
+    case "type":
+      return "thumbnail_type";
+  }
+}
+
+function revalidateCreatorPortfolioPaths(creatorId: string) {
+  revalidatePath("/creator/portfolio");
+  revalidatePath("/creator/profile");
+  revalidatePath("/creator/dashboard");
+  revalidatePath("/katalog");
+  revalidatePath(`/kreator/${creatorId}`);
+  revalidatePath("/layanan/[serviceId]", "page");
+}
+
+async function removeStorageObject(
+  supabase: CreatorSupabaseClient,
+  storagePath: string | null,
+) {
+  if (storagePath) {
+    await supabase.storage.from(STORAGE_BUCKETS.PORTFOLIOS).remove([storagePath]);
+  }
+}
+
+async function uploadPortfolioThumbnail(
+  supabase: CreatorSupabaseClient,
+  creatorId: string,
+  portfolioId: string,
+  formData: FormData,
+) {
+  const validation = validateImageFile(formData.get("thumbnailFile"), {
+    maxSizeBytes: FILE_SIZE_LIMITS.portfolioImage,
+  });
+
+  if (!validation.ok) {
+    redirect(`/creator/portfolio?error=${getThumbnailUploadError(validation.code)}`);
+  }
+
+  if (validation.file === null) {
+    return null;
+  }
+
+  const storagePath = createPortfolioThumbnailStoragePath(
+    creatorId,
+    portfolioId,
+    validation.extension,
+  );
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKETS.PORTFOLIOS)
+    .upload(storagePath, validation.file, {
+      cacheControl: "3600",
+      contentType: validation.file.type,
+      upsert: false,
+    });
+
+  if (error) {
+    redirect("/creator/portfolio?error=thumbnail_upload");
+  }
+
+  return storagePath;
 }
 
 async function getCreatorContext() {
@@ -68,7 +145,15 @@ export async function createCreatorPortfolioAction(formData: FormData) {
   }
 
   const { creator, supabase } = await getCreatorContext();
+  const portfolioId = randomUUID();
+  const thumbnailStoragePath = await uploadPortfolioThumbnail(
+    supabase,
+    creator.id,
+    portfolioId,
+    formData,
+  );
   const { error } = await supabase.from("portfolios").insert({
+    id: portfolioId,
     category_id: getNullableText(formData, "categoryId"),
     client_type: getNullableText(formData, "clientType"),
     creator_id: creator.id,
@@ -77,17 +162,16 @@ export async function createCreatorPortfolioAction(formData: FormData) {
     is_featured: getBoolean(formData, "isFeatured"),
     media_url: getNullableText(formData, "mediaUrl"),
     sort_order: getInteger(formData, "sortOrder"),
-    thumbnail_url: getNullableText(formData, "thumbnailUrl"),
+    thumbnail_storage_path: thumbnailStoragePath,
     title,
   });
 
   if (error) {
+    await removeStorageObject(supabase, thumbnailStoragePath);
     redirect("/creator/portfolio?error=save");
   }
 
-  revalidatePath("/creator/portfolio");
-  revalidatePath("/creator/profile");
-  revalidatePath("/creator/dashboard");
+  revalidateCreatorPortfolioPaths(creator.id);
   redirect("/creator/portfolio?created=1");
 }
 
@@ -100,30 +184,63 @@ export async function updateCreatorPortfolioAction(formData: FormData) {
   }
 
   const { creator, supabase } = await getCreatorContext();
-  const { error } = await supabase
+  const { data: existingPortfolio, error: existingError } = await supabase
     .from("portfolios")
-    .update({
-      category_id: getNullableText(formData, "categoryId"),
-      client_type: getNullableText(formData, "clientType"),
-      description: getNullableText(formData, "description"),
-      external_url: getNullableText(formData, "externalUrl"),
-      is_featured: getBoolean(formData, "isFeatured"),
-      media_url: getNullableText(formData, "mediaUrl"),
-      sort_order: getInteger(formData, "sortOrder"),
-      thumbnail_url: getNullableText(formData, "thumbnailUrl"),
-      title,
-    })
+    .select("id, thumbnail_storage_path")
     .eq("id", portfolioId)
     .eq("creator_id", creator.id)
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    .maybeSingle();
 
-  if (error) {
+  if (existingError || !existingPortfolio) {
     redirect("/creator/portfolio?error=save");
   }
 
-  revalidatePath("/creator/portfolio");
-  revalidatePath("/creator/profile");
-  revalidatePath("/creator/dashboard");
+  const thumbnailStoragePath = await uploadPortfolioThumbnail(
+    supabase,
+    creator.id,
+    portfolioId,
+    formData,
+  );
+  const updatePayload: PortfolioUpdate = {
+    category_id: getNullableText(formData, "categoryId"),
+    client_type: getNullableText(formData, "clientType"),
+    description: getNullableText(formData, "description"),
+    external_url: getNullableText(formData, "externalUrl"),
+    is_featured: getBoolean(formData, "isFeatured"),
+    media_url: getNullableText(formData, "mediaUrl"),
+    sort_order: getInteger(formData, "sortOrder"),
+    title,
+  };
+
+  if (thumbnailStoragePath) {
+    updatePayload.thumbnail_storage_path = thumbnailStoragePath;
+    updatePayload.thumbnail_url = null;
+  }
+
+  const { data: updatedPortfolio, error } = await supabase
+    .from("portfolios")
+    .update(updatePayload)
+    .eq("id", portfolioId)
+    .eq("creator_id", creator.id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !updatedPortfolio) {
+    await removeStorageObject(supabase, thumbnailStoragePath);
+    redirect("/creator/portfolio?error=save");
+  }
+
+  if (
+    thumbnailStoragePath &&
+    existingPortfolio.thumbnail_storage_path &&
+    existingPortfolio.thumbnail_storage_path !== thumbnailStoragePath
+  ) {
+    await removeStorageObject(supabase, existingPortfolio.thumbnail_storage_path);
+  }
+
+  revalidateCreatorPortfolioPaths(creator.id);
   redirect("/creator/portfolio?updated=1");
 }
 
@@ -135,19 +252,32 @@ export async function deleteCreatorPortfolioAction(formData: FormData) {
   }
 
   const { creator, supabase } = await getCreatorContext();
-  const { error } = await supabase
+  const { data: existingPortfolio, error: existingError } = await supabase
+    .from("portfolios")
+    .select("id, thumbnail_storage_path")
+    .eq("id", portfolioId)
+    .eq("creator_id", creator.id)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (existingError || !existingPortfolio) {
+    redirect("/creator/portfolio?error=delete");
+  }
+
+  const { data: deletedPortfolio, error } = await supabase
     .from("portfolios")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", portfolioId)
     .eq("creator_id", creator.id)
-    .is("deleted_at", null);
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
+  if (error || !deletedPortfolio) {
     redirect("/creator/portfolio?error=delete");
   }
 
-  revalidatePath("/creator/portfolio");
-  revalidatePath("/creator/profile");
-  revalidatePath("/creator/dashboard");
+  await removeStorageObject(supabase, existingPortfolio.thumbnail_storage_path);
+  revalidateCreatorPortfolioPaths(creator.id);
   redirect("/creator/portfolio?deleted=1");
 }

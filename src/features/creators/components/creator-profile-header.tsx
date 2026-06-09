@@ -34,7 +34,7 @@ export function CreatorProfileHeader({
   creator,
   primaryService,
 }: CreatorProfileHeaderProps) {
-  const visualUrl = creator.bannerUrl || creator.avatarUrl || "/images/image (1).webp";
+  const visualUrl = creator.bannerUrl;
   const initials = creator.displayName
     .split(" ")
     .map((part) => part[0])
@@ -46,12 +46,27 @@ export function CreatorProfileHeader({
       <PageContainer className="grid gap-8 py-12 sm:py-14 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:py-16">
         <div>
           <div
-            className="mb-6 aspect-[16/6] min-h-52 rounded-[22px] bg-cover bg-center"
-            style={{ backgroundImage: `url("${visualUrl}")` }}
-          />
+            className="mb-6 grid aspect-[16/6] min-h-52 place-items-center rounded-[22px] bg-muted/50 bg-cover bg-center"
+            style={
+              visualUrl ? { backgroundImage: `url("${visualUrl}")` } : undefined
+            }
+          >
+            {visualUrl ? null : (
+              <span className="text-5xl font-semibold text-primary/25">
+                {initials}
+              </span>
+            )}
+          </div>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="-mt-12 grid size-20 shrink-0 place-items-center rounded-full bg-white text-2xl font-semibold text-primary shadow-[var(--shadow-card)] ring-4 ring-background sm:mt-0">
-              {initials}
+            <div
+              className="-mt-12 grid size-20 shrink-0 place-items-center rounded-full bg-white bg-cover bg-center text-2xl font-semibold text-primary shadow-[var(--shadow-card)] ring-4 ring-background sm:mt-0"
+              style={
+                creator.avatarUrl
+                  ? { backgroundImage: `url("${creator.avatarUrl}")` }
+                  : undefined
+              }
+            >
+              {creator.avatarUrl ? null : initials}
             </div>
             <div>
               <div className="flex flex-wrap gap-2">

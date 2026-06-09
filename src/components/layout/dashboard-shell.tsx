@@ -8,11 +8,22 @@ import { DashboardTopbar } from "@/components/layout/dashboard-topbar";
 import type { DashboardNavigationVariant } from "@/lib/constants/navigation";
 
 type DashboardShellProps = {
+  accountPreview?: DashboardAccountPreview | null;
   children: ReactNode;
   variant: DashboardNavigationVariant;
 };
 
-export function DashboardShell({ children, variant }: DashboardShellProps) {
+export type DashboardAccountPreview = {
+  avatarUrl: string | null;
+  displayName: string;
+  initials: string;
+};
+
+export function DashboardShell({
+  accountPreview,
+  children,
+  variant,
+}: DashboardShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
@@ -29,7 +40,7 @@ export function DashboardShell({ children, variant }: DashboardShellProps) {
         />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <DashboardTopbar variant={variant} />
+          <DashboardTopbar accountPreview={accountPreview} variant={variant} />
           <main className="min-h-0 flex-1 overflow-y-auto py-5 lg:py-8">
             {children}
           </main>

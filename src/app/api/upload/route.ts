@@ -1,6 +1,6 @@
 export async function GET() {
   return Response.json({
-    message: "Endpoint upload belum aktif. Upload aset akan memakai storage setelah policy siap.",
-    status: "not_implemented",
+    message: "Upload avatar kreator dan gambar portofolio sudah ditangani lewat Server Action role-scoped. Endpoint upload generik belum masuk scope fase ini.",
+    status: "scoped_to_creator_actions",
   }, { status: 501 });
 }

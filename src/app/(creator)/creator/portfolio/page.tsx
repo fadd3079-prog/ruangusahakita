@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import { ExternalLink, Image as ImageIcon, PlusCircle, Save, Trash2 } from "lucide-react";
+import {
+  ExternalLink,
+  Image as ImageIcon,
+  PlusCircle,
+  Save,
+  Trash2,
+  Upload,
+} from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -38,6 +45,10 @@ const errorMessages = {
   profile: "Profil kreator belum tersedia.",
   required: "Judul portofolio wajib diisi.",
   save: "Portofolio belum bisa disimpan.",
+  thumbnail_required: "Pilih gambar portofolio terlebih dahulu.",
+  thumbnail_size: "Ukuran gambar portofolio maksimal 5 MB.",
+  thumbnail_type: "Gambar portofolio harus berupa JPG, PNG, atau WebP.",
+  thumbnail_upload: "Gambar portofolio belum bisa diunggah ke storage.",
   unauthorized: "Akun ini tidak memiliki akses kreator aktif.",
 };
 
@@ -116,7 +127,7 @@ export default async function CreatorPortfolioPage({
                 Tambah portofolio
               </h2>
               <p className="text-sm text-muted-foreground">
-                Gunakan URL gambar atau link eksternal untuk sementara.
+                Unggah gambar portofolio dan lengkapi link eksternal jika karya sudah tayang.
               </p>
             </div>
           </div>
@@ -162,18 +173,25 @@ function PortfolioEditor({
   categories: readonly CreatorPortfolioCategory[];
   item: CreatorPortfolioItem;
 }) {
+  const previewUrl = item.thumbnailPreviewUrl;
+
   return (
     <article className="marketplace-card overflow-hidden">
       <div className="grid gap-0 lg:grid-cols-[220px_1fr]">
         <div
-          className="grid min-h-56 place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
+          className="grid min-h-56 place-items-center bg-muted/50 bg-cover bg-center p-5 text-center text-muted-foreground"
           style={
-            item.thumbnail_url
-              ? { backgroundImage: `url(${item.thumbnail_url})` }
+            previewUrl
+              ? { backgroundImage: `url(${previewUrl})` }
               : undefined
           }
         >
-          {item.thumbnail_url ? null : <ImageIcon className="size-10 opacity-40" />}
+          {previewUrl ? null : (
+            <div>
+              <ImageIcon className="mx-auto size-10 opacity-40" />
+              <p className="mt-3 text-sm">Belum ada gambar portofolio.</p>
+            </div>
+          )}
         </div>
         <div className="space-y-5 p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -270,9 +288,24 @@ function PortfolioForm({
         />
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor={item ? `thumbnailFile-${item.id}` : "thumbnailFile"}>
+          Gambar portofolio
+        </Label>
+        <Input
+          id={item ? `thumbnailFile-${item.id}` : "thumbnailFile"}
+          name="thumbnailFile"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="h-11"
+        />
+        <p className="text-xs leading-5 text-muted-foreground">
+          JPG, PNG, atau WebP. Maksimal 5 MB.
+        </p>
+      </div>
+
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="clientType" label="Jenis klien" value={item?.client_type} />
-        <Field id="thumbnailUrl" label="URL thumbnail" value={item?.thumbnail_url} />
         <Field id="mediaUrl" label="URL media" value={item?.media_url} />
         <Field id="externalUrl" label="URL eksternal" value={item?.external_url} />
         <Field id="sortOrder" label="Urutan" type="number" value={String(item?.sort_order ?? 0)} />
@@ -293,7 +326,7 @@ function PortfolioForm({
       </div>
 
       <Button type="submit" className="rounded-full">
-        <Save className="size-4" />
+        {item ? <Save className="size-4" /> : <Upload className="size-4" />}
         {submitLabel}
       </Button>
     </form>

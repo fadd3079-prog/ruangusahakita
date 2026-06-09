@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Image as ImageIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,14 +15,18 @@ type PortfolioCardProps = {
 };
 
 export function PortfolioCard({ portfolio, category }: PortfolioCardProps) {
-  const visualUrl = portfolio.thumbnailUrl || "/images/image (10).webp";
+  const visualUrl = portfolio.thumbnailUrl;
 
   return (
     <Card className="marketplace-card h-full overflow-hidden p-0">
       <div
-        className="aspect-video bg-cover bg-center"
-        style={{ backgroundImage: `url("${visualUrl}")` }}
-      />
+        className="grid aspect-video place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
+        style={
+          visualUrl ? { backgroundImage: `url("${visualUrl}")` } : undefined
+        }
+      >
+        {visualUrl ? null : <ImageIcon className="size-10 opacity-40" />}
+      </div>
       <CardHeader className="px-4 pb-2 pt-4">
         <div className="flex flex-wrap gap-2">
           {category ? (

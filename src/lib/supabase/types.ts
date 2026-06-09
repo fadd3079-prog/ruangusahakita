@@ -17,6 +17,7 @@ export interface Database {
           email: string
           phone: string | null
           avatar_url: string | null
+          avatar_storage_path: string | null
           account_status: Database['public']['Enums']['account_status']
           onboarding_completed: boolean
           onboarding_skipped_at: string | null
@@ -31,6 +32,7 @@ export interface Database {
           email: string
           phone?: string | null
           avatar_url?: string | null
+          avatar_storage_path?: string | null
           account_status?: Database['public']['Enums']['account_status']
           onboarding_completed?: boolean
           onboarding_skipped_at?: string | null
@@ -45,6 +47,7 @@ export interface Database {
           email?: string
           phone?: string | null
           avatar_url?: string | null
+          avatar_storage_path?: string | null
           account_status?: Database['public']['Enums']['account_status']
           onboarding_completed?: boolean
           onboarding_skipped_at?: string | null
@@ -148,6 +151,7 @@ export interface Database {
           portfolio_url: string | null
           banner_url: string | null
           avatar_url: string | null
+          avatar_storage_path: string | null
           availability_status: Database['public']['Enums']['creator_availability_status']
           starting_price: number | null
           average_rating: number | null
@@ -174,6 +178,7 @@ export interface Database {
           portfolio_url?: string | null
           banner_url?: string | null
           avatar_url?: string | null
+          avatar_storage_path?: string | null
           availability_status?: Database['public']['Enums']['creator_availability_status']
           starting_price?: number | null
           average_rating?: number | null
@@ -200,6 +205,7 @@ export interface Database {
           portfolio_url?: string | null
           banner_url?: string | null
           avatar_url?: string | null
+          avatar_storage_path?: string | null
           availability_status?: Database['public']['Enums']['creator_availability_status']
           starting_price?: number | null
           average_rating?: number | null
@@ -434,6 +440,7 @@ export interface Database {
           description: string | null
           category_id: string | null
           thumbnail_url: string | null
+          thumbnail_storage_path: string | null
           media_url: string | null
           external_url: string | null
           client_type: string | null
@@ -450,6 +457,7 @@ export interface Database {
           description?: string | null
           category_id?: string | null
           thumbnail_url?: string | null
+          thumbnail_storage_path?: string | null
           media_url?: string | null
           external_url?: string | null
           client_type?: string | null
@@ -466,6 +474,7 @@ export interface Database {
           description?: string | null
           category_id?: string | null
           thumbnail_url?: string | null
+          thumbnail_storage_path?: string | null
           media_url?: string | null
           external_url?: string | null
           client_type?: string | null

@@ -43,7 +43,7 @@ type CreatorCardProps = {
 };
 
 export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
-  const visualUrl = creator.bannerUrl || creator.avatarUrl || "/images/image (1).webp";
+  const visualUrl = creator.bannerUrl;
   const initials = creator.displayName
     .split(" ")
     .map((part) => part[0])
@@ -53,13 +53,28 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
   return (
     <Card className="marketplace-card h-full overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
       <div
-        className="relative aspect-[16/9] bg-cover bg-center"
-        style={{ backgroundImage: `url("${visualUrl}")` }}
+        className="relative aspect-[16/9] bg-muted/50 bg-cover bg-center"
+        style={
+          visualUrl ? { backgroundImage: `url("${visualUrl}")` } : undefined
+        }
       >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,17,31,0.04),rgba(6,17,31,0.58))]" />
-        <div className="absolute bottom-3 left-3 flex min-w-0 items-center gap-2 pr-3">
-          <div className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-sm font-semibold text-primary shadow-sm ring-1 ring-white/40">
+        {visualUrl ? (
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,17,31,0.04),rgba(6,17,31,0.58))]" />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center bg-[linear-gradient(135deg,var(--surface-soft),var(--background))] text-4xl font-semibold text-primary/40">
             {initials}
+          </div>
+        )}
+        <div className="absolute bottom-3 left-3 flex min-w-0 items-center gap-2 pr-3">
+          <div
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-white bg-cover bg-center text-sm font-semibold text-primary shadow-sm ring-1 ring-white/40"
+            style={
+              creator.avatarUrl
+                ? { backgroundImage: `url("${creator.avatarUrl}")` }
+                : undefined
+            }
+          >
+            {creator.avatarUrl ? null : initials}
           </div>
           <div className="min-w-0 rounded-full bg-white/88 px-3 py-1.5 backdrop-blur-sm">
             <p className="truncate text-xs font-semibold text-brand-navy">
