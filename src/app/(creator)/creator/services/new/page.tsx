@@ -12,12 +12,13 @@ export const metadata: Metadata = {
 
 type NewServicePageProps = {
   searchParams: Promise<{
+    detail?: string;
     error?: string;
   }>;
 };
 
 export default async function NewServicePage({ searchParams }: NewServicePageProps) {
-  const [{ error }, categories] = await Promise.all([
+  const [{ detail, error }, categories] = await Promise.all([
     searchParams,
     getCreatorServiceCategories(),
   ]);
@@ -29,6 +30,7 @@ export default async function NewServicePage({ searchParams }: NewServicePagePro
         categories={categories}
         description="Buat paket jasa digital baru yang jelas dari sisi output, harga, estimasi, dan revisi."
         error={error}
+        errorDetail={detail}
         submitLabel="Simpan Paket"
         title="Tambah Paket Layanan"
       />

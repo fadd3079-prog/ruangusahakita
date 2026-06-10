@@ -26,6 +26,11 @@ type CreatorContext = {
   userId: string;
 };
 
+type ServicePackageInsert =
+  Database["public"]["Tables"]["service_packages"]["Insert"];
+type ServiceTierInsert =
+  Database["public"]["Tables"]["service_package_tiers"]["Insert"];
+
 function getText(formData: FormData, key: string) {
   const value = formData.get(key);
 
@@ -55,6 +60,75 @@ function getNumber(formData: FormData, key: string) {
 
 function getInteger(formData: FormData, key: string) {
   return Math.floor(getNumber(formData, key));
+}
+
+function getDebugText(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (value instanceof File) {
+    return value.size > 0
+      ? {
+          name: value.name,
+          size: value.size,
+          type: value.type,
+        }
+      : null;
+  }
+
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  return null;
+}
+
+function getCreatorServiceFormDebugData(formData: FormData) {
+  return {
+    basePrice: getDebugText(formData, "basePrice"),
+    categoryId: getDebugText(formData, "categoryId"),
+    coverFile: getDebugText(formData, "coverFile"),
+    deliverables: getDebugText(formData, "deliverables"),
+    description: getDebugText(formData, "description"),
+    estimatedDays: getDebugText(formData, "estimatedDays"),
+    isActive: getDebugText(formData, "isActive"),
+    requirements: getDebugText(formData, "requirements"),
+    revisionCount: getDebugText(formData, "revisionCount"),
+    shortDescription: getDebugText(formData, "shortDescription"),
+    tags: getDebugText(formData, "tags"),
+    tierDeliverables: getDebugText(formData, "tierDeliverables"),
+    tierDescription: getDebugText(formData, "tierDescription"),
+    tierEstimatedDays: getDebugText(formData, "tierEstimatedDays"),
+    tierName: getDebugText(formData, "tierName"),
+    tierPrice: getDebugText(formData, "tierPrice"),
+    tierRevisionCount: getDebugText(formData, "tierRevisionCount"),
+    title: getDebugText(formData, "title"),
+  };
+}
+
+function getErrorDetail(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return String(error ?? "Unknown error");
+  }
+
+  const errorRecord = error as {
+    code?: unknown;
+    details?: unknown;
+    hint?: unknown;
+    message?: unknown;
+  };
+  const parts = [
+    typeof errorRecord.code === "string" ? `[${errorRecord.code}]` : null,
+    typeof errorRecord.message === "string" ? errorRecord.message : null,
+    typeof errorRecord.details === "string" ? `Details: ${errorRecord.details}` : null,
+    typeof errorRecord.hint === "string" ? `Hint: ${errorRecord.hint}` : null,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(" ") : JSON.stringify(error);
+}
+
+function redirectWithError(path: string, code: string, error?: unknown): never {
+  const detail = error ? `&detail=${encodeURIComponent(getErrorDetail(error))}` : "";
+  redirect(`${path}?error=${code}${detail}`);
 }
 
 function createSlug(value: string) {
@@ -199,6 +273,25 @@ async function getCreatorContext(): Promise<CreatorContext> {
   return { creator, supabase, userId: user.id };
 }
 
+async function ensureActiveCategory(context: CreatorContext, categoryId: string, redirectPath: string) {
+  const { data: category, error } = await context.supabase
+    .from("service_categories")
+    .select("id")
+    .eq("id", categoryId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error || !category) {
+    console.error("[creator-services] Category validation failed", {
+      categoryId,
+      error,
+    });
+    redirectWithError(redirectPath, "category", error);
+  }
+
+  return category.id;
+}
+
 async function ensureOwnedService(context: CreatorContext, serviceId: string) {
   if (!serviceId) {
     redirect("/creator/services?error=missing");
@@ -227,6 +320,30 @@ function revalidateServicePaths(serviceId: string, creatorId?: string) {
   if (creatorId) {
     revalidatePath(`/kreator/${creatorId}`);
   }
+}
+
+/**
+ * Sync `creator_profiles.starting_price` with the minimum active tier price
+ * across all active (non-deleted) services belonging to this creator.
+ */
+async function syncCreatorStartingPrice(context: CreatorContext) {
+  const { creator, supabase } = context;
+
+  const { data: tiers } = await supabase
+    .from("service_package_tiers")
+    .select("price, service_packages!inner(creator_id, is_active, deleted_at)")
+    .eq("service_packages.creator_id", creator.id)
+    .eq("service_packages.is_active", true)
+    .is("service_packages.deleted_at", null)
+    .eq("is_active", true);
+
+  const prices = (tiers ?? []).map((t) => Number(t.price)).filter((p) => p > 0);
+  const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+
+  await supabase
+    .from("creator_profiles")
+    .update({ starting_price: minPrice })
+    .eq("id", creator.id);
 }
 
 function getTierPayload(formData: FormData) {
@@ -333,13 +450,20 @@ async function uploadServiceCover(
 
 export async function createCreatorServiceAction(formData: FormData) {
   const coverFile = validateOptionalCoverFile(formData, "/creator/services/new");
+  console.log("FORM DATA", getCreatorServiceFormDebugData(formData));
   const validationError = getValidationError(formData);
 
   if (validationError) {
     redirect(`/creator/services/new?error=${validationError}`);
   }
 
-  const { creator, supabase } = await getCreatorContext();
+  const context = await getCreatorContext();
+  const { creator, supabase } = context;
+  const categoryId = await ensureActiveCategory(
+    context,
+    getText(formData, "categoryId"),
+    "/creator/services/new",
+  );
   const title = getText(formData, "title");
   const basePrice = getNumber(formData, "basePrice");
   const estimatedDays = getInteger(formData, "estimatedDays");
@@ -349,34 +473,24 @@ export async function createCreatorServiceAction(formData: FormData) {
   const tierRevisionCount = getInteger(formData, "tierRevisionCount");
   const slug = `${createSlug(title)}-${Date.now().toString(36)}`;
   const serviceId = randomUUID();
-
-  const { data: service, error: serviceError } = await supabase
-    .from("service_packages")
-    .insert({
-      id: serviceId,
-      base_price: basePrice,
-      category_id: getNullableText(formData, "categoryId"),
-      creator_id: creator.id,
-      deliverables: getTextList(formData, "deliverables"),
-      description: getNullableText(formData, "description"),
-      estimated_days: estimatedDays,
-      is_active: getText(formData, "isActive") === "true",
-      is_featured: false,
-      requirements: getTextList(formData, "requirements"),
-      revision_count: revisionCount,
-      short_description: getNullableText(formData, "shortDescription"),
-      slug,
-      tags: getTextList(formData, "tags"),
-      title,
-    })
-    .select("id")
-    .single();
-
-  if (serviceError || !service) {
-    redirect("/creator/services/new?error=save");
-  }
-
-  const { error: tierError } = await supabase.from("service_package_tiers").insert({
+  const servicePayload: ServicePackageInsert = {
+    id: serviceId,
+    base_price: basePrice,
+    category_id: categoryId,
+    creator_id: creator.id,
+    deliverables: getTextList(formData, "deliverables"),
+    description: getNullableText(formData, "description"),
+    estimated_days: estimatedDays,
+    is_active: getText(formData, "isActive") === "true",
+    is_featured: false,
+    requirements: getTextList(formData, "requirements"),
+    revision_count: revisionCount,
+    short_description: getNullableText(formData, "shortDescription"),
+    slug,
+    tags: getTextList(formData, "tags"),
+    title,
+  };
+  const tierPayload: ServiceTierInsert = {
     deliverables: getTextList(formData, "tierDeliverables"),
     description: getNullableText(formData, "tierDescription"),
     estimated_days: tierEstimatedDays,
@@ -384,14 +498,49 @@ export async function createCreatorServiceAction(formData: FormData) {
     name: getText(formData, "tierName"),
     price: tierPrice,
     revision_count: tierRevisionCount >= 0 ? tierRevisionCount : revisionCount,
-    service_package_id: service.id,
+    service_package_id: serviceId,
     sort_order: 1,
+  };
+
+  console.log("VALIDATED DATA", {
+    creatorId: creator.id,
+    servicePayload,
+    tierPayload,
+    userId: context.userId,
+  });
+
+  const { data: service, error: serviceError } = await supabase
+    .from("service_packages")
+    .insert(servicePayload)
+    .select("id")
+    .single();
+
+  console.log("INSERT RESULT", {
+    error: serviceError,
+    service,
+    table: "service_packages",
+  });
+
+  if (serviceError || !service) {
+    console.error("[creator-services] Failed to insert service package", serviceError);
+    redirectWithError("/creator/services/new", "save", serviceError);
+  }
+
+  const { error: tierError } = await supabase.from("service_package_tiers").insert({
+    ...tierPayload,
+    service_package_id: service.id,
+  });
+
+  console.log("INSERT RESULT", {
+    error: tierError,
+    table: "service_package_tiers",
   });
 
   revalidatePath("/creator/services");
 
   if (tierError) {
-    redirect(`/creator/services/${service.id}/edit?error=tier`);
+    console.error("[creator-services] Failed to insert service tier", tierError);
+    redirectWithError(`/creator/services/${service.id}/edit`, "tier", tierError);
   }
 
   const cover = await uploadServiceCover(
@@ -421,6 +570,7 @@ export async function createCreatorServiceAction(formData: FormData) {
     }
   }
 
+  await syncCreatorStartingPrice(context);
   revalidateServicePaths(service.id, creator.id);
   redirect("/creator/services?created=1");
 }
@@ -441,7 +591,13 @@ export async function updateCreatorServiceAction(formData: FormData) {
   }
 
   const coverFile = validateOptionalCoverFile(formData, editPath);
-  const { creator, supabase } = await getCreatorContext();
+  const context = await getCreatorContext();
+  const { creator, supabase } = context;
+  const categoryId = await ensureActiveCategory(
+    context,
+    getText(formData, "categoryId"),
+    editPath,
+  );
   const { data: existingService, error: existingError } = await supabase
     .from("service_packages")
     .select("id, cover_file_asset_id")
@@ -468,7 +624,7 @@ export async function updateCreatorServiceAction(formData: FormData) {
   );
   const servicePayload: ServicePackageUpdate = {
     base_price: basePrice,
-    category_id: getNullableText(formData, "categoryId"),
+    category_id: categoryId,
     deliverables: getTextList(formData, "deliverables"),
     description: getNullableText(formData, "description"),
     estimated_days: estimatedDays,
@@ -536,6 +692,7 @@ export async function updateCreatorServiceAction(formData: FormData) {
     await removeImageAssetById(supabase, existingService.cover_file_asset_id);
   }
 
+  await syncCreatorStartingPrice(context);
   revalidateServicePaths(serviceId, creator.id);
   redirect("/creator/services?updated=1");
 }
@@ -570,6 +727,7 @@ export async function toggleCreatorServiceStatusAction(formData: FormData) {
     redirect("/creator/services?error=toggle");
   }
 
+  await syncCreatorStartingPrice({ creator, supabase, userId: creator.user_id });
   revalidateServicePaths(serviceId, creator.id);
   redirect("/creator/services?toggled=1");
 }

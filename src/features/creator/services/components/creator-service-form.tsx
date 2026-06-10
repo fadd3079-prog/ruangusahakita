@@ -24,6 +24,7 @@ type CreatorServiceFormProps = {
   categories: readonly CreatorServiceCategory[];
   description: string;
   error?: string;
+  errorDetail?: string;
   service?: CreatorServiceEditData | null;
   submitLabel: string;
   success?: string;
@@ -42,6 +43,7 @@ const errorMessages = {
   cover_size: "Ukuran cover layanan maksimal 5 MB.",
   cover_type: "Cover layanan harus berupa JPG, PNG, atau WebP.",
   cover_upload: "Cover layanan belum bisa diunggah ke storage.",
+  category: "Kategori layanan tidak tersedia atau sudah tidak aktif.",
   missing: "Data layanan tidak lengkap.",
   not_found: "Layanan tidak ditemukan atau bukan milik akun kreator ini.",
   price: "Harga layanan dan harga tier wajib lebih dari nol.",
@@ -97,6 +99,7 @@ export function CreatorServiceForm({
   categories,
   description,
   error,
+  errorDetail,
   service,
   submitLabel,
   success,
@@ -106,6 +109,7 @@ export function CreatorServiceForm({
   const successMessage = getSuccessMessage(success);
   const primaryTier = service?.primaryTier ?? null;
   const servicePackage = service?.service ?? null;
+  const hasCategories = categories.length > 0;
   const formId = servicePackage
     ? "creator-service-edit-form"
     : "creator-service-create-form";
@@ -131,7 +135,14 @@ export function CreatorServiceForm({
         <Alert variant="destructive">
           <Info className="size-4" />
           <AlertTitle>Data belum bisa disimpan</AlertTitle>
-          <AlertDescription>{errorMessage}</AlertDescription>
+          <AlertDescription>
+            <span>{errorMessage}</span>
+            {errorDetail ? (
+              <span className="mt-2 block rounded-md bg-destructive/10 px-3 py-2 font-mono text-xs leading-5">
+                {errorDetail}
+              </span>
+            ) : null}
+          </AlertDescription>
         </Alert>
       ) : null}
 
@@ -140,6 +151,17 @@ export function CreatorServiceForm({
           <Info className="size-4" />
           <AlertTitle>Perubahan tersimpan</AlertTitle>
           <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {!hasCategories ? (
+        <Alert variant="destructive">
+          <Info className="size-4" />
+          <AlertTitle>Kategori layanan belum tersedia</AlertTitle>
+          <AlertDescription>
+            Tambah atau aktifkan kategori layanan terlebih dahulu sebelum membuat
+            paket jasa digital.
+          </AlertDescription>
         </Alert>
       ) : null}
 
@@ -175,11 +197,14 @@ export function CreatorServiceForm({
                   id="categoryId"
                   name="categoryId"
                   required
+                  disabled={!hasCategories}
                   defaultValue={servicePackage?.category_id ?? ""}
-                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value="" disabled>
-                    Pilih kategori layanan
+                    {hasCategories
+                      ? "Pilih kategori layanan"
+                      : "Kategori layanan belum tersedia"}
                   </option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
@@ -451,7 +476,12 @@ export function CreatorServiceForm({
                 Pastikan harga, output, estimasi, dan revisi sudah sesuai sebelum
                 layanan ditampilkan kepada UMKM.
               </p>
-              <Button type="submit" form={formId} className="h-11 w-full">
+              <Button
+                type="submit"
+                form={formId}
+                disabled={!hasCategories}
+                className="h-11 w-full"
+              >
                 <Save className="size-4" />
                 {submitLabel}
               </Button>

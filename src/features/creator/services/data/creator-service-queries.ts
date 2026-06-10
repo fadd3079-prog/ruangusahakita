@@ -1,3 +1,5 @@
+import { unstable_rethrow } from "next/navigation";
+
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -68,12 +70,19 @@ export async function getCreatorServiceCategories() {
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
 
-    if (error || !data) {
+    if (error) {
+      console.error("[creator-services] Failed to load service categories", error);
+      return [];
+    }
+
+    if (!data) {
       return [];
     }
 
     return data;
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error("[creator-services] Failed to load service categories", error);
     return [];
   }
 }

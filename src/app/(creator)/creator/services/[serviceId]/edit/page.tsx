@@ -17,6 +17,7 @@ type EditServicePageProps = {
     addon_created?: string;
     addon_deleted?: string;
     addon_updated?: string;
+    detail?: string;
     error?: string;
     tier_created?: string;
     tier_toggled?: string;
@@ -88,6 +89,7 @@ export default async function EditServicePage({
         categories={categories}
         description="Perbarui detail paket jasa digital tanpa mengubah data transaksi atau order."
         error={currentSearchParams.error}
+        errorDetail={currentSearchParams.detail}
         service={service}
         submitLabel="Simpan Perubahan"
         success={getSuccess(currentSearchParams)}
