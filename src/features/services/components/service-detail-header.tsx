@@ -10,6 +10,7 @@ import type {
   PublicServiceCategory,
   PublicServicePackage,
 } from "@/features/catalog/data/catalog-types";
+import { addServiceToCart } from "@/features/cart/actions/cart-actions";
 
 type ServiceDetailHeaderProps = {
   service: PublicServicePackage;
@@ -95,17 +96,23 @@ export function ServiceDetailHeader({
           <div className="mt-5 rounded-2xl border border-border/70 bg-muted/35 p-3 text-sm">
             <PriceText value={service.basePrice} />
           </div>
-          <div className="mt-5 grid gap-2">
-            <Button asChild className="h-11 rounded-full">
-              <Link href={`/umkm/cart?serviceId=${service.id}`}>
+          <div className="mt-5 flex flex-col gap-2">
+            <form action={addServiceToCart}>
+              <input type="hidden" name="serviceId" value={service.id} />
+              <input type="hidden" name="redirectTo" value="/umkm/cart" />
+              <input type="hidden" name="debug_source" value="TOP_BUTTON" />
+              <Button type="submit" className="h-11 w-full rounded-full">
                 Tambah ke Keranjang
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-11 rounded-full">
-              <Link href={`/umkm/checkout?serviceId=${service.id}`}>
+              </Button>
+            </form>
+            <form action={addServiceToCart}>
+              <input type="hidden" name="serviceId" value={service.id} />
+              <input type="hidden" name="redirectTo" value="/umkm/checkout" />
+              <input type="hidden" name="debug_source" value="TOP_BUTTON" />
+              <Button type="submit" variant="outline" className="h-11 w-full rounded-full">
                 Pesan Sekarang
-              </Link>
-            </Button>
+              </Button>
+            </form>
           </div>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
             Pilih tier yang paling sesuai sebelum melanjutkan brief campaign.

@@ -224,6 +224,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   <input type="hidden" name="tierId" value={primaryTier.id} />
                 ) : null}
                 <input type="hidden" name="redirectTo" value="/umkm/cart" />
+                <input type="hidden" name="debug_source" value="BOTTOM_BUTTON" />
                 <Button type="submit" size="lg" className="h-11 w-full rounded-full px-5">
                   Tambah ke Keranjang
                 </Button>
@@ -234,6 +235,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   <input type="hidden" name="tierId" value={primaryTier.id} />
                 ) : null}
                 <input type="hidden" name="redirectTo" value="/umkm/checkout" />
+                <input type="hidden" name="debug_source" value="BOTTOM_BUTTON" />
                 <Button
                   type="submit"
                   size="lg"

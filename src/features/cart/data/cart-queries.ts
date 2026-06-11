@@ -1,3 +1,5 @@
+import { unstable_noStore as noStore } from "next/cache";
+
 import { createClient } from "@/lib/supabase/server";
 import type { StorageBucket } from "@/lib/storage/buckets";
 import { createStorageSignedUrl } from "@/lib/storage/urls";
@@ -143,6 +145,7 @@ function unique(values: readonly (string | null | undefined)[]) {
 }
 
 export async function getCurrentCart(): Promise<CurrentCart> {
+  noStore();
   try {
     const umkm = await getCurrentUmkmProfile();
 
@@ -161,6 +164,7 @@ export async function getCurrentCart(): Promise<CurrentCart> {
       .maybeSingle();
 
     if (cartError || !cart) {
+      console.log("getCurrentCart: no active cart found", { cartError, umkmId: umkm.id });
       return emptyCart();
     }
 
@@ -170,7 +174,10 @@ export async function getCurrentCart(): Promise<CurrentCart> {
       .eq("cart_id", cart.id)
       .order("created_at", { ascending: true });
 
+    console.log("getCurrentCart: raw items fetched", { count: items?.length, error: itemError });
+
     if (itemError || !items || items.length === 0) {
+      console.log("getCurrentCart: returning empty because items is empty or error");
       return {
         ...emptyCart(),
         cart,
@@ -178,6 +185,8 @@ export async function getCurrentCart(): Promise<CurrentCart> {
     }
 
     const displayItems = await enrichCartItems(items);
+    console.log("getCurrentCart: enriched display items", { count: displayItems.length });
+    
     const serviceSubtotal = displayItems.reduce(
       (total, item) => total + item.tierPrice,
       0,

@@ -78,12 +78,13 @@ function sanitizeRedirectPath(value: string) {
   return "/umkm/cart";
 }
 
-async function requireUmkmContext(): Promise<UmkmContext> {
+async function requireUmkmContext(fallbackPath?: string): Promise<UmkmContext> {
   const supabase = await createClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
   if (userError || !userData.user) {
-    redirect("/login");
+    console.log("REQUIRE_UMKM: No user or userError", userError);
+    redirect(fallbackPath ? `/login?redirectTo=${encodeURIComponent(fallbackPath)}` : "/login");
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -98,6 +99,7 @@ async function requireUmkmContext(): Promise<UmkmContext> {
     profile.role !== "umkm" ||
     profile.account_status !== "active"
   ) {
+    console.log("REQUIRE_UMKM: Invalid profile", profileError, profile);
     redirect("/umkm/dashboard?error=unauthorized");
   }
 
@@ -108,6 +110,7 @@ async function requireUmkmContext(): Promise<UmkmContext> {
     .maybeSingle();
 
   if (umkmError || !umkm) {
+    console.log("REQUIRE_UMKM: No UMKM profile", umkmError);
     redirect("/umkm/dashboard?error=profile");
   }
 
@@ -342,13 +345,19 @@ async function upsertCartItem(
   cart: Cart,
   selection: ServiceSelection,
 ) {
-  const { data: existingItem } = await supabase
+  let query = supabase
     .from("cart_items")
     .select("*")
     .eq("cart_id", cart.id)
-    .eq("service_package_id", selection.service.id)
-    .eq("tier_id", selection.tier.id)
-    .maybeSingle();
+    .eq("service_package_id", selection.service.id);
+
+  if (selection.tier.id) {
+    query = query.eq("tier_id", selection.tier.id);
+  } else {
+    query = query.is("tier_id", null);
+  }
+
+  const { data: existingItem } = await query.maybeSingle();
 
   const payload = {
     addon_total: selection.addonTotal,
@@ -368,47 +377,68 @@ async function upsertCartItem(
       .eq("id", existingItem.id);
 
     if (error) {
-      redirect("/umkm/cart?error=save");
+      return { success: false, error: "save" };
     }
 
     await replaceCartItemAddons(supabase, existingItem.id, selection);
-    return;
+    return { success: true };
   }
 
   const { data: item, error } = await supabase
     .from("cart_items")
     .insert(payload)
-    .select("*")
+    .select("id")
     .single();
 
   if (error || !item) {
-    redirect("/umkm/cart?error=save");
+    return { success: false, error: "save" };
   }
 
   await replaceCartItemAddons(supabase, item.id, selection);
+  return { success: true };
 }
 
 export async function addServiceToCart(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
   const tierId = getText(formData, "tierId");
   const redirectTo = sanitizeRedirectPath(getText(formData, "redirectTo"));
+  const debugSource = getText(formData, "debug_source");
+
+  if (debugSource) {
+    console.log(`${debugSource} CLICKED`);
+  }
 
   if (!serviceId) {
     redirect("/katalog?error=service");
   }
 
-  const { supabase, umkm } = await requireUmkmContext();
+  console.log("ADD TO CART: START", { serviceId, tierId, redirectTo });
+  const { supabase, umkm } = await requireUmkmContext(`/layanan/${serviceId}`);
+  console.log("ADD TO CART: UMKM CONTEXT", { umkmId: umkm.id });
+  
   const cart = await getOrCreateActiveCart(supabase, umkm.id);
+  console.log("ADD TO CART: CART", { cartId: cart.id });
+  
   const selection = await getActiveServiceSelection(
     supabase,
     serviceId,
     tierId,
     getSelectedAddons(formData),
   );
+  console.log("ADD TO CART: SELECTION", { serviceId: selection.service.id, tierId: selection.tier.id });
 
-  await upsertCartItem(supabase, cart, selection);
+  const result = await upsertCartItem(supabase, cart, selection);
+  
+  if (!result.success) {
+    console.error("ADD TO CART: UPSERT ERROR", result.error);
+    redirect(`/umkm/cart?error=${result.error}`);
+  }
+
+  console.log("ADD TO CART: UPSERT SUCCESS");
+  
   revalidatePath("/umkm/cart");
   revalidatePath("/umkm/checkout");
+  console.log("ADD TO CART: REDIRECTING TO", redirectTo);
   redirect(`${redirectTo}?added=1`);
 }
 

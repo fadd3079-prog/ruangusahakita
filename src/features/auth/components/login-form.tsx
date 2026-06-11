@@ -10,9 +10,10 @@ import { loginAction } from "@/lib/auth/actions";
 type LoginFormProps = {
   notice?: string;
   routeError?: string;
+  redirectTo?: string;
 };
 
-export function LoginForm({ notice, routeError }: LoginFormProps) {
+export function LoginForm({ notice, routeError, redirectTo }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(
     async (_state: unknown, formData: FormData) => {
       return await loginAction(formData);
@@ -41,6 +42,10 @@ export function LoginForm({ notice, routeError }: LoginFormProps) {
         <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-200">
           {error}
         </div>
+      )}
+
+      {redirectTo && (
+        <input type="hidden" name="redirectTo" value={redirectTo} />
       )}
 
       <div className="space-y-5">

@@ -46,6 +46,13 @@ function getRouteError(params: Record<string, string | string[] | undefined>) {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
+  const redirectTo = getSingleParam(params.redirectTo);
 
-  return <LoginForm notice={getNotice(params)} routeError={getRouteError(params)} />;
+  return (
+    <LoginForm 
+      notice={getNotice(params)} 
+      routeError={getRouteError(params)} 
+      redirectTo={redirectTo}
+    />
+  );
 }

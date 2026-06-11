@@ -105,6 +105,11 @@ export async function loginAction(formData: FormData) {
     redirect(getOnboardingPathByRole(profile.role));
   }
 
+  const redirectTo = formData.get("redirectTo");
+  if (typeof redirectTo === "string" && redirectTo.startsWith("/")) {
+    redirect(redirectTo);
+  }
+
   redirect(getDashboardPathByRole(profile.role));
 }
 
@@ -146,6 +151,9 @@ export async function registerAction(formData: FormData) {
   });
 
   if (authError) {
+    if (authError.message?.includes("User already registered") || authError.status === 422) {
+      return { error: "Email ini sudah terdaftar. Silakan gunakan email lain atau masuk ke akun Anda." };
+    }
     return getRegisterError("admin create user", authError, "Registrasi gagal. Periksa email dan password lalu coba lagi.");
   }
 
