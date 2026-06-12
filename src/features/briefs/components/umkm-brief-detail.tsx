@@ -10,6 +10,7 @@ import {
   Save,
 } from "lucide-react";
 
+import { FileDropzone } from "@/components/common/file-dropzone";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -339,22 +340,14 @@ function BriefAssetsEditor({
 }) {
   return (
     <div className="space-y-3">
-      <div>
-        <label htmlFor="briefAssetFiles" className="text-sm font-medium leading-none text-foreground">
-          Tambah gambar
-        </label>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          Unggah JPG, PNG, atau WebP. Maksimal 5 MB per gambar.
-        </p>
-        <Input
-          id="briefAssetFiles"
-          name="briefAssetFiles"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          className="mt-2 h-11 bg-card"
-        />
-      </div>
+      <FileDropzone
+        id="briefAssetFiles"
+        name="briefAssetFiles"
+        label="Seret gambar pendukung"
+        description="JPG, PNG, atau WebP. Maksimal 5 MB per gambar."
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+      />
 
       {assets.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2">

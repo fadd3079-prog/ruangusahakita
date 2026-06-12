@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { FileUp, Image as ImageIcon, Info, Save, Sparkles } from "lucide-react";
 
+import { FileDropzone } from "@/components/common/file-dropzone";
 import { SubmitButton } from "@/components/common/submit-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -189,22 +190,14 @@ function BriefAssetsField({
 }) {
   return (
     <div className="space-y-3">
-      <div>
-        <label htmlFor="briefAssetFiles" className="text-sm font-medium leading-none text-foreground">
-          Gambar pendukung brief
-        </label>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          Unggah JPG, PNG, atau WebP. Maksimal 5 MB per gambar.
-        </p>
-        <Input
-          id="briefAssetFiles"
-          name="briefAssetFiles"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          className="mt-2 h-11 bg-card"
-        />
-      </div>
+      <FileDropzone
+        id="briefAssetFiles"
+        name="briefAssetFiles"
+        label="Seret gambar pendukung brief"
+        description="JPG, PNG, atau WebP. Maksimal 5 MB per gambar."
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+      />
 
       {assets.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2">

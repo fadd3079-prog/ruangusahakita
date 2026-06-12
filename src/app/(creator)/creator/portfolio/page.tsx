@@ -8,8 +8,9 @@ import {
   Upload,
 } from "lucide-react";
 
-import { PageContainer } from "@/components/layout/page-container";
+import { FileDropzone } from "@/components/common/file-dropzone";
 import { SubmitButton } from "@/components/common/submit-button";
+import { PageContainer } from "@/components/layout/page-container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -294,19 +295,13 @@ function PortfolioForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={item ? `thumbnailFile-${item.id}` : "thumbnailFile"}>
-          Gambar portofolio
-        </Label>
-        <Input
+        <FileDropzone
           id={item ? `thumbnailFile-${item.id}` : "thumbnailFile"}
           name="thumbnailFile"
-          type="file"
+          label="Seret gambar portofolio"
+          description="JPG, PNG, atau WebP. Maksimal 5 MB."
           accept="image/jpeg,image/png,image/webp"
-          className="h-11"
         />
-        <p className="text-xs leading-5 text-muted-foreground">
-          JPG, PNG, atau WebP. Maksimal 5 MB.
-        </p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">

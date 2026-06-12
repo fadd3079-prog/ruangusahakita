@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import type { ReactNode } from "react";
 import { Image as ImageIcon } from "lucide-react";
 
+import { FileDropzone } from "@/components/common/file-dropzone";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -87,15 +88,13 @@ export function UmkmSettingsForm({ data, updated }: UmkmSettingsFormProps) {
                   : "Unggah logo agar identitas UMKM tampil lebih jelas di dashboard dan brief campaign."}
               </p>
             </div>
-            <Field label="File logo" htmlFor="logoFile">
-              <Input
-                id="logoFile"
-                name="logoFile"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="h-11"
-              />
-            </Field>
+            <FileDropzone
+              id="logoFile"
+              name="logoFile"
+              label="Seret logo UMKM"
+              description="JPG, PNG, atau WebP. Maksimal 2 MB."
+              accept="image/jpeg,image/png,image/webp"
+            />
             {data.logoPreviewUrl ? (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input

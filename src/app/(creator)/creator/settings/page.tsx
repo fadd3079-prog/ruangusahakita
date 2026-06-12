@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Bell, Image as ImageIcon, Save, Shield, Trash2, Upload, User } from "lucide-react";
 
-import { PageContainer } from "@/components/layout/page-container";
+import { FileDropzone } from "@/components/common/file-dropzone";
 import { SubmitButton } from "@/components/common/submit-button";
+import { PageContainer } from "@/components/layout/page-container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -182,13 +183,12 @@ export default async function CreatorSettingsPage({
                 </div>
                 <form action={uploadCreatorAvatarAction} className="grid gap-3 sm:min-w-72">
                   <input type="hidden" name="redirectTo" value="/creator/settings" />
-                  <Label htmlFor="avatarFile">File avatar</Label>
-                  <Input
+                  <FileDropzone
                     id="avatarFile"
                     name="avatarFile"
-                    type="file"
+                    label="Seret avatar"
+                    description="JPG, PNG, atau WebP. Maksimal 2 MB."
                     accept="image/jpeg,image/png,image/webp"
-                    className="h-11"
                     required
                   />
                   <SubmitButton
@@ -246,13 +246,12 @@ export default async function CreatorSettingsPage({
                 <div className="grid gap-3">
                   <form action={uploadCreatorBannerAction} className="grid gap-3">
                     <input type="hidden" name="redirectTo" value="/creator/settings" />
-                    <Label htmlFor="bannerFile">File banner</Label>
-                    <Input
+                    <FileDropzone
                       id="bannerFile"
                       name="bannerFile"
-                      type="file"
+                      label="Seret banner"
+                      description="JPG, PNG, atau WebP. Maksimal 5 MB."
                       accept="image/jpeg,image/png,image/webp"
-                      className="h-11"
                       required
                     />
                     <SubmitButton

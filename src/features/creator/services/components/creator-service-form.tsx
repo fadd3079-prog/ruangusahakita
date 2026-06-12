@@ -6,9 +6,9 @@ import {
   Image as ImageIcon,
   Info,
   Save,
-  Upload,
 } from "lucide-react";
 
+import { FileDropzone } from "@/components/common/file-dropzone";
 import { SubmitButton } from "@/components/common/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -366,20 +366,21 @@ export function CreatorServiceForm({
               </div>
 
               <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
-                <Upload className="size-5 text-primary" />
                 <h3 className="mt-3 font-semibold text-foreground">
                   Upload gambar katalog
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   Gunakan 1-5 gambar WebP, JPG, atau PNG. Gambar pertama akan dipakai sebagai cover jika belum ada cover.
                 </p>
-                <Input
+                <FileDropzone
                   id="mediaFiles"
                   name="mediaFiles"
-                  type="file"
+                  label="Seret gambar katalog"
+                  description="Klik atau drag gambar WebP, JPG, atau PNG. Maksimal 5 gambar."
                   accept="image/jpeg,image/png,image/webp"
                   multiple
-                  className="mt-4 h-11"
+                  maxFiles={5}
+                  className="mt-4"
                 />
               </div>
             </div>
