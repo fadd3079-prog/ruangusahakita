@@ -1,12 +1,3 @@
--- Retroactive sync: creator_profiles.starting_price = MIN(active tier price)
--- This fixes all creators whose starting_price was not updated because
--- their services were created before the syncCreatorStartingPrice() fix.
---
--- Logic:
--- 1. For each creator who has at least one active service with active tiers,
---    set starting_price = min(tier.price) across those tiers.
--- 2. For creators with no active tiers, reset starting_price to 0.
-
 UPDATE creator_profiles cp
 SET starting_price = COALESCE(sub.min_price, 0),
     updated_at = now()
