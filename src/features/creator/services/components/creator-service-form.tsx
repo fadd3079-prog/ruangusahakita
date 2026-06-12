@@ -32,6 +32,7 @@ import { formatCurrency } from "@/lib/formatters/currency";
 type CreatorServiceFormProps = {
   action: (formData: FormData) => Promise<void>;
   categories: readonly CreatorServiceCategory[];
+  createIntentId?: string;
   description: string;
   error?: string;
   errorDetail?: string;
@@ -150,6 +151,7 @@ function getStartingPrice(service: CreatorServiceEditData | null | undefined) {
 export function CreatorServiceForm({
   action,
   categories,
+  createIntentId,
   description,
   error,
   errorDetail,
@@ -224,6 +226,8 @@ export function CreatorServiceForm({
         <form id={formId} action={action} className="space-y-8">
           {servicePackage ? (
             <input type="hidden" name="serviceId" value={servicePackage.id} />
+          ) : createIntentId ? (
+            <input type="hidden" name="serviceId" value={createIntentId} />
           ) : null}
 
           <StepCard step="01" title="Info Layanan">

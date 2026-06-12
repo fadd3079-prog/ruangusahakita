@@ -45,7 +45,7 @@ export function UmkmSettingsForm({ data, updated }: UmkmSettingsFormProps) {
   }
 
   return (
-    <form action={formAction} encType="multipart/form-data" className="space-y-8">
+    <form action={formAction} className="space-y-8">
       {state.error ? (
         <Alert variant="destructive">
           <AlertTitle>Pengaturan belum tersimpan</AlertTitle>
@@ -238,7 +238,7 @@ export function UmkmSettingsForm({ data, updated }: UmkmSettingsFormProps) {
           <p className="text-sm text-muted-foreground">
             Simpan perubahan agar dashboard, checkout, dan brief campaign memakai data terbaru.
           </p>
-          <Button type="submit" disabled={isPending} className="h-11">
+          <Button type="submit" disabled={isPending} aria-busy={isPending} className="h-11">
             {isPending ? "Menyimpan..." : "Simpan Pengaturan"}
           </Button>
         </div>

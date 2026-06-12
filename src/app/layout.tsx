@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
+
+import { ActionFeedback } from "@/components/common/action-feedback";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,7 +28,13 @@ export default function RootLayout({
       lang="id"
       className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Suspense fallback={null}>
+          <ActionFeedback />
+        </Suspense>
+        <Toaster richColors closeButton />
+      </body>
     </html>
   );
 }

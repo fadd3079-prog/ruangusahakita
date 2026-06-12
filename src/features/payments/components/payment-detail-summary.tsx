@@ -129,7 +129,7 @@ export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
           <form action={markSandboxPaymentAsPaid}>
             <input type="hidden" name="paymentId" value={detail.payment.id} />
             <SubmitButton
-              pendingLabel="Memproses..."
+              pendingLabel="Memproses pembayaran..."
               disabled={!canPay}
               className="h-11 w-full"
             >

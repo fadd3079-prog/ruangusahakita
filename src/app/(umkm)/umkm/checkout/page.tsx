@@ -160,7 +160,7 @@ function CreateOrderPanel({ hasBrief }: { hasBrief: boolean }) {
 
       <form action={createOrderFromCheckout} className="mt-5">
         <SubmitButton
-          pendingLabel="Memproses..."
+          pendingLabel="Melanjutkan..."
           disabled={!hasBrief}
           className="w-full bg-white text-primary hover:bg-white/90"
           icon={<ArrowRight className="size-4" aria-hidden="true" />}

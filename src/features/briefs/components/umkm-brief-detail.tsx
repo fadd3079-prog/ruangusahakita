@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { FileDropzone } from "@/components/common/file-dropzone";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -145,7 +146,7 @@ export function UmkmBriefDetailView({
 
 function BriefEditForm({ brief }: { brief: UmkmBriefDetail }) {
   return (
-    <form action={updateUmkmBrief} encType="multipart/form-data" className="space-y-6">
+    <form action={updateUmkmBrief} className="space-y-6">
       <input type="hidden" name="briefId" value={brief.id} />
 
       <FormGroup
@@ -242,10 +243,9 @@ function BriefEditForm({ brief }: { brief: UmkmBriefDetail }) {
         <Button asChild variant="outline" className="bg-background">
           <Link href="/umkm/briefs">Kembali</Link>
         </Button>
-        <Button type="submit">
+        <SubmitButton pendingLabel="Menyimpan..." icon={<Save className="size-4" aria-hidden="true" />}>
           Simpan Perubahan
-          <Save className="size-4" aria-hidden="true" />
-        </Button>
+        </SubmitButton>
       </div>
     </form>
   );

@@ -119,7 +119,7 @@ export function ServiceDetailHeader({
             <form action={addServiceToCart}>
               <input type="hidden" name="serviceId" value={service.id} />
               <input type="hidden" name="redirectTo" value="/umkm/cart" />
-              <SubmitButton pendingLabel="Menyimpan..." className="h-11 w-full rounded-full">
+              <SubmitButton pendingLabel="Menambahkan..." className="h-11 w-full rounded-full">
                 Tambah ke Keranjang
               </SubmitButton>
             </form>
@@ -127,7 +127,7 @@ export function ServiceDetailHeader({
               <input type="hidden" name="serviceId" value={service.id} />
               <input type="hidden" name="redirectTo" value="/umkm/checkout" />
               <SubmitButton
-                pendingLabel="Memproses..."
+                pendingLabel="Melanjutkan..."
                 variant="outline"
                 className="h-11 w-full rounded-full"
               >

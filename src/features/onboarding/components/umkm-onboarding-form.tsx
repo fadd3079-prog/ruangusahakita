@@ -141,7 +141,7 @@ export function UmkmOnboardingForm({ data }: UmkmOnboardingFormProps) {
         />
       </Field>
 
-      <Button type="submit" disabled={isPending} className="h-11 w-full sm:w-auto">
+      <Button type="submit" disabled={isPending} aria-busy={isPending} className="h-11 w-full sm:w-auto">
         {isPending ? "Menyimpan..." : "Simpan dan buka dashboard"}
       </Button>
     </form>

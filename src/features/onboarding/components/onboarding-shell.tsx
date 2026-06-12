@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
+import { SubmitButton } from "@/components/common/submit-button";
 import { Button } from "@/components/ui/button";
 import { skipOnboardingAction } from "@/features/onboarding/actions/profile-onboarding-actions";
 
@@ -54,13 +55,13 @@ export function OnboardingShell({
           ))}
         </div>
         <form action={skipOnboardingAction} className="mt-8">
-          <Button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Melanjutkan..."
             variant="ghost"
             className="text-primary-foreground/78 hover:bg-white/10 hover:text-primary-foreground"
           >
             Lewati dulu dan buka dashboard
-          </Button>
+          </SubmitButton>
         </form>
       </section>
       <section className="rounded-3xl border border-border/70 bg-card/95 p-5 shadow-[var(--shadow-soft)] sm:p-7">

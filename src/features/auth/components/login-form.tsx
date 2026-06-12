@@ -109,8 +109,8 @@ export function LoginForm({ notice, routeError, redirectTo }: LoginFormProps) {
           </label>
         </div>
 
-        <Button type="submit" disabled={isPending} className="w-full h-11 text-base font-semibold shadow-sm" size="lg">
-          {isPending ? "Sedang masuk..." : "Masuk ke Akun"}
+        <Button type="submit" disabled={isPending} aria-busy={isPending} className="w-full h-11 text-base font-semibold shadow-sm" size="lg">
+          {isPending ? "Masuk..." : "Masuk ke Akun"}
         </Button>
       </div>
 

@@ -88,6 +88,10 @@ function getNumber(formData: FormData, key: string) {
   return Number(value);
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function getInteger(formData: FormData, key: string) {
   return Math.floor(getNumber(formData, key));
 }
@@ -527,7 +531,20 @@ export async function createCreatorServiceAction(formData: FormData) {
   const tiers = getTierInputs(formData);
   const metrics = getServiceMetricsFromTiers(tiers);
   const isActive = getText(formData, "isActive") === "true";
-  const serviceId = randomUUID();
+  const requestedServiceId = getText(formData, "serviceId");
+  const serviceId = isUuid(requestedServiceId) ? requestedServiceId : randomUUID();
+  const { data: existingService } = await context.supabase
+    .from("service_packages")
+    .select("id")
+    .eq("id", serviceId)
+    .eq("creator_id", context.creator.id)
+    .maybeSingle();
+
+  if (existingService) {
+    revalidateServicePaths(existingService.id, context.creator.id);
+    redirect("/creator/services?created=1");
+  }
+
   const payload: ServicePackageInsert = {
     id: serviceId,
     base_price: metrics.basePrice,
@@ -554,6 +571,18 @@ export async function createCreatorServiceAction(formData: FormData) {
     .single();
 
   if (error || !service) {
+    const { data: createdService } = await context.supabase
+      .from("service_packages")
+      .select("id")
+      .eq("id", serviceId)
+      .eq("creator_id", context.creator.id)
+      .maybeSingle();
+
+    if (createdService) {
+      revalidateServicePaths(createdService.id, context.creator.id);
+      redirect("/creator/services?created=1");
+    }
+
     redirectWithError("/creator/services/new", "save");
   }
 

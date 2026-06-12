@@ -80,7 +80,7 @@ export function ServiceTierOptions({ serviceId, tiers }: ServiceTierOptionsProps
               <input type="hidden" name="serviceId" value={serviceId} />
               <input type="hidden" name="tierId" value={tier.id} />
               <input type="hidden" name="redirectTo" value="/umkm/cart" />
-              <SubmitButton pendingLabel="Menyimpan..." className="h-10 w-full rounded-full">
+              <SubmitButton pendingLabel="Menambahkan..." className="h-10 w-full rounded-full">
                 Tambah ke Keranjang
               </SubmitButton>
             </form>
@@ -89,7 +89,7 @@ export function ServiceTierOptions({ serviceId, tiers }: ServiceTierOptionsProps
               <input type="hidden" name="tierId" value={tier.id} />
               <input type="hidden" name="redirectTo" value="/umkm/checkout" />
               <SubmitButton
-                pendingLabel="Memproses..."
+                pendingLabel="Melanjutkan..."
                 variant="outline"
                 className="h-10 w-full rounded-full bg-background"
               >

@@ -163,8 +163,8 @@ export function RegisterForm() {
           )}
         </div>
 
-        <Button type="submit" disabled={isPending} className="w-full h-11 text-base font-semibold shadow-sm" size="lg">
-          {isPending ? "Mendaftar..." : "Daftar Sekarang"}
+        <Button type="submit" disabled={isPending} aria-busy={isPending} className="w-full h-11 text-base font-semibold shadow-sm" size="lg">
+          {isPending ? "Membuat akun..." : "Daftar Sekarang"}
         </Button>
       </div>
 

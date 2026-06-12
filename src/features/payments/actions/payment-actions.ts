@@ -42,6 +42,26 @@ export async function markSandboxPaymentAsPaid(formData: FormData) {
 
   if (error || !orderId) {
     const code = getPaymentErrorCode(error?.message ?? "");
+
+    if (code === "payment_not_payable") {
+      const { data: existingPayment } = await supabase
+        .from("payments")
+        .select("order_id, payment_status, orders!inner(umkm_id, payment_status, order_status)")
+        .eq("id", paymentId)
+        .maybeSingle();
+
+      if (
+        existingPayment?.payment_status === "paid" &&
+        existingPayment.orders?.payment_status === "paid"
+      ) {
+        revalidatePath(`/umkm/payments/${paymentId}`);
+        revalidatePath(`/umkm/orders/${existingPayment.order_id}`);
+        revalidatePath("/umkm/orders");
+        revalidatePath("/umkm/dashboard");
+        redirect(`/umkm/orders/${existingPayment.order_id}?already_paid=1`);
+      }
+    }
+
     redirect(`/umkm/payments/${paymentId}?error=${code}`);
   }
 

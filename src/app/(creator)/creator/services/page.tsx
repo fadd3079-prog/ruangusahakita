@@ -268,7 +268,7 @@ export default async function CreatorServicesPage({
                     <form action={toggleCreatorServiceStatusAction}>
                       <input type="hidden" name="serviceId" value={item.service.id} />
                       <SubmitButton
-                        pendingLabel="Memproses..."
+                        pendingLabel={item.service.is_active ? "Memproses..." : "Menerbitkan..."}
                         variant="outline"
                         className="h-10 w-full rounded-full bg-background"
                         icon={<Power className="size-4" />}

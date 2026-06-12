@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { randomUUID } from "node:crypto";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { createCreatorServiceAction } from "@/features/creator/services/actions/creator-service-actions";
@@ -22,12 +23,14 @@ export default async function NewServicePage({ searchParams }: NewServicePagePro
     searchParams,
     getCreatorServiceCategories(),
   ]);
+  const createIntentId = randomUUID();
 
   return (
     <PageContainer>
       <CreatorServiceForm
         action={createCreatorServiceAction}
         categories={categories}
+        createIntentId={createIntentId}
         description="Buat satu listing layanan dengan paket Basic wajib serta Medium dan Premium opsional."
         error={error}
         errorDetail={detail}

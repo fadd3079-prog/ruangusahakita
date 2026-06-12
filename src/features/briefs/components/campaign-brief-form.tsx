@@ -53,7 +53,6 @@ export function CampaignBriefForm({
 
       <form
         action={createOrUpdateCampaignBrief}
-        encType="multipart/form-data"
         className="space-y-6 p-5 sm:p-6"
       >
         <FormGroup

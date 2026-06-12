@@ -21,7 +21,7 @@ export function SubmitButton({
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" disabled={disabled || pending} {...props}>
+    <Button type="submit" disabled={disabled || pending} aria-busy={pending} {...props}>
       {pending ? (
         <Loader2 className="size-4 animate-spin" aria-hidden="true" />
       ) : (

@@ -225,7 +225,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                 ) : null}
                 <input type="hidden" name="redirectTo" value="/umkm/cart" />
                 <SubmitButton
-                  pendingLabel="Menyimpan..."
+                  pendingLabel="Menambahkan..."
                   size="lg"
                   className="h-11 w-full rounded-full px-5"
                 >
@@ -239,7 +239,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                 ) : null}
                 <input type="hidden" name="redirectTo" value="/umkm/checkout" />
                 <SubmitButton
-                  pendingLabel="Memproses..."
+                  pendingLabel="Melanjutkan..."
                   size="lg"
                   variant="outline"
                   className="h-11 w-full rounded-full px-5"
