@@ -83,7 +83,6 @@ async function requireUmkmContext(fallbackPath?: string): Promise<UmkmContext> {
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
   if (userError || !userData.user) {
-    console.log("REQUIRE_UMKM: No user or userError", userError);
     redirect(fallbackPath ? `/login?redirectTo=${encodeURIComponent(fallbackPath)}` : "/login");
   }
 
@@ -99,7 +98,6 @@ async function requireUmkmContext(fallbackPath?: string): Promise<UmkmContext> {
     profile.role !== "umkm" ||
     profile.account_status !== "active"
   ) {
-    console.log("REQUIRE_UMKM: Invalid profile", profileError, profile);
     redirect("/umkm/dashboard?error=unauthorized");
   }
 
@@ -110,7 +108,6 @@ async function requireUmkmContext(fallbackPath?: string): Promise<UmkmContext> {
     .maybeSingle();
 
   if (umkmError || !umkm) {
-    console.log("REQUIRE_UMKM: No UMKM profile", umkmError);
     redirect("/umkm/dashboard?error=profile");
   }
 
@@ -402,43 +399,28 @@ export async function addServiceToCart(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
   const tierId = getText(formData, "tierId");
   const redirectTo = sanitizeRedirectPath(getText(formData, "redirectTo"));
-  const debugSource = getText(formData, "debug_source");
-
-  if (debugSource) {
-    console.log(`${debugSource} CLICKED`);
-  }
 
   if (!serviceId) {
     redirect("/katalog?error=service");
   }
 
-  console.log("ADD TO CART: START", { serviceId, tierId, redirectTo });
   const { supabase, umkm } = await requireUmkmContext(`/layanan/${serviceId}`);
-  console.log("ADD TO CART: UMKM CONTEXT", { umkmId: umkm.id });
-  
   const cart = await getOrCreateActiveCart(supabase, umkm.id);
-  console.log("ADD TO CART: CART", { cartId: cart.id });
-  
   const selection = await getActiveServiceSelection(
     supabase,
     serviceId,
     tierId,
     getSelectedAddons(formData),
   );
-  console.log("ADD TO CART: SELECTION", { serviceId: selection.service.id, tierId: selection.tier.id });
 
   const result = await upsertCartItem(supabase, cart, selection);
-  
+
   if (!result.success) {
-    console.error("ADD TO CART: UPSERT ERROR", result.error);
     redirect(`/umkm/cart?error=${result.error}`);
   }
 
-  console.log("ADD TO CART: UPSERT SUCCESS");
-  
   revalidatePath("/umkm/cart");
   revalidatePath("/umkm/checkout");
-  console.log("ADD TO CART: REDIRECTING TO", redirectTo);
   redirect(`${redirectTo}?added=1`);
 }
 

@@ -87,13 +87,13 @@ export default async function EditServicePage({
       <CreatorServiceForm
         action={updateCreatorServiceAction}
         categories={categories}
-        description="Perbarui detail paket jasa digital tanpa mengubah data transaksi atau order."
+        description="Perbarui listing layanan, paket harga, media katalog, dan kebutuhan brief."
         error={currentSearchParams.error}
         errorDetail={currentSearchParams.detail}
         service={service}
         submitLabel="Simpan Perubahan"
         success={getSuccess(currentSearchParams)}
-        title="Edit Paket Layanan"
+        title="Edit Layanan"
       />
     </PageContainer>
   );

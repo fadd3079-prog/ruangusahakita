@@ -20,7 +20,7 @@ const steps = [
   {
     icon: Layers3,
     title: "2. Memilih Paket Jasa",
-    description: "Pilih paket layanan digital yang sesuai (Basic, Standard, Premium). Tiap paket memiliki kejelasan output (deliverables) dan estimasi pengerjaan."
+    description: "Pilih paket layanan digital yang sesuai (Basic, Medium, Premium). Tiap paket memiliki kejelasan output dan estimasi pengerjaan."
   },
   {
     icon: FileText,

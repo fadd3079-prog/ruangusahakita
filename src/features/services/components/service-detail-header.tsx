@@ -23,6 +23,14 @@ export function ServiceDetailHeader({
   creator,
   category,
 }: ServiceDetailHeaderProps) {
+  const galleryUrls =
+    service.mediaUrls.length > 0
+      ? service.mediaUrls
+      : service.coverImageUrl
+        ? [service.coverImageUrl]
+        : [];
+  const heroImage = galleryUrls[0] ?? "";
+
   return (
     <section className="border-b border-border/70 bg-background">
       <PageContainer className="grid gap-8 py-12 sm:py-14 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:py-16">
@@ -48,18 +56,29 @@ export function ServiceDetailHeader({
           <div
             className="mt-8 grid aspect-[16/7] min-h-56 place-items-center rounded-2xl border border-border/70 bg-muted/50 bg-cover bg-center text-muted-foreground"
             style={
-              service.coverImageUrl
-                ? { backgroundImage: `url("${service.coverImageUrl}")` }
+              heroImage
+                ? { backgroundImage: `url("${heroImage}")` }
                 : undefined
             }
           >
-            {service.coverImageUrl ? null : (
+            {heroImage ? null : (
               <div className="text-center">
                 <ImageIcon className="mx-auto size-10 opacity-40" aria-hidden="true" />
                 <p className="mt-2 text-sm">Cover layanan belum tersedia</p>
               </div>
             )}
           </div>
+          {galleryUrls.length > 1 ? (
+            <div className="mt-3 grid grid-cols-4 gap-3">
+              {galleryUrls.slice(0, 4).map((url) => (
+                <div
+                  key={url}
+                  className="aspect-[16/10] rounded-xl border border-border/70 bg-muted bg-cover bg-center"
+                  style={{ backgroundImage: `url("${url}")` }}
+                />
+              ))}
+            </div>
+          ) : null}
           <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Metric icon={Clock} label="Estimasi" value={`${service.estimatedDays} hari`} />
             <Metric icon={FileCheck2} label="Revisi" value={`${service.revisionCount} kali`} />

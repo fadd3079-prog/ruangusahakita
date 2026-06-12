@@ -1,20 +1,24 @@
 import { CheckCircle2, Clock, FilePenLine } from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { addServiceToCart } from "@/features/cart/actions/cart-actions";
 import type { PublicServiceTier } from "@/features/catalog/data/catalog-types";
 
 type ServiceTierOptionsProps = {
+  serviceId: string;
   tiers: readonly PublicServiceTier[];
 };
 
-export function ServiceTierOptions({ tiers }: ServiceTierOptionsProps) {
+export function ServiceTierOptions({ serviceId, tiers }: ServiceTierOptionsProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       {tiers.map((tier) => (
@@ -26,7 +30,7 @@ export function ServiceTierOptions({ tiers }: ServiceTierOptionsProps) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <Badge
-                  variant={tier.name === "Standard" ? "default" : "secondary"}
+                  variant={tier.name === "Medium" ? "default" : "secondary"}
                   className="mb-3 rounded-full"
                 >
                   {tier.name}
@@ -53,7 +57,7 @@ export function ServiceTierOptions({ tiers }: ServiceTierOptionsProps) {
               </span>
             </div>
             <ul className="space-y-2 border-t border-border pt-4">
-              {tier.deliverables.map((deliverable) => (
+              {tier.deliverables.length > 0 ? tier.deliverables.map((deliverable) => (
                 <li
                   key={deliverable}
                   className="flex items-start gap-2 text-sm leading-6 text-muted-foreground"
@@ -64,9 +68,35 @@ export function ServiceTierOptions({ tiers }: ServiceTierOptionsProps) {
                   />
                   {deliverable}
                 </li>
-              ))}
+              )) : (
+                <li className="text-sm leading-6 text-muted-foreground">
+                  Output paket akan dikonfirmasi dalam brief campaign.
+                </li>
+              )}
             </ul>
           </CardContent>
+          <CardFooter className="grid gap-2 border-t border-border/70 bg-muted/25 p-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <form action={addServiceToCart}>
+              <input type="hidden" name="serviceId" value={serviceId} />
+              <input type="hidden" name="tierId" value={tier.id} />
+              <input type="hidden" name="redirectTo" value="/umkm/cart" />
+              <SubmitButton pendingLabel="Menyimpan..." className="h-10 w-full rounded-full">
+                Tambah ke Keranjang
+              </SubmitButton>
+            </form>
+            <form action={addServiceToCart}>
+              <input type="hidden" name="serviceId" value={serviceId} />
+              <input type="hidden" name="tierId" value={tier.id} />
+              <input type="hidden" name="redirectTo" value="/umkm/checkout" />
+              <SubmitButton
+                pendingLabel="Memproses..."
+                variant="outline"
+                className="h-10 w-full rounded-full bg-background"
+              >
+                Pesan Sekarang
+              </SubmitButton>
+            </form>
+          </CardFooter>
         </Card>
       ))}
     </div>

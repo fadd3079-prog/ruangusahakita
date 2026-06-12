@@ -4,41 +4,65 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/supabase/types";
 import { STORAGE_BUCKETS } from "@/lib/storage/buckets";
 import { FILE_SIZE_LIMITS } from "@/lib/storage/file-limits";
-import { createServiceCoverStoragePath } from "@/lib/storage/file-paths";
+import { createServiceMediaStoragePath } from "@/lib/storage/file-paths";
 import {
-  removeImageAsset,
   removeImageAssetById,
   uploadImageAsset,
 } from "@/lib/storage/image-assets";
-import { validateImageFile, type FileValidationErrorCode } from "@/lib/storage/validate-file";
 import { getPublicAssetUrl } from "@/lib/storage/urls";
+import { validateImageFile, type FileValidationErrorCode } from "@/lib/storage/validate-file";
+import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
 
+type Supabase = Awaited<ReturnType<typeof createClient>>;
 type CreatorProfile = Database["public"]["Tables"]["creator_profiles"]["Row"];
+type ServicePackageInsert = Database["public"]["Tables"]["service_packages"]["Insert"];
 type ServicePackageUpdate = Database["public"]["Tables"]["service_packages"]["Update"];
+type ServiceTierInsert = Database["public"]["Tables"]["service_package_tiers"]["Insert"];
+type ServiceTierUpdate = Database["public"]["Tables"]["service_package_tiers"]["Update"];
+type ServiceMediaRow = Database["public"]["Tables"]["service_media"]["Row"];
+type TierKey = Database["public"]["Tables"]["service_package_tiers"]["Row"]["tier_key"];
 
 type CreatorContext = {
   creator: CreatorProfile;
-  supabase: Awaited<ReturnType<typeof createClient>>;
+  supabase: Supabase;
   userId: string;
 };
 
-type ServicePackageInsert =
-  Database["public"]["Tables"]["service_packages"]["Insert"];
-type ServiceTierInsert =
-  Database["public"]["Tables"]["service_package_tiers"]["Insert"];
+type TierInput = {
+  deliverables: string[];
+  description: string | null;
+  estimatedDays: number;
+  isActive: boolean;
+  key: TierKey;
+  name: string;
+  price: number;
+  revisionCount: number;
+  sortOrder: number;
+};
+
+type ValidMediaFile = {
+  extension: "jpg" | "jpeg" | "png" | "webp";
+  file: File;
+};
+
+const tierLabels: Record<TierKey, string> = {
+  basic: "Basic",
+  medium: "Medium",
+  premium: "Premium",
+};
+
+const tierSortOrder: Record<TierKey, number> = {
+  basic: 1,
+  medium: 2,
+  premium: 3,
+};
 
 function getText(formData: FormData, key: string) {
   const value = formData.get(key);
-
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function getNullableText(formData: FormData, key: string) {
@@ -53,6 +77,12 @@ function getTextList(formData: FormData, key: string) {
     .filter(Boolean);
 }
 
+function getSelectedIds(formData: FormData, key: string) {
+  return formData
+    .getAll(key)
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+}
+
 function getNumber(formData: FormData, key: string) {
   const value = getText(formData, key).replace(/[^\d]/g, "");
   return Number(value);
@@ -60,75 +90,6 @@ function getNumber(formData: FormData, key: string) {
 
 function getInteger(formData: FormData, key: string) {
   return Math.floor(getNumber(formData, key));
-}
-
-function getDebugText(formData: FormData, key: string) {
-  const value = formData.get(key);
-
-  if (value instanceof File) {
-    return value.size > 0
-      ? {
-          name: value.name,
-          size: value.size,
-          type: value.type,
-        }
-      : null;
-  }
-
-  if (typeof value === "string") {
-    return value.trim();
-  }
-
-  return null;
-}
-
-function getCreatorServiceFormDebugData(formData: FormData) {
-  return {
-    basePrice: getDebugText(formData, "basePrice"),
-    categoryId: getDebugText(formData, "categoryId"),
-    coverFile: getDebugText(formData, "coverFile"),
-    deliverables: getDebugText(formData, "deliverables"),
-    description: getDebugText(formData, "description"),
-    estimatedDays: getDebugText(formData, "estimatedDays"),
-    isActive: getDebugText(formData, "isActive"),
-    requirements: getDebugText(formData, "requirements"),
-    revisionCount: getDebugText(formData, "revisionCount"),
-    shortDescription: getDebugText(formData, "shortDescription"),
-    tags: getDebugText(formData, "tags"),
-    tierDeliverables: getDebugText(formData, "tierDeliverables"),
-    tierDescription: getDebugText(formData, "tierDescription"),
-    tierEstimatedDays: getDebugText(formData, "tierEstimatedDays"),
-    tierName: getDebugText(formData, "tierName"),
-    tierPrice: getDebugText(formData, "tierPrice"),
-    tierRevisionCount: getDebugText(formData, "tierRevisionCount"),
-    title: getDebugText(formData, "title"),
-  };
-}
-
-function getErrorDetail(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return String(error ?? "Unknown error");
-  }
-
-  const errorRecord = error as {
-    code?: unknown;
-    details?: unknown;
-    hint?: unknown;
-    message?: unknown;
-  };
-  const parts = [
-    typeof errorRecord.code === "string" ? `[${errorRecord.code}]` : null,
-    typeof errorRecord.message === "string" ? errorRecord.message : null,
-    typeof errorRecord.details === "string" ? `Details: ${errorRecord.details}` : null,
-    typeof errorRecord.hint === "string" ? `Hint: ${errorRecord.hint}` : null,
-  ].filter(Boolean);
-
-  return parts.length > 0 ? parts.join(" ") : JSON.stringify(error);
-}
-
-function redirectWithError(path: string, code: string, error?: unknown): never {
-  const detail = error ? `&detail=${encodeURIComponent(getErrorDetail(error))}` : "";
-  redirect(`${path}?error=${code}${detail}`);
 }
 
 function createSlug(value: string) {
@@ -143,95 +104,109 @@ function createSlug(value: string) {
   return slug.length > 0 ? slug : "layanan-digital";
 }
 
+function redirectWithError(path: string, code: string): never {
+  redirect(`${path}?error=${code}`);
+}
+
+function getImageValidationError(code: FileValidationErrorCode) {
+  if (code === "size") {
+    return "media_size";
+  }
+
+  if (code === "type" || code === "extension") {
+    return "media_type";
+  }
+
+  return "media_missing";
+}
+
+function getBriefRequirements(formData: FormData) {
+  const checklist = getSelectedIds(formData, "briefRequirements");
+  const custom = getTextList(formData, "customBriefRequirements");
+  return [...new Set([...checklist, ...custom])];
+}
+
+function getTierInput(formData: FormData, key: TierKey): TierInput {
+  const enabled = key === "basic" || getText(formData, `${key}Enabled`) === "true";
+  const name = getText(formData, `${key}Name`) || tierLabels[key];
+
+  return {
+    deliverables: getTextList(formData, `${key}Deliverables`),
+    description: getNullableText(formData, `${key}Description`),
+    estimatedDays: getInteger(formData, `${key}EstimatedDays`),
+    isActive: enabled,
+    key,
+    name,
+    price: getNumber(formData, `${key}Price`),
+    revisionCount: getInteger(formData, `${key}RevisionCount`),
+    sortOrder: tierSortOrder[key],
+  };
+}
+
+function getTierInputs(formData: FormData) {
+  return [
+    getTierInput(formData, "basic"),
+    getTierInput(formData, "medium"),
+    getTierInput(formData, "premium"),
+  ];
+}
+
+function getActiveTierInputs(formData: FormData) {
+  return getTierInputs(formData).filter((tier) => tier.isActive);
+}
+
 function getValidationError(formData: FormData) {
   const title = getText(formData, "title");
   const categoryId = getText(formData, "categoryId");
-  const basePrice = getNumber(formData, "basePrice");
-  const tierPrice = getNumber(formData, "tierPrice");
-  const estimatedDays = getInteger(formData, "estimatedDays");
-  const revisionCount = getInteger(formData, "revisionCount");
-  const tierName = getText(formData, "tierName");
+  const basic = getTierInput(formData, "basic");
 
-  if (!title || !categoryId || !tierName) {
+  if (!title || !categoryId || !basic.name) {
     return "required";
   }
 
-  if (basePrice <= 0 || tierPrice <= 0) {
+  if (basic.price <= 0) {
     return "price";
   }
 
-  if (estimatedDays < 1 || revisionCount < 0) {
+  if (basic.estimatedDays < 1 || basic.revisionCount < 0) {
     return "scope";
   }
 
-  return null;
-}
+  for (const tier of getActiveTierInputs(formData)) {
+    if (!tier.name || tier.price <= 0) {
+      return "price";
+    }
 
-function getAddonValidationError(formData: FormData) {
-  const name = getText(formData, "addonName");
-  const price = getNumber(formData, "addonPrice");
-
-  if (!name) {
-    return "addon_required";
-  }
-
-  if (price < 0) {
-    return "addon_price";
+    if (tier.estimatedDays < 1 || tier.revisionCount < 0) {
+      return "scope";
+    }
   }
 
   return null;
 }
 
-function getTierValidationError(formData: FormData) {
-  const name = getText(formData, "tierName");
-  const price = getNumber(formData, "tierPrice");
-  const estimatedDays = getInteger(formData, "tierEstimatedDays");
-  const revisionCount = getInteger(formData, "tierRevisionCount");
+function getMediaFiles(formData: FormData, redirectPath: string) {
+  const values = formData.getAll("mediaFiles");
+  const files: ValidMediaFile[] = [];
 
-  if (!name) {
-    return "tier_required";
+  for (const value of values) {
+    const validation = validateImageFile(value, {
+      maxSizeBytes: FILE_SIZE_LIMITS.serviceCover,
+    });
+
+    if (!validation.ok) {
+      redirectWithError(redirectPath, getImageValidationError(validation.code));
+    }
+
+    if (validation.file && validation.extension) {
+      files.push({
+        extension: validation.extension,
+        file: validation.file,
+      });
+    }
   }
 
-  if (price <= 0) {
-    return "tier_price";
-  }
-
-  if (estimatedDays < 1 || revisionCount < 0) {
-    return "tier_scope";
-  }
-
-  return null;
-}
-
-function getCoverUploadError(code: FileValidationErrorCode) {
-  switch (code) {
-    case "missing":
-      return "cover_required";
-    case "size":
-      return "cover_size";
-    case "extension":
-    case "type":
-      return "cover_type";
-  }
-}
-
-function validateOptionalCoverFile(formData: FormData, redirectPath: string) {
-  const validation = validateImageFile(formData.get("coverFile"), {
-    maxSizeBytes: FILE_SIZE_LIMITS.serviceCover,
-  });
-
-  if (!validation.ok) {
-    redirect(`${redirectPath}?error=${getCoverUploadError(validation.code)}`);
-  }
-
-  if (validation.file === null || validation.extension === null) {
-    return null;
-  }
-
-  return {
-    extension: validation.extension,
-    file: validation.file,
-  };
+  return files;
 }
 
 async function getCreatorContext(): Promise<CreatorContext> {
@@ -282,11 +257,7 @@ async function ensureActiveCategory(context: CreatorContext, categoryId: string,
     .maybeSingle();
 
   if (error || !category) {
-    console.error("[creator-services] Category validation failed", {
-      categoryId,
-      error,
-    });
-    redirectWithError(redirectPath, "category", error);
+    redirectWithError(redirectPath, "category");
   }
 
   return category.id;
@@ -299,7 +270,7 @@ async function ensureOwnedService(context: CreatorContext, serviceId: string) {
 
   const { data: service, error } = await context.supabase
     .from("service_packages")
-    .select("id")
+    .select("*")
     .eq("id", serviceId)
     .eq("creator_id", context.creator.id)
     .is("deleted_at", null)
@@ -309,7 +280,7 @@ async function ensureOwnedService(context: CreatorContext, serviceId: string) {
     redirect("/creator/services?error=not_found");
   }
 
-  return service.id;
+  return service;
 }
 
 function revalidateServicePaths(serviceId: string, creatorId?: string) {
@@ -322,262 +293,280 @@ function revalidateServicePaths(serviceId: string, creatorId?: string) {
   }
 }
 
-/**
- * Sync `creator_profiles.starting_price` with the minimum active tier price
- * across all active (non-deleted) services belonging to this creator.
- */
 async function syncCreatorStartingPrice(context: CreatorContext) {
-  const { creator, supabase } = context;
-
-  const { data: tiers } = await supabase
+  const { data: tiers } = await context.supabase
     .from("service_package_tiers")
     .select("price, service_packages!inner(creator_id, is_active, deleted_at)")
-    .eq("service_packages.creator_id", creator.id)
+    .eq("service_packages.creator_id", context.creator.id)
     .eq("service_packages.is_active", true)
     .is("service_packages.deleted_at", null)
     .eq("is_active", true);
 
-  const prices = (tiers ?? []).map((t) => Number(t.price)).filter((p) => p > 0);
+  const prices = (tiers ?? []).map((tier) => Number(tier.price)).filter((price) => price > 0);
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
-  await supabase
+  await context.supabase
     .from("creator_profiles")
     .update({ starting_price: minPrice })
-    .eq("id", creator.id);
+    .eq("id", context.creator.id);
 }
 
-function getTierPayload(formData: FormData) {
+function getTierPayload(serviceId: string, tier: TierInput): ServiceTierInsert {
   return {
-    deliverables: getTextList(formData, "tierDeliverables"),
-    description: getNullableText(formData, "tierDescription"),
-    estimated_days: getInteger(formData, "tierEstimatedDays"),
-    is_active: getText(formData, "tierIsActive") !== "false",
-    name: getText(formData, "tierName"),
-    price: getNumber(formData, "tierPrice"),
-    revision_count: getInteger(formData, "tierRevisionCount"),
-    sort_order: getInteger(formData, "tierSortOrder"),
+    deliverables: tier.deliverables,
+    description: tier.description,
+    estimated_days: tier.estimatedDays,
+    is_active: tier.isActive,
+    name: tier.name,
+    price: tier.price,
+    revision_count: tier.revisionCount,
+    service_package_id: serviceId,
+    sort_order: tier.sortOrder,
+    tier_key: tier.key,
   };
 }
 
-async function ensureOwnedTier(
+function getServiceMetricsFromTiers(tiers: readonly TierInput[]) {
+  const activeTiers = tiers.filter((tier) => tier.isActive);
+  const selectedTiers = activeTiers.length > 0 ? activeTiers : [tiers[0]];
+  const cheapestTier = [...selectedTiers].sort((first, second) => first.price - second.price)[0];
+  const fastestTier = [...selectedTiers].sort((first, second) => first.estimatedDays - second.estimatedDays)[0];
+  const deliverables = cheapestTier?.deliverables.length ? cheapestTier.deliverables : selectedTiers.flatMap((tier) => tier.deliverables);
+
+  return {
+    basePrice: cheapestTier?.price ?? 0,
+    deliverables: [...new Set(deliverables)],
+    estimatedDays: fastestTier?.estimatedDays ?? 3,
+    revisionCount: cheapestTier?.revisionCount ?? 1,
+  };
+}
+
+async function uploadServiceMedia(
   context: CreatorContext,
   serviceId: string,
-  tierId: string,
+  files: readonly ValidMediaFile[],
+  startOrder: number,
 ) {
-  if (!tierId) {
-    redirect(`/creator/services/${serviceId}/edit?error=tier_missing`);
+  const createdMedia: ServiceMediaRow[] = [];
+  const uploadedAssetIds: string[] = [];
+
+  for (const [index, item] of files.entries()) {
+    const storagePath = createServiceMediaStoragePath(
+      context.creator.id,
+      serviceId,
+      item.extension,
+    );
+    const uploadResult = await uploadImageAsset({
+      bucket: STORAGE_BUCKETS.PUBLIC_ASSETS,
+      context: "service_media",
+      creatorId: context.creator.id,
+      extension: item.extension,
+      file: item.file,
+      ownerId: context.userId,
+      servicePackageId: serviceId,
+      storagePath,
+      supabase: context.supabase,
+      uploadedBy: context.userId,
+      visibility: "public",
+    });
+
+    if (uploadResult.error || !uploadResult.asset) {
+      await Promise.all(uploadedAssetIds.map((assetId) => removeImageAssetById(context.supabase, assetId)));
+      redirectWithError(`/creator/services/${serviceId}/edit`, "media_upload");
+    }
+
+    uploadedAssetIds.push(uploadResult.asset.id);
+
+    const { data: media, error: mediaError } = await context.supabase
+      .from("service_media")
+      .insert({
+        alt_text: item.file.name,
+        file_asset_id: uploadResult.asset.id,
+        image_url: getPublicAssetUrl(context.supabase, storagePath),
+        is_cover: false,
+        service_package_id: serviceId,
+        sort_order: startOrder + index,
+      })
+      .select("*")
+      .single();
+
+    if (mediaError || !media) {
+      await Promise.all(uploadedAssetIds.map((assetId) => removeImageAssetById(context.supabase, assetId)));
+      redirectWithError(`/creator/services/${serviceId}/edit`, "media_save");
+    }
+
+    createdMedia.push(media);
   }
 
+  return createdMedia;
+}
+
+async function getActiveMedia(context: CreatorContext, serviceId: string) {
+  const { data } = await context.supabase
+    .from("service_media")
+    .select("*")
+    .eq("service_package_id", serviceId)
+    .is("deleted_at", null)
+    .order("sort_order", { ascending: true });
+
+  return data ?? [];
+}
+
+async function syncServiceCover(context: CreatorContext, serviceId: string, requestedCoverId?: string) {
+  const media = await getActiveMedia(context, serviceId);
+  const selected =
+    media.find((item) => item.id === requestedCoverId) ??
+    media.find((item) => item.is_cover) ??
+    media[0] ??
+    null;
+
+  await context.supabase
+    .from("service_media")
+    .update({ is_cover: false })
+    .eq("service_package_id", serviceId);
+
+  if (selected) {
+    await context.supabase
+      .from("service_media")
+      .update({ is_cover: true })
+      .eq("id", selected.id)
+      .eq("service_package_id", serviceId);
+  }
+
+  await context.supabase
+    .from("service_packages")
+    .update({
+      cover_file_asset_id: selected?.file_asset_id ?? null,
+      cover_image_url: selected?.image_url ?? null,
+    })
+    .eq("id", serviceId)
+    .eq("creator_id", context.creator.id);
+}
+
+async function saveTiers(context: CreatorContext, serviceId: string, tiers: readonly TierInput[]) {
+  const payload = tiers.map((tier) => getTierPayload(serviceId, tier));
+  const { error } = await context.supabase
+    .from("service_package_tiers")
+    .upsert(payload, { onConflict: "service_package_id,tier_key" });
+
+  if (error) {
+    redirectWithError(`/creator/services/${serviceId}/edit`, "tier");
+  }
+}
+
+async function removeServiceMedia(context: CreatorContext, serviceId: string, mediaIds: readonly string[]) {
+  if (mediaIds.length === 0) {
+    return;
+  }
+
+  const { data } = await context.supabase
+    .from("service_media")
+    .select("id, file_asset_id")
+    .eq("service_package_id", serviceId)
+    .in("id", [...mediaIds]);
+
+  await context.supabase
+    .from("service_media")
+    .update({ deleted_at: new Date().toISOString(), is_cover: false })
+    .eq("service_package_id", serviceId)
+    .in("id", [...mediaIds]);
+
+  await Promise.all((data ?? []).map((media) => removeImageAssetById(context.supabase, media.file_asset_id)));
+}
+
+function getAddonValidationError(formData: FormData) {
+  const name = getText(formData, "addonName");
+  const price = getNumber(formData, "addonPrice");
+
+  if (!name) {
+    return "addon_required";
+  }
+
+  if (price < 0) {
+    return "addon_price";
+  }
+
+  return null;
+}
+
+async function ensureOwnedAddon(context: CreatorContext, serviceId: string, addonId: string) {
   await ensureOwnedService(context, serviceId);
-
-  const { data: tier, error } = await context.supabase
-    .from("service_package_tiers")
-    .select("id, is_active")
-    .eq("id", tierId)
+  const { data: addon, error } = await context.supabase
+    .from("service_addons")
+    .select("id")
+    .eq("id", addonId)
     .eq("service_package_id", serviceId)
     .maybeSingle();
 
-  if (error || !tier) {
-    redirect(`/creator/services/${serviceId}/edit?error=tier_not_found`);
+  if (error || !addon) {
+    redirect(`/creator/services/${serviceId}/edit?error=addon_not_found`);
   }
 
-  return tier;
-}
-
-async function canDeactivateTier(
-  context: CreatorContext,
-  serviceId: string,
-  tierId: string,
-) {
-  const { count, error } = await context.supabase
-    .from("service_package_tiers")
-    .select("id", { count: "exact", head: true })
-    .eq("service_package_id", serviceId)
-    .eq("is_active", true);
-
-  if (error || typeof count !== "number") {
-    return false;
-  }
-
-  const { data: tier } = await context.supabase
-    .from("service_package_tiers")
-    .select("is_active")
-    .eq("id", tierId)
-    .eq("service_package_id", serviceId)
-    .maybeSingle();
-
-  return !tier?.is_active || count > 1;
-}
-
-async function uploadServiceCover(
-  context: CreatorContext,
-  serviceId: string,
-  validatedFile: ReturnType<typeof validateOptionalCoverFile>,
-) {
-  if (!validatedFile) {
-    return null;
-  }
-
-  const storagePath = createServiceCoverStoragePath(
-    context.creator.id,
-    serviceId,
-    validatedFile.extension,
-  );
-  const uploadResult = await uploadImageAsset({
-    bucket: STORAGE_BUCKETS.PUBLIC_ASSETS,
-    context: "service_cover",
-    creatorId: context.creator.id,
-    extension: validatedFile.extension,
-    file: validatedFile.file,
-    ownerId: context.userId,
-    servicePackageId: serviceId,
-    storagePath,
-    supabase: context.supabase,
-    uploadedBy: context.userId,
-    visibility: "public",
-  });
-
-  if (uploadResult.error || !uploadResult.asset) {
-    redirect(`/creator/services/${serviceId}/edit?error=cover_upload`);
-  }
-
-  return {
-    assetId: uploadResult.asset.id,
-    publicUrl: getPublicAssetUrl(context.supabase, storagePath),
-    storagePath,
-  };
+  return addon.id;
 }
 
 export async function createCreatorServiceAction(formData: FormData) {
-  const coverFile = validateOptionalCoverFile(formData, "/creator/services/new");
-  console.log("FORM DATA", getCreatorServiceFormDebugData(formData));
   const validationError = getValidationError(formData);
 
   if (validationError) {
     redirect(`/creator/services/new?error=${validationError}`);
   }
 
+  const mediaFiles = getMediaFiles(formData, "/creator/services/new");
+  if (mediaFiles.length > 5) {
+    redirect("/creator/services/new?error=media_limit");
+  }
+
   const context = await getCreatorContext();
-  const { creator, supabase } = context;
   const categoryId = await ensureActiveCategory(
     context,
     getText(formData, "categoryId"),
     "/creator/services/new",
   );
   const title = getText(formData, "title");
-  const basePrice = getNumber(formData, "basePrice");
-  const estimatedDays = getInteger(formData, "estimatedDays");
-  const revisionCount = getInteger(formData, "revisionCount");
-  const tierPrice = getNumber(formData, "tierPrice");
-  const tierEstimatedDays = getInteger(formData, "tierEstimatedDays") || estimatedDays;
-  const tierRevisionCount = getInteger(formData, "tierRevisionCount");
-  const slug = `${createSlug(title)}-${Date.now().toString(36)}`;
+  const tiers = getTierInputs(formData);
+  const metrics = getServiceMetricsFromTiers(tiers);
+  const isActive = getText(formData, "isActive") === "true";
   const serviceId = randomUUID();
-  const servicePayload: ServicePackageInsert = {
+  const payload: ServicePackageInsert = {
     id: serviceId,
-    base_price: basePrice,
+    base_price: metrics.basePrice,
+    brief_requirements: getBriefRequirements(formData),
     category_id: categoryId,
-    creator_id: creator.id,
-    deliverables: getTextList(formData, "deliverables"),
-    description: getNullableText(formData, "description"),
-    estimated_days: estimatedDays,
-    is_active: getText(formData, "isActive") === "true",
+    creator_id: context.creator.id,
+    deliverables: metrics.deliverables,
+    description: getNullableText(formData, "shortDescription"),
+    estimated_days: metrics.estimatedDays,
+    is_active: isActive,
     is_featured: false,
-    requirements: getTextList(formData, "requirements"),
-    revision_count: revisionCount,
+    published_at: isActive ? new Date().toISOString() : null,
+    requirements: getBriefRequirements(formData),
+    revision_count: metrics.revisionCount,
     short_description: getNullableText(formData, "shortDescription"),
-    slug,
+    slug: `${createSlug(title)}-${Date.now().toString(36)}`,
     tags: getTextList(formData, "tags"),
     title,
   };
-  const tierPayload: ServiceTierInsert = {
-    deliverables: getTextList(formData, "tierDeliverables"),
-    description: getNullableText(formData, "tierDescription"),
-    estimated_days: tierEstimatedDays,
-    is_active: true,
-    name: getText(formData, "tierName"),
-    price: tierPrice,
-    revision_count: tierRevisionCount >= 0 ? tierRevisionCount : revisionCount,
-    service_package_id: serviceId,
-    sort_order: 1,
-  };
-
-  console.log("VALIDATED DATA", {
-    creatorId: creator.id,
-    servicePayload,
-    tierPayload,
-    userId: context.userId,
-  });
-
-  const { data: service, error: serviceError } = await supabase
+  const { data: service, error } = await context.supabase
     .from("service_packages")
-    .insert(servicePayload)
+    .insert(payload)
     .select("id")
     .single();
 
-  console.log("INSERT RESULT", {
-    error: serviceError,
-    service,
-    table: "service_packages",
-  });
-
-  if (serviceError || !service) {
-    console.error("[creator-services] Failed to insert service package", serviceError);
-    redirectWithError("/creator/services/new", "save", serviceError);
+  if (error || !service) {
+    redirectWithError("/creator/services/new", "save");
   }
 
-  const { error: tierError } = await supabase.from("service_package_tiers").insert({
-    ...tierPayload,
-    service_package_id: service.id,
-  });
-
-  console.log("INSERT RESULT", {
-    error: tierError,
-    table: "service_package_tiers",
-  });
-
-  revalidatePath("/creator/services");
-
-  if (tierError) {
-    console.error("[creator-services] Failed to insert service tier", tierError);
-    redirectWithError(`/creator/services/${service.id}/edit`, "tier", tierError);
-  }
-
-  const cover = await uploadServiceCover(
-    { creator, supabase, userId: creator.user_id },
-    service.id,
-    coverFile,
-  );
-
-  if (cover) {
-    const { error: coverError } = await supabase
-      .from("service_packages")
-      .update({
-        cover_file_asset_id: cover.assetId,
-        cover_image_url: cover.publicUrl,
-      })
-      .eq("id", service.id)
-      .eq("creator_id", creator.id);
-
-    if (coverError) {
-      await removeImageAsset(
-        supabase,
-        STORAGE_BUCKETS.PUBLIC_ASSETS,
-        cover.storagePath,
-        cover.assetId,
-      );
-      redirect(`/creator/services/${service.id}/edit?error=cover_save`);
-    }
-  }
-
+  await saveTiers(context, service.id, tiers);
+  const media = await uploadServiceMedia(context, service.id, mediaFiles, 0);
+  await syncServiceCover(context, service.id, media[0]?.id);
   await syncCreatorStartingPrice(context);
-  revalidateServicePaths(service.id, creator.id);
+  revalidateServicePaths(service.id, context.creator.id);
   redirect("/creator/services?created=1");
 }
 
 export async function updateCreatorServiceAction(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
-  const tierId = getText(formData, "tierId");
   const editPath = `/creator/services/${serviceId}/edit`;
 
   if (!serviceId) {
@@ -590,110 +579,61 @@ export async function updateCreatorServiceAction(formData: FormData) {
     redirect(`${editPath}?error=${validationError}`);
   }
 
-  const coverFile = validateOptionalCoverFile(formData, editPath);
   const context = await getCreatorContext();
-  const { creator, supabase } = context;
+  const existingService = await ensureOwnedService(context, serviceId);
+  const existingMedia = await getActiveMedia(context, serviceId);
+  const removeMediaIds = getSelectedIds(formData, "removeMediaIds");
+  const mediaFiles = getMediaFiles(formData, editPath);
+  const remainingMediaCount = existingMedia.filter((media) => !removeMediaIds.includes(media.id)).length;
+
+  if (remainingMediaCount + mediaFiles.length > 5) {
+    redirect(`${editPath}?error=media_limit`);
+  }
+
   const categoryId = await ensureActiveCategory(
     context,
     getText(formData, "categoryId"),
     editPath,
   );
-  const { data: existingService, error: existingError } = await supabase
-    .from("service_packages")
-    .select("id, cover_file_asset_id")
-    .eq("id", serviceId)
-    .eq("creator_id", creator.id)
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (existingError || !existingService) {
-    redirect("/creator/services?error=not_found");
-  }
-
-  const title = getText(formData, "title");
-  const basePrice = getNumber(formData, "basePrice");
-  const estimatedDays = getInteger(formData, "estimatedDays");
-  const revisionCount = getInteger(formData, "revisionCount");
-  const tierPrice = getNumber(formData, "tierPrice");
-  const tierEstimatedDays = getInteger(formData, "tierEstimatedDays") || estimatedDays;
-  const tierRevisionCount = getInteger(formData, "tierRevisionCount");
-  const cover = await uploadServiceCover(
-    { creator, supabase, userId: creator.user_id },
-    serviceId,
-    coverFile,
-  );
-  const servicePayload: ServicePackageUpdate = {
-    base_price: basePrice,
+  const tiers = getTierInputs(formData);
+  const metrics = getServiceMetricsFromTiers(tiers);
+  const isActive = getText(formData, "isActive") === "true";
+  const payload: ServicePackageUpdate = {
+    base_price: metrics.basePrice,
+    brief_requirements: getBriefRequirements(formData),
     category_id: categoryId,
-    deliverables: getTextList(formData, "deliverables"),
-    description: getNullableText(formData, "description"),
-    estimated_days: estimatedDays,
-    is_active: getText(formData, "isActive") === "true",
-    requirements: getTextList(formData, "requirements"),
-    revision_count: revisionCount,
+    deliverables: metrics.deliverables,
+    description: getNullableText(formData, "shortDescription"),
+    estimated_days: metrics.estimatedDays,
+    is_active: isActive,
+    published_at: isActive ? existingService.published_at ?? new Date().toISOString() : null,
+    requirements: getBriefRequirements(formData),
+    revision_count: metrics.revisionCount,
     short_description: getNullableText(formData, "shortDescription"),
     tags: getTextList(formData, "tags"),
-    title,
+    title: getText(formData, "title"),
   };
 
-  if (cover) {
-    servicePayload.cover_file_asset_id = cover.assetId;
-    servicePayload.cover_image_url = cover.publicUrl;
-  } else if (getText(formData, "removeCoverImage") === "true") {
-    servicePayload.cover_file_asset_id = null;
-    servicePayload.cover_image_url = null;
-  }
-
-  const { error: serviceError } = await supabase
+  const { error } = await context.supabase
     .from("service_packages")
-    .update(servicePayload)
+    .update(payload)
     .eq("id", serviceId)
-    .eq("creator_id", creator.id);
+    .eq("creator_id", context.creator.id);
 
-  if (serviceError) {
-    if (cover) {
-      await removeImageAsset(
-        supabase,
-        STORAGE_BUCKETS.PUBLIC_ASSETS,
-        cover.storagePath,
-        cover.assetId,
-      );
-    }
-    redirect(`/creator/services/${serviceId}/edit?error=save`);
+  if (error) {
+    redirect(`${editPath}?error=save`);
   }
 
-  const tierPayload = {
-    deliverables: getTextList(formData, "tierDeliverables"),
-    description: getNullableText(formData, "tierDescription"),
-    estimated_days: tierEstimatedDays,
-    is_active: true,
-    name: getText(formData, "tierName"),
-    price: tierPrice,
-    revision_count: tierRevisionCount >= 0 ? tierRevisionCount : revisionCount,
-    sort_order: 1,
-  };
-
-  const tierResult = tierId
-    ? await supabase
-        .from("service_package_tiers")
-        .update(tierPayload)
-        .eq("id", tierId)
-        .eq("service_package_id", serviceId)
-    : await supabase.from("service_package_tiers").insert({
-        ...tierPayload,
-        service_package_id: serviceId,
-      });
-
-  if (tierResult.error) {
-    redirect(`/creator/services/${serviceId}/edit?error=tier`);
-  }
-
-  if (cover || servicePayload.cover_file_asset_id === null) {
-    await removeImageAssetById(supabase, existingService.cover_file_asset_id);
-  }
-
+  await saveTiers(context, serviceId, tiers);
+  await removeServiceMedia(context, serviceId, removeMediaIds);
+  const uploadedMedia = await uploadServiceMedia(context, serviceId, mediaFiles, existingMedia.length);
+  await syncServiceCover(
+    context,
+    serviceId,
+    getText(formData, "coverMediaId") || uploadedMedia[0]?.id,
+  );
   await syncCreatorStartingPrice(context);
-  revalidateServicePaths(serviceId, creator.id);
+  revalidateServicePaths(serviceId, context.creator.id);
   redirect("/creator/services?updated=1");
 }
 
@@ -704,138 +644,137 @@ export async function toggleCreatorServiceStatusAction(formData: FormData) {
     redirect("/creator/services?error=missing");
   }
 
-  const { creator, supabase } = await getCreatorContext();
-  const { data: service, error: serviceError } = await supabase
+  const context = await getCreatorContext();
+  const service = await ensureOwnedService(context, serviceId);
+  const nextActive = !service.is_active;
+  const { error } = await context.supabase
     .from("service_packages")
-    .select("id, is_active")
-    .eq("id", serviceId)
-    .eq("creator_id", creator.id)
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (serviceError || !service) {
-    redirect("/creator/services?error=not_found");
-  }
-
-  const { error: updateError } = await supabase
-    .from("service_packages")
-    .update({ is_active: !service.is_active })
+    .update({
+      is_active: nextActive,
+      published_at: nextActive ? service.published_at ?? new Date().toISOString() : null,
+    })
     .eq("id", service.id)
-    .eq("creator_id", creator.id);
+    .eq("creator_id", context.creator.id);
 
-  if (updateError) {
+  if (error) {
     redirect("/creator/services?error=toggle");
   }
 
-  await syncCreatorStartingPrice({ creator, supabase, userId: creator.user_id });
-  revalidateServicePaths(serviceId, creator.id);
+  await syncCreatorStartingPrice(context);
+  revalidateServicePaths(serviceId, context.creator.id);
   redirect("/creator/services?toggled=1");
 }
 
-export async function createCreatorServiceTierAction(formData: FormData) {
+export async function deleteCreatorServiceAction(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
 
   if (!serviceId) {
     redirect("/creator/services?error=missing");
   }
 
-  const editPath = `/creator/services/${serviceId}/edit`;
-  const validationError = getTierValidationError(formData);
-
-  if (validationError) {
-    redirect(`${editPath}?error=${validationError}`);
-  }
-
   const context = await getCreatorContext();
-  const ownedServiceId = await ensureOwnedService(context, serviceId);
-  const { error } = await context.supabase.from("service_package_tiers").insert({
-    ...getTierPayload(formData),
-    service_package_id: ownedServiceId,
-  });
+  await ensureOwnedService(context, serviceId);
+  const { error } = await context.supabase
+    .from("service_packages")
+    .update({
+      deleted_at: new Date().toISOString(),
+      is_active: false,
+      published_at: null,
+    })
+    .eq("id", serviceId)
+    .eq("creator_id", context.creator.id);
 
   if (error) {
-    redirect(`${editPath}?error=tier_save`);
+    redirect("/creator/services?error=delete");
   }
 
-  revalidateServicePaths(serviceId);
+  await syncCreatorStartingPrice(context);
+  revalidatePath("/creator/services");
+  revalidatePath("/katalog");
+  redirect("/creator/services?deleted=1");
+}
+
+export async function createCreatorServiceTierAction(formData: FormData) {
+  const serviceId = getText(formData, "serviceId");
+  const tierKey = (getText(formData, "tierKey") || "medium") as TierKey;
+  const editPath = `/creator/services/${serviceId}/edit`;
+  const context = await getCreatorContext();
+  await ensureOwnedService(context, serviceId);
+  const tier = getTierInput(formData, tierKey);
+
+  if (!tier.name || tier.price <= 0 || tier.estimatedDays < 1 || tier.revisionCount < 0) {
+    redirect(`${editPath}?error=tier_required`);
+  }
+
+  await saveTiers(context, serviceId, [{ ...tier, isActive: true }]);
+  revalidateServicePaths(serviceId, context.creator.id);
   redirect(`${editPath}?tier_created=1`);
 }
 
 export async function updateCreatorServiceTierAction(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
-  const tierId = getText(formData, "tierId");
-
-  if (!serviceId) {
-    redirect("/creator/services?error=missing");
-  }
-
+  const tierKey = (getText(formData, "tierKey") || "basic") as TierKey;
   const editPath = `/creator/services/${serviceId}/edit`;
-  const validationError = getTierValidationError(formData);
-
-  if (validationError) {
-    redirect(`${editPath}?error=${validationError}`);
-  }
-
   const context = await getCreatorContext();
-  await ensureOwnedTier(context, serviceId, tierId);
-  const payload = getTierPayload(formData);
+  await ensureOwnedService(context, serviceId);
+  const tier = getTierInput(formData, tierKey);
 
-  if (!payload.is_active && !(await canDeactivateTier(context, serviceId, tierId))) {
+  if (tier.key === "basic" && !tier.isActive) {
     redirect(`${editPath}?error=tier_last_active`);
   }
 
+  const payload: ServiceTierUpdate = getTierPayload(serviceId, tier);
   const { error } = await context.supabase
     .from("service_package_tiers")
     .update(payload)
-    .eq("id", tierId)
-    .eq("service_package_id", serviceId);
+    .eq("service_package_id", serviceId)
+    .eq("tier_key", tierKey);
 
   if (error) {
     redirect(`${editPath}?error=tier_update`);
   }
 
-  revalidateServicePaths(serviceId);
+  revalidateServicePaths(serviceId, context.creator.id);
   redirect(`${editPath}?tier_updated=1`);
 }
 
 export async function toggleCreatorServiceTierStatusAction(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
-  const tierId = getText(formData, "tierId");
+  const tierKey = (getText(formData, "tierKey") || "medium") as TierKey;
+  const editPath = `/creator/services/${serviceId}/edit`;
 
-  if (!serviceId) {
-    redirect("/creator/services?error=missing");
+  if (tierKey === "basic") {
+    redirect(`${editPath}?error=tier_last_active`);
   }
 
-  const editPath = `/creator/services/${serviceId}/edit`;
   const context = await getCreatorContext();
-  const tier = await ensureOwnedTier(context, serviceId, tierId);
-  const nextActive = !tier.is_active;
+  await ensureOwnedService(context, serviceId);
+  const { data: tier, error: tierError } = await context.supabase
+    .from("service_package_tiers")
+    .select("id, is_active")
+    .eq("service_package_id", serviceId)
+    .eq("tier_key", tierKey)
+    .maybeSingle();
 
-  if (!nextActive && !(await canDeactivateTier(context, serviceId, tierId))) {
-    redirect(`${editPath}?error=tier_last_active`);
+  if (tierError || !tier) {
+    redirect(`${editPath}?error=tier_not_found`);
   }
 
   const { error } = await context.supabase
     .from("service_package_tiers")
-    .update({ is_active: nextActive })
-    .eq("id", tier.id)
-    .eq("service_package_id", serviceId);
+    .update({ is_active: !tier.is_active })
+    .eq("id", tier.id);
 
   if (error) {
     redirect(`${editPath}?error=tier_toggle`);
   }
 
-  revalidateServicePaths(serviceId);
+  revalidateServicePaths(serviceId, context.creator.id);
   redirect(`${editPath}?tier_toggled=1`);
 }
 
 export async function createCreatorServiceAddonAction(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
-
-  if (!serviceId) {
-    redirect("/creator/services?error=missing");
-  }
-
   const editPath = `/creator/services/${serviceId}/edit`;
   const validationError = getAddonValidationError(formData);
 
@@ -844,31 +783,26 @@ export async function createCreatorServiceAddonAction(formData: FormData) {
   }
 
   const context = await getCreatorContext();
-  const ownedServiceId = await ensureOwnedService(context, serviceId);
+  await ensureOwnedService(context, serviceId);
   const { error } = await context.supabase.from("service_addons").insert({
     description: getNullableText(formData, "addonDescription"),
     is_active: getText(formData, "addonIsActive") !== "false",
     name: getText(formData, "addonName"),
     price: getNumber(formData, "addonPrice"),
-    service_package_id: ownedServiceId,
+    service_package_id: serviceId,
   });
 
   if (error) {
     redirect(`${editPath}?error=addon_save`);
   }
 
-  revalidateServicePaths(serviceId);
+  revalidateServicePaths(serviceId, context.creator.id);
   redirect(`${editPath}?addon_created=1`);
 }
 
 export async function updateCreatorServiceAddonAction(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
   const addonId = getText(formData, "addonId");
-
-  if (!serviceId) {
-    redirect("/creator/services?error=missing");
-  }
-
   const editPath = `/creator/services/${serviceId}/edit`;
   const validationError = getAddonValidationError(formData);
 
@@ -881,19 +815,7 @@ export async function updateCreatorServiceAddonAction(formData: FormData) {
   }
 
   const context = await getCreatorContext();
-  await ensureOwnedService(context, serviceId);
-
-  const { data: addon, error: addonError } = await context.supabase
-    .from("service_addons")
-    .select("id")
-    .eq("id", addonId)
-    .eq("service_package_id", serviceId)
-    .maybeSingle();
-
-  if (addonError || !addon) {
-    redirect(`${editPath}?error=addon_not_found`);
-  }
-
+  const ownedAddonId = await ensureOwnedAddon(context, serviceId, addonId);
   const { error } = await context.supabase
     .from("service_addons")
     .update({
@@ -902,25 +824,19 @@ export async function updateCreatorServiceAddonAction(formData: FormData) {
       name: getText(formData, "addonName"),
       price: getNumber(formData, "addonPrice"),
     })
-    .eq("id", addon.id)
-    .eq("service_package_id", serviceId);
+    .eq("id", ownedAddonId);
 
   if (error) {
     redirect(`${editPath}?error=addon_update`);
   }
 
-  revalidateServicePaths(serviceId);
+  revalidateServicePaths(serviceId, context.creator.id);
   redirect(`${editPath}?addon_updated=1`);
 }
 
 export async function deleteCreatorServiceAddonAction(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
   const addonId = getText(formData, "addonId");
-
-  if (!serviceId) {
-    redirect("/creator/services?error=missing");
-  }
-
   const editPath = `/creator/services/${serviceId}/edit`;
 
   if (!addonId) {
@@ -928,29 +844,16 @@ export async function deleteCreatorServiceAddonAction(formData: FormData) {
   }
 
   const context = await getCreatorContext();
-  await ensureOwnedService(context, serviceId);
-
-  const { data: addon, error: addonError } = await context.supabase
-    .from("service_addons")
-    .select("id")
-    .eq("id", addonId)
-    .eq("service_package_id", serviceId)
-    .maybeSingle();
-
-  if (addonError || !addon) {
-    redirect(`${editPath}?error=addon_not_found`);
-  }
-
+  const ownedAddonId = await ensureOwnedAddon(context, serviceId, addonId);
   const { error } = await context.supabase
     .from("service_addons")
     .delete()
-    .eq("id", addon.id)
-    .eq("service_package_id", serviceId);
+    .eq("id", ownedAddonId);
 
   if (error) {
     redirect(`${editPath}?error=addon_delete`);
   }
 
-  revalidateServicePaths(serviceId);
+  revalidateServicePaths(serviceId, context.creator.id);
   redirect(`${editPath}?addon_deleted=1`);
 }

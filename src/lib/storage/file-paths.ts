@@ -37,6 +37,14 @@ export function createServiceCoverStoragePath(
   return `creators/${creatorId}/services/${serviceId}/${createFileName("cover", extension)}`;
 }
 
+export function createServiceMediaStoragePath(
+  creatorId: string,
+  serviceId: string,
+  extension: AllowedImageExtension,
+) {
+  return `creators/${creatorId}/services/${serviceId}/${createFileName("media", extension)}`;
+}
+
 export function createUmkmLogoStoragePath(
   umkmId: string,
   extension: AllowedImageExtension,

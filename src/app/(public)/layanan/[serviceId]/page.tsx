@@ -77,7 +77,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
             description="Harga, estimasi, revisi, dan output terlihat sejak awal."
           />
           <div className="mt-8">
-            <ServiceTierOptions tiers={tiers} />
+            <ServiceTierOptions serviceId={service.id} tiers={tiers} />
           </div>
         </PageContainer>
       </section>

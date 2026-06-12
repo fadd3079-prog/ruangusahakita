@@ -284,6 +284,8 @@ export interface Database {
           description: string | null
           cover_image_url: string | null
           cover_file_asset_id: string | null
+          brief_requirements: Json
+          published_at: string | null
           base_price: number
           estimated_days: number
           revision_count: number
@@ -306,6 +308,8 @@ export interface Database {
           description?: string | null
           cover_image_url?: string | null
           cover_file_asset_id?: string | null
+          brief_requirements?: Json
+          published_at?: string | null
           base_price?: number
           estimated_days?: number
           revision_count?: number
@@ -328,6 +332,8 @@ export interface Database {
           description?: string | null
           cover_image_url?: string | null
           cover_file_asset_id?: string | null
+          brief_requirements?: Json
+          published_at?: string | null
           base_price?: number
           estimated_days?: number
           revision_count?: number
@@ -359,6 +365,7 @@ export interface Database {
         Row: {
           id: string
           service_package_id: string
+          tier_key: "basic" | "medium" | "premium"
           name: string
           description: string | null
           price: number
@@ -373,6 +380,7 @@ export interface Database {
         Insert: {
           id?: string
           service_package_id: string
+          tier_key?: "basic" | "medium" | "premium"
           name: string
           description?: string | null
           price: number
@@ -387,6 +395,7 @@ export interface Database {
         Update: {
           id?: string
           service_package_id?: string
+          tier_key?: "basic" | "medium" | "premium"
           name?: string
           description?: string | null
           price?: number
@@ -443,6 +452,58 @@ export interface Database {
             foreignKeyName: "service_addons_service_package_id_fkey"
             columns: ["service_package_id"]
             referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      service_media: {
+        Row: {
+          id: string
+          service_package_id: string
+          file_asset_id: string | null
+          image_url: string
+          alt_text: string | null
+          is_cover: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          service_package_id: string
+          file_asset_id?: string | null
+          image_url: string
+          alt_text?: string | null
+          is_cover?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: {
+          id?: string
+          service_package_id?: string
+          file_asset_id?: string | null
+          image_url?: string
+          alt_text?: string | null
+          is_cover?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_media_service_package_id_fkey"
+            columns: ["service_package_id"]
+            referencedRelation: "service_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_media_file_asset_id_fkey"
+            columns: ["file_asset_id"]
+            referencedRelation: "file_assets"
             referencedColumns: ["id"]
           }
         ]

@@ -35,6 +35,7 @@ const availabilityLabels: Record<PublicAvailabilityStatus, string> = {
 type CreatorCardProps = {
   creator: PublicCreatorProfile;
   primaryService?: {
+    basePrice?: number;
     id: string;
     title: string;
     categoryName: string;
@@ -44,6 +45,7 @@ type CreatorCardProps = {
 
 export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
   const visualUrl = creator.bannerUrl;
+  const startingPrice = primaryService?.basePrice ?? creator.startingPrice;
   const initials = creator.displayName
     .split(" ")
     .map((part) => part[0])
@@ -141,7 +143,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
           <div className="border-r border-border/70 p-2.5">
             <p className="text-xs text-muted-foreground">Mulai dari</p>
             <p className="mt-1 text-sm font-semibold text-foreground">
-              <PriceText value={creator.startingPrice} prefix="" />
+              <PriceText value={startingPrice} prefix="" />
             </p>
           </div>
           <div className="p-2.5">

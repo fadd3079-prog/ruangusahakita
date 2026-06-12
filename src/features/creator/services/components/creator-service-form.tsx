@@ -1,8 +1,17 @@
 import Link from "next/link";
-import { ArrowLeft, Image as ImageIcon, Info, Save } from "lucide-react";
+import type { ReactNode } from "react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Image as ImageIcon,
+  Info,
+  Save,
+  Upload,
+} from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SubmitButton } from "@/components/common/submit-button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,12 +22,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CreatorServiceAddonManager } from "@/features/creator/services/components/creator-service-addon-manager";
-import { CreatorServiceTierManager } from "@/features/creator/services/components/creator-service-tier-manager";
 import type {
   CreatorServiceCategory,
   CreatorServiceEditData,
+  CreatorServiceTier,
 } from "@/features/creator/services/data/creator-service-queries";
+import { formatCurrency } from "@/lib/formatters/currency";
 
 type CreatorServiceFormProps = {
   action: (formData: FormData) => Promise<void>;
@@ -32,6 +41,31 @@ type CreatorServiceFormProps = {
   title: string;
 };
 
+type TierKey = CreatorServiceTier["tier_key"];
+
+const tierKeys: readonly TierKey[] = ["basic", "medium", "premium"];
+
+const tierLabels: Record<TierKey, string> = {
+  basic: "Basic",
+  medium: "Medium",
+  premium: "Premium",
+};
+
+const tierDescriptions: Record<TierKey, string> = {
+  basic: "Paket awal yang wajib tersedia untuk UMKM.",
+  medium: "Paket menengah opsional untuk kebutuhan lebih lengkap.",
+  premium: "Paket paling lengkap untuk campaign yang lebih serius.",
+};
+
+const briefRequirementOptions = [
+  "nama usaha",
+  "produk/jasa yang dipromosikan",
+  "target audiens",
+  "platform konten",
+  "referensi konten",
+  "catatan tambahan",
+] as const;
+
 const errorMessages = {
   addon_delete: "Add-on belum bisa dihapus.",
   addon_missing: "Data add-on tidak lengkap.",
@@ -40,29 +74,25 @@ const errorMessages = {
   addon_required: "Nama add-on wajib diisi.",
   addon_save: "Add-on belum bisa disimpan.",
   addon_update: "Add-on belum bisa diperbarui.",
-  cover_save: "Cover layanan sudah diunggah, tetapi belum bisa disimpan ke layanan.",
-  cover_size: "Ukuran cover layanan maksimal 5 MB.",
-  cover_type: "Cover layanan harus berupa JPG, PNG, atau WebP.",
-  cover_upload: "Cover layanan belum bisa diunggah ke storage.",
   category: "Kategori layanan tidak tersedia atau sudah tidak aktif.",
+  delete: "Layanan belum bisa dihapus.",
+  media_limit: "Maksimal 5 gambar katalog untuk satu layanan.",
+  media_save: "Gambar sudah diunggah, tetapi belum bisa disimpan.",
+  media_size: "Ukuran gambar maksimal 5 MB.",
+  media_type: "Gambar katalog harus berupa JPG, PNG, atau WebP.",
+  media_upload: "Gambar katalog belum bisa diunggah.",
   missing: "Data layanan tidak lengkap.",
   not_found: "Layanan tidak ditemukan atau bukan milik akun kreator ini.",
-  price: "Harga layanan dan harga tier wajib lebih dari nol.",
+  price: "Harga paket aktif wajib lebih dari nol.",
   profile: "Profil kreator belum lengkap.",
-  required: "Judul, kategori, dan nama tier wajib diisi.",
+  required: "Nama layanan, kategori, dan paket Basic wajib diisi.",
   save: "Layanan belum bisa disimpan. Coba lagi setelah data diperiksa.",
-  scope: "Estimasi hari minimal 1 dan jumlah revisi tidak boleh negatif.",
-  tier: "Layanan tersimpan, tetapi tier belum berhasil disimpan.",
-  tier_last_active: "Minimal satu tier aktif harus tersedia untuk layanan ini.",
-  tier_missing: "Data tier tidak lengkap.",
-  tier_not_found: "Tier tidak ditemukan atau bukan bagian dari layanan ini.",
-  tier_price: "Harga tier wajib lebih dari nol.",
-  tier_required: "Nama tier wajib diisi.",
-  tier_save: "Tier belum bisa ditambahkan.",
-  tier_scope: "Estimasi tier minimal 1 hari dan jumlah revisi tidak boleh negatif.",
-  tier_toggle: "Status tier belum bisa diperbarui.",
-  tier_update: "Tier belum bisa diperbarui.",
-  toggle: "Status layanan belum bisa diperbarui.",
+  scope: "Estimasi pengerjaan minimal 1 hari dan revisi tidak boleh negatif.",
+  tier: "Paket harga belum berhasil disimpan.",
+  tier_last_active: "Paket Basic wajib tetap aktif.",
+  tier_not_found: "Paket harga tidak ditemukan.",
+  tier_required: "Data paket harga belum lengkap.",
+  tier_update: "Paket harga belum bisa diperbarui.",
   unauthorized: "Akun ini tidak memiliki akses kreator aktif.",
 };
 
@@ -70,9 +100,9 @@ const successMessages = {
   addon_created: "Add-on berhasil ditambahkan.",
   addon_deleted: "Add-on berhasil dihapus.",
   addon_updated: "Add-on berhasil diperbarui.",
-  tier_created: "Tier berhasil ditambahkan.",
-  tier_toggled: "Status tier berhasil diperbarui.",
-  tier_updated: "Tier berhasil diperbarui.",
+  tier_created: "Paket harga berhasil ditambahkan.",
+  tier_toggled: "Status paket harga berhasil diperbarui.",
+  tier_updated: "Paket harga berhasil diperbarui.",
 };
 
 function getErrorMessage(error?: string) {
@@ -91,8 +121,30 @@ function getSuccessMessage(success?: string) {
   return successMessages[success as keyof typeof successMessages] ?? null;
 }
 
-function toTextareaValue(value: readonly string[] | null) {
+function toTextareaValue(value: readonly string[] | null | undefined) {
   return value?.join("\n") ?? "";
+}
+
+function getTier(service: CreatorServiceEditData | null | undefined, key: TierKey) {
+  return service?.tiersByKey[key] ?? null;
+}
+
+function getCoverMedia(service: CreatorServiceEditData | null | undefined) {
+  return (
+    service?.media.find((item) => item.is_cover) ??
+    service?.media[0] ??
+    null
+  );
+}
+
+function getStartingPrice(service: CreatorServiceEditData | null | undefined) {
+  const activePrices =
+    service?.tiers
+      .filter((tier) => tier.is_active)
+      .map((tier) => Number(tier.price))
+      .filter((price) => price > 0) ?? [];
+
+  return activePrices.length > 0 ? Math.min(...activePrices) : 0;
 }
 
 export function CreatorServiceForm({
@@ -108,12 +160,15 @@ export function CreatorServiceForm({
 }: CreatorServiceFormProps) {
   const errorMessage = getErrorMessage(error);
   const successMessage = getSuccessMessage(success);
-  const primaryTier = service?.primaryTier ?? null;
   const servicePackage = service?.service ?? null;
   const hasCategories = categories.length > 0;
   const formId = servicePackage
     ? "creator-service-edit-form"
     : "creator-service-create-form";
+  const coverMedia = getCoverMedia(service);
+  const selectedRequirements =
+    servicePackage?.requirements ??
+    briefRequirementOptions;
 
   return (
     <div className="space-y-8 pb-10">
@@ -128,7 +183,7 @@ export function CreatorServiceForm({
           <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">
             {title}
           </h1>
-          <p className="mt-2 text-muted-foreground">{description}</p>
+          <p className="mt-2 max-w-3xl text-muted-foreground">{description}</p>
         </div>
       </div>
 
@@ -160,28 +215,21 @@ export function CreatorServiceForm({
           <Info className="size-4" />
           <AlertTitle>Kategori layanan belum tersedia</AlertTitle>
           <AlertDescription>
-            Tambah atau aktifkan kategori layanan terlebih dahulu sebelum membuat
-            paket jasa digital.
+            Aktifkan kategori layanan terlebih dahulu sebelum membuat paket jasa digital.
           </AlertDescription>
         </Alert>
       ) : null}
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <form id={formId} action={action} className="space-y-8">
           {servicePackage ? (
             <input type="hidden" name="serviceId" value={servicePackage.id} />
           ) : null}
-          {primaryTier ? (
-            <input type="hidden" name="tierId" value={primaryTier.id} />
-          ) : null}
 
-          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
-            <CardHeader>
-              <CardTitle className="text-xl">Informasi dasar</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <StepCard step="01" title="Info Layanan">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(220px,0.7fr)]">
               <div className="space-y-2">
-                <Label htmlFor="title">Judul layanan</Label>
+                <Label htmlFor="title">Nama layanan</Label>
                 <Input
                   id="title"
                   name="title"
@@ -191,7 +239,31 @@ export function CreatorServiceForm({
                   className="h-11"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="isActive">Status</Label>
+                <select
+                  id="isActive"
+                  name="isActive"
+                  defaultValue={servicePackage?.is_active === false ? "false" : "true"}
+                  className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  <option value="false">Draft</option>
+                  <option value="true">Aktif</option>
+                </select>
+              </div>
+            </div>
 
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <div className="space-y-2">
+                <Label htmlFor="shortDescription">Deskripsi singkat</Label>
+                <Textarea
+                  id="shortDescription"
+                  name="shortDescription"
+                  defaultValue={servicePackage?.short_description ?? ""}
+                  placeholder="Jelaskan manfaat utama layanan dalam 1-2 kalimat."
+                  className="min-h-28 resize-y"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="categoryId">Kategori layanan</Label>
                 <select
@@ -203,9 +275,7 @@ export function CreatorServiceForm({
                   className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value="" disabled>
-                    {hasCategories
-                      ? "Pilih kategori layanan"
-                      : "Kategori layanan belum tersedia"}
+                    {hasCategories ? "Pilih kategori" : "Kategori belum tersedia"}
                   </option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
@@ -213,270 +283,188 @@ export function CreatorServiceForm({
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="shortDescription">Deskripsi singkat</Label>
-                <Textarea
-                  id="shortDescription"
-                  name="shortDescription"
-                  defaultValue={servicePackage?.short_description ?? ""}
-                  placeholder="Ringkas manfaat layanan dalam satu atau dua kalimat."
-                  className="min-h-24 resize-y"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Deskripsi lengkap</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  defaultValue={servicePackage?.description ?? ""}
-                  placeholder="Jelaskan proses, gaya kerja, dan ruang lingkup layanan digital."
-                  className="min-h-32 resize-y"
-                />
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="isActive">Status layanan</Label>
-                  <select
-                    id="isActive"
-                    name="isActive"
-                    defaultValue={servicePackage?.is_active === false ? "false" : "true"}
-                    className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                  >
-                    <option value="true">Aktif</option>
-                    <option value="false">Tidak aktif</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
+                <div className="space-y-2 pt-3">
                   <Label htmlFor="tags">Tag layanan</Label>
                   <Input
                     id="tags"
                     name="tags"
                     defaultValue={servicePackage?.tags?.join(", ") ?? ""}
-                    placeholder="reels, kuliner, campaign"
+                    placeholder="reels, kuliner, caption"
                     className="h-11"
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </StepCard>
 
-          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+          <StepCard step="02" title="Paket Harga">
+            <div className="grid gap-5 xl:grid-cols-3">
+              {tierKeys.map((key) => (
+                <TierCard
+                  key={key}
+                  tierKey={key}
+                  tier={getTier(service, key)}
+                />
+              ))}
+            </div>
+          </StepCard>
+
+          <StepCard step="03" title="Media Katalog">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <div>
+                <div
+                  className="grid aspect-[16/9] place-items-center overflow-hidden rounded-2xl border border-border/70 bg-muted/50 bg-cover bg-center"
+                  style={
+                    coverMedia?.image_url
+                      ? { backgroundImage: `url("${coverMedia.image_url}")` }
+                      : undefined
+                  }
+                >
+                  {coverMedia?.image_url ? null : (
+                    <div className="text-center text-muted-foreground">
+                      <ImageIcon className="mx-auto size-10 opacity-45" />
+                      <p className="mt-2 text-sm">Cover katalog belum tersedia</p>
+                    </div>
+                  )}
+                </div>
+                {service?.media.length ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {service.media.map((media) => (
+                      <div
+                        key={media.id}
+                        className="group overflow-hidden rounded-2xl border border-border/70 bg-background"
+                      >
+                        <div
+                          className="aspect-[16/10] bg-muted bg-cover bg-center"
+                          style={{ backgroundImage: `url("${media.image_url}")` }}
+                        />
+                        <div className="space-y-2 p-3 text-sm">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="coverMediaId"
+                              value={media.id}
+                              defaultChecked={media.is_cover}
+                              className="size-4 accent-primary"
+                            />
+                            Jadikan cover
+                          </label>
+                          <label className="flex items-center gap-2 text-muted-foreground">
+                            <input
+                              type="checkbox"
+                              name="removeMediaIds"
+                              value={media.id}
+                              className="size-4 accent-destructive"
+                            />
+                            Hapus gambar
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
+                <Upload className="size-5 text-primary" />
+                <h3 className="mt-3 font-semibold text-foreground">
+                  Upload gambar katalog
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Gunakan 1-5 gambar WebP, JPG, atau PNG. Gambar pertama akan dipakai sebagai cover jika belum ada cover.
+                </p>
+                <Input
+                  id="mediaFiles"
+                  name="mediaFiles"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  className="mt-4 h-11"
+                />
+              </div>
+            </div>
+          </StepCard>
+
+          <StepCard step="04" title="Kebutuhan Brief">
+            <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="rounded-2xl border border-border/70 bg-muted/35 p-4">
+                <h3 className="font-semibold text-foreground">
+                  Checklist data dari UMKM
+                </h3>
+                <div className="mt-4 grid gap-3">
+                  {briefRequirementOptions.map((item) => (
+                    <label key={item} className="flex items-center gap-3 text-sm">
+                      <input
+                        type="checkbox"
+                        name="briefRequirements"
+                        value={item}
+                        defaultChecked={selectedRequirements.includes(item)}
+                        className="size-4 accent-primary"
+                      />
+                      <span className="capitalize">{item}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customBriefRequirements">Kebutuhan tambahan</Label>
+                <Textarea
+                  id="customBriefRequirements"
+                  name="customBriefRequirements"
+                  defaultValue={toTextareaValue(
+                    servicePackage?.requirements?.filter(
+                      (item) => !briefRequirementOptions.includes(item as (typeof briefRequirementOptions)[number]),
+                    ) ?? [],
+                  )}
+                  placeholder="Tambahkan kebutuhan brief khusus, satu item per baris."
+                  className="min-h-44 resize-y"
+                />
+              </div>
+            </div>
+          </StepCard>
+        </form>
+
+        <aside className="space-y-5">
+          <Card className="sticky top-24 rounded-2xl border-primary/20 bg-primary/5 shadow-[var(--shadow-soft)]">
             <CardHeader>
-              <CardTitle className="text-xl">Cover katalog</CardTitle>
+              <CardTitle className="text-lg text-brand-navy">Preview & Publish</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-4">
               <div
                 className="grid aspect-[16/9] place-items-center rounded-2xl bg-muted/50 bg-cover bg-center text-muted-foreground ring-1 ring-border"
                 style={
-                  servicePackage?.cover_image_url
-                    ? { backgroundImage: `url("${servicePackage.cover_image_url}")` }
+                  coverMedia?.image_url
+                    ? { backgroundImage: `url("${coverMedia.image_url}")` }
                     : undefined
                 }
               >
-                {servicePackage?.cover_image_url ? null : (
-                  <div className="text-center">
-                    <ImageIcon className="mx-auto size-10 opacity-50" />
-                    <p className="mt-2 text-sm">Cover layanan belum tersedia</p>
-                  </div>
+                {coverMedia?.image_url ? null : (
+                  <ImageIcon className="size-8 opacity-40" />
                 )}
               </div>
-              <div className="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="coverFile">File cover layanan</Label>
-                  <Input
-                    id="coverFile"
-                    name="coverFile"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="h-11"
-                  />
-                  <p className="text-xs leading-5 text-muted-foreground">
-                    Kosongkan jika tidak ingin mengganti cover saat menyimpan.
-                  </p>
-                </div>
-                {servicePackage?.cover_image_url ? (
-                  <label className="flex h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      name="removeCoverImage"
-                      value="true"
-                      className="size-4 accent-primary"
-                    />
-                    Hapus cover
-                  </label>
-                ) : null}
+              <div>
+                <Badge variant={servicePackage?.is_active ? "default" : "secondary"} className="rounded-full">
+                  {servicePackage?.is_active ? "Aktif" : "Draft"}
+                </Badge>
+                <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight text-foreground">
+                  {servicePackage?.title ?? "Nama layanan akan tampil di sini"}
+                </h3>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                  {servicePackage?.short_description ??
+                    "Isi informasi layanan agar UMKM memahami output, estimasi, dan revisi sejak awal."}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
-            <CardHeader>
-              <CardTitle className="text-xl">Output dan kebutuhan brief</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="deliverables">Output layanan digital</Label>
-                <Textarea
-                  id="deliverables"
-                  name="deliverables"
-                  defaultValue={toTextareaValue(servicePackage?.deliverables ?? null)}
-                  placeholder="Pisahkan setiap output dengan baris baru."
-                  className="min-h-28 resize-y"
-                />
+              <div className="rounded-2xl border border-border/70 bg-background p-4">
+                <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  Mulai dari
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-brand-navy">
+                  {formatCurrency(getStartingPrice(service))}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Basic wajib, Medium dan Premium opsional.
+                </p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="requirements">Kebutuhan dari UMKM</Label>
-                <Textarea
-                  id="requirements"
-                  name="requirements"
-                  defaultValue={toTextareaValue(servicePackage?.requirements ?? null)}
-                  placeholder="Tuliskan data atau arahan yang perlu disiapkan dalam brief campaign."
-                  className="min-h-28 resize-y"
-                />
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedDays">Estimasi pengerjaan</Label>
-                  <Input
-                    id="estimatedDays"
-                    name="estimatedDays"
-                    type="number"
-                    min="1"
-                    required
-                    defaultValue={servicePackage?.estimated_days ?? 3}
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="revisionCount">Jumlah revisi</Label>
-                  <Input
-                    id="revisionCount"
-                    name="revisionCount"
-                    type="number"
-                    min="0"
-                    required
-                    defaultValue={servicePackage?.revision_count ?? 1}
-                    className="h-11"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
-            <CardHeader>
-              <CardTitle className="text-xl">Harga dan tier utama</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="basePrice">Harga dasar</Label>
-                  <Input
-                    id="basePrice"
-                    name="basePrice"
-                    type="number"
-                    min="1"
-                    required
-                    defaultValue={servicePackage?.base_price ?? ""}
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tierName">Nama tier</Label>
-                  <Input
-                    id="tierName"
-                    name="tierName"
-                    required
-                    defaultValue={primaryTier?.name ?? "Basic"}
-                    className="h-11"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tierDescription">Deskripsi tier</Label>
-                <Textarea
-                  id="tierDescription"
-                  name="tierDescription"
-                  defaultValue={primaryTier?.description ?? ""}
-                  placeholder="Jelaskan cakupan tier ini secara singkat."
-                  className="min-h-24 resize-y"
-                />
-              </div>
-
-              <div className="grid gap-6 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="tierPrice">Harga tier</Label>
-                  <Input
-                    id="tierPrice"
-                    name="tierPrice"
-                    type="number"
-                    min="1"
-                    required
-                    defaultValue={primaryTier?.price ?? servicePackage?.base_price ?? ""}
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tierEstimatedDays">Estimasi tier</Label>
-                  <Input
-                    id="tierEstimatedDays"
-                    name="tierEstimatedDays"
-                    type="number"
-                    min="1"
-                    required
-                    defaultValue={
-                      primaryTier?.estimated_days ?? servicePackage?.estimated_days ?? 3
-                    }
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tierRevisionCount">Revisi tier</Label>
-                  <Input
-                    id="tierRevisionCount"
-                    name="tierRevisionCount"
-                    type="number"
-                    min="0"
-                    required
-                    defaultValue={
-                      primaryTier?.revision_count ?? servicePackage?.revision_count ?? 1
-                    }
-                    className="h-11"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tierDeliverables">Output tier</Label>
-                <Textarea
-                  id="tierDeliverables"
-                  name="tierDeliverables"
-                  defaultValue={toTextareaValue(primaryTier?.deliverables ?? null)}
-                  placeholder="Pisahkan output tier dengan baris baru."
-                  className="min-h-24 resize-y"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </form>
-
-        <aside className="space-y-6">
-          <Card className="sticky top-24 rounded-2xl border-primary/20 bg-primary/5 shadow-[var(--shadow-soft)]">
-            <CardHeader>
-              <CardTitle className="text-lg text-brand-navy">Simpan layanan</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm leading-6 text-muted-foreground">
-                Pastikan harga, output, estimasi, dan revisi sudah sesuai sebelum
-                layanan ditampilkan kepada UMKM.
-              </p>
               <SubmitButton
                 pendingLabel="Menyimpan..."
                 form={formId}
@@ -491,45 +479,145 @@ export function CreatorServiceForm({
               </Button>
             </CardContent>
           </Card>
-
-          {servicePackage ? (
-            <>
-              <CreatorServiceTierManager
-                serviceId={servicePackage.id}
-                tiers={service?.tiers ?? []}
-              />
-              <CreatorServiceAddonManager
-                addons={service?.addons ?? []}
-                serviceId={servicePackage.id}
-              />
-            </>
-          ) : (
-            <>
-              <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
-                <CardHeader>
-                  <CardTitle className="text-lg">Tier paket jasa</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Simpan paket jasa terlebih dahulu, lalu kelola tier dari halaman
-                    edit layanan.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
-                <CardHeader>
-                  <CardTitle className="text-lg">Add-on layanan</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Simpan paket jasa terlebih dahulu, lalu tambahkan add-on dari
-                    halaman edit layanan.
-                  </p>
-                </CardContent>
-              </Card>
-            </>
-          )}
         </aside>
+      </div>
+    </div>
+  );
+}
+
+type StepCardProps = {
+  children: ReactNode;
+  step: string;
+  title: string;
+};
+
+function StepCard({ children, step, title }: StepCardProps) {
+  return (
+    <Card className="rounded-2xl border-border/70 bg-card/95 shadow-[var(--shadow-soft)]">
+      <CardHeader className="flex-row items-center gap-3 space-y-0">
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+          {step}
+        </span>
+        <CardTitle className="text-xl">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">{children}</CardContent>
+    </Card>
+  );
+}
+
+type TierCardProps = {
+  tier: CreatorServiceTier | null;
+  tierKey: TierKey;
+};
+
+function TierCard({ tier, tierKey }: TierCardProps) {
+  const isBasic = tierKey === "basic";
+  const activeByDefault = isBasic || Boolean(tier?.is_active);
+
+  return (
+    <div className="flex h-full flex-col rounded-2xl border border-border/70 bg-background p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <Badge variant={isBasic ? "default" : "secondary"} className="rounded-full">
+            {isBasic ? "Wajib" : "Opsional"}
+          </Badge>
+          <h3 className="mt-3 text-lg font-semibold tracking-tight text-foreground">
+            {tierLabels[tierKey]}
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            {tierDescriptions[tierKey]}
+          </p>
+        </div>
+        {!isBasic ? (
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              name={`${tierKey}Enabled`}
+              value="true"
+              defaultChecked={activeByDefault}
+              className="size-4 accent-primary"
+            />
+            Aktif
+          </label>
+        ) : (
+          <input type="hidden" name="basicEnabled" value="true" />
+        )}
+      </div>
+
+      <div className="mt-5 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor={`${tierKey}Name`}>Nama paket</Label>
+          <Input
+            id={`${tierKey}Name`}
+            name={`${tierKey}Name`}
+            required={isBasic}
+            defaultValue={tier?.name ?? tierLabels[tierKey]}
+            className="h-11"
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+          <div className="space-y-2">
+            <Label htmlFor={`${tierKey}Price`}>Harga</Label>
+            <Input
+              id={`${tierKey}Price`}
+              name={`${tierKey}Price`}
+              type="number"
+              min="1"
+              required={isBasic}
+              defaultValue={tier?.price ?? ""}
+              className="h-11"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`${tierKey}EstimatedDays`}>Estimasi pengerjaan</Label>
+            <Input
+              id={`${tierKey}EstimatedDays`}
+              name={`${tierKey}EstimatedDays`}
+              type="number"
+              min="1"
+              required={isBasic}
+              defaultValue={tier?.estimated_days ?? 3}
+              className="h-11"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`${tierKey}RevisionCount`}>Jumlah revisi</Label>
+            <Input
+              id={`${tierKey}RevisionCount`}
+              name={`${tierKey}RevisionCount`}
+              type="number"
+              min="0"
+              required={isBasic}
+              defaultValue={tier?.revision_count ?? 1}
+              className="h-11"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`${tierKey}Description`}>Deskripsi paket</Label>
+          <Textarea
+            id={`${tierKey}Description`}
+            name={`${tierKey}Description`}
+            defaultValue={tier?.description ?? ""}
+            placeholder="Jelaskan cakupan paket ini secara singkat."
+            className="min-h-24 resize-y"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`${tierKey}Deliverables`}>Output yang didapat</Label>
+          <Textarea
+            id={`${tierKey}Deliverables`}
+            name={`${tierKey}Deliverables`}
+            defaultValue={toTextareaValue(tier?.deliverables ?? null)}
+            placeholder="Satu output per baris."
+            className="min-h-28 resize-y"
+          />
+        </div>
+      </div>
+
+      <div className="mt-auto flex items-center gap-2 pt-5 text-sm text-muted-foreground">
+        <CheckCircle2 className="size-4 text-primary" />
+        <span>{activeByDefault ? "Siap dipakai" : "Tidak tampil sampai diaktifkan"}</span>
       </div>
     </div>
   );

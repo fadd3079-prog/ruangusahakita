@@ -9,6 +9,7 @@ import {
   Pencil,
   PlusCircle,
   Power,
+  Trash2,
 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
@@ -23,7 +24,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { toggleCreatorServiceStatusAction } from "@/features/creator/services/actions/creator-service-actions";
+import {
+  deleteCreatorServiceAction,
+  toggleCreatorServiceStatusAction,
+} from "@/features/creator/services/actions/creator-service-actions";
 import { getCurrentCreatorServices } from "@/features/creator/services/data/creator-service-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 
@@ -38,6 +42,7 @@ type CreatorServicesPageProps = {
     error?: string;
     toggled?: string;
     updated?: string;
+    deleted?: string;
   }>;
 };
 
@@ -47,6 +52,7 @@ const errorMessages = {
   profile: "Profil kreator belum lengkap.",
   save: "Layanan belum bisa disimpan.",
   toggle: "Status layanan belum bisa diperbarui.",
+  delete: "Layanan belum bisa dihapus.",
   unauthorized: "Akun ini tidak memiliki akses kreator aktif.",
 };
 
@@ -69,6 +75,10 @@ function getSuccessMessage(params: Awaited<CreatorServicesPageProps["searchParam
 
   if (params.toggled) {
     return "Status layanan berhasil diperbarui.";
+  }
+
+  if (params.deleted) {
+    return "Layanan berhasil dihapus dari katalog.";
   }
 
   return null;
@@ -152,7 +162,19 @@ export default async function CreatorServicesPage({
         {services.length > 0 ? (
           <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
             {services.map((item) => {
-              const primaryTier = item.tiers[0] ?? null;
+              const activeTiers = item.tiers.filter((tier) => tier.is_active);
+              const startingPrice =
+                activeTiers.length > 0
+                  ? Math.min(...activeTiers.map((tier) => Number(tier.price)))
+                  : Number(item.service.base_price);
+              const primaryTier =
+                activeTiers.find((tier) => tier.tier_key === "basic") ??
+                activeTiers[0] ??
+                item.tiers[0] ??
+                null;
+              const coverMedia =
+                item.media.find((media) => media.is_cover) ?? item.media[0] ?? null;
+              const coverUrl = coverMedia?.image_url ?? item.service.cover_image_url;
 
               return (
                 <Card
@@ -162,14 +184,14 @@ export default async function CreatorServicesPage({
                   <div
                     className="grid aspect-[16/9] place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
                     style={
-                      item.service.cover_image_url
+                      coverUrl
                         ? {
-                            backgroundImage: `url("${item.service.cover_image_url}")`,
+                            backgroundImage: `url("${coverUrl}")`,
                           }
                         : undefined
                     }
                   >
-                    {item.service.cover_image_url ? null : (
+                    {coverUrl ? null : (
                       <ImageIcon className="size-10 opacity-40" aria-hidden="true" />
                     )}
                   </div>
@@ -214,7 +236,7 @@ export default async function CreatorServicesPage({
                       </span>
                       <span className="inline-flex items-center gap-2">
                         <Layers3 className="size-4 text-primary" aria-hidden="true" />
-                        {item.tiers.length || 1} tier layanan
+                        {activeTiers.length || 1} paket aktif
                       </span>
                     </div>
 
@@ -223,7 +245,7 @@ export default async function CreatorServicesPage({
                         Mulai dari
                       </p>
                       <p className="mt-2 text-2xl font-semibold tracking-tight text-brand-navy">
-                        {formatCurrency(Number(item.service.base_price))}
+                        {formatCurrency(startingPrice)}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {primaryTier?.name ?? "Tier utama"} ·{" "}
@@ -233,7 +255,7 @@ export default async function CreatorServicesPage({
                       </p>
                     </div>
                   </CardContent>
-                  <CardFooter className="grid gap-2 border-t border-border/70 bg-muted/25 p-3 sm:grid-cols-3">
+                  <CardFooter className="grid gap-2 border-t border-border/70 bg-muted/25 p-3 sm:grid-cols-4">
                     <Button asChild className="h-10 rounded-full sm:col-span-1">
                       <Link href={`/creator/services/${item.service.id}/edit`}>
                         <Pencil className="size-4" />
@@ -252,6 +274,17 @@ export default async function CreatorServicesPage({
                         icon={<Power className="size-4" />}
                       >
                         {item.service.is_active ? "Nonaktifkan" : "Aktifkan"}
+                      </SubmitButton>
+                    </form>
+                    <form action={deleteCreatorServiceAction}>
+                      <input type="hidden" name="serviceId" value={item.service.id} />
+                      <SubmitButton
+                        pendingLabel="Menghapus..."
+                        variant="outline"
+                        className="h-10 w-full rounded-full border-destructive/30 bg-background text-destructive hover:bg-destructive/10"
+                        icon={<Trash2 className="size-4" />}
+                      >
+                        Hapus
                       </SubmitButton>
                     </form>
                   </CardFooter>

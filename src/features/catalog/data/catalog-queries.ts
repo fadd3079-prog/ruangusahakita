@@ -91,6 +91,29 @@ export async function getPublicCreatorDetail(id: string) {
       supabase.from("portfolios").select("*").eq("creator_id", id).is("deleted_at", null),
       getPublicCategories(),
     ]);
+    const serviceIds = (servicesRes.data ?? []).map((service) => service.id);
+    const [tiersRes, mediaRes] = await Promise.all([
+      serviceIds.length > 0
+        ? supabase.from("service_package_tiers").select("*").in("service_package_id", serviceIds).eq("is_active", true)
+        : Promise.resolve({ data: [], error: null }),
+      serviceIds.length > 0
+        ? supabase.from("service_media").select("*").in("service_package_id", serviceIds).is("deleted_at", null).order("sort_order", { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    const tiersByServiceId = new Map<string, { price: number }[]>();
+    const mediaByServiceId = new Map<string, string[]>();
+
+    for (const tier of tiersRes.data ?? []) {
+      const current = tiersByServiceId.get(tier.service_package_id) ?? [];
+      current.push({ price: Number(tier.price) });
+      tiersByServiceId.set(tier.service_package_id, current);
+    }
+
+    for (const media of mediaRes.data ?? []) {
+      const current = mediaByServiceId.get(media.service_package_id) ?? [];
+      current.push(media.image_url);
+      mediaByServiceId.set(media.service_package_id, current);
+    }
 
     const services: PublicServicePackage[] = (servicesRes.data ?? []).map(s => ({
       id: s.id,
@@ -100,8 +123,10 @@ export async function getPublicCreatorDetail(id: string) {
       slug: s.slug,
       shortDescription: s.short_description ?? "",
       description: s.description ?? "",
-      coverImageUrl: s.cover_image_url ?? "",
-      basePrice: Number(s.base_price),
+      coverImageUrl: mediaByServiceId.get(s.id)?.[0] ?? s.cover_image_url ?? "",
+      basePrice: Math.min(
+        ...(tiersByServiceId.get(s.id)?.map((tier) => tier.price) ?? [Number(s.base_price)]),
+      ),
       estimatedDays: s.estimated_days,
       revisionCount: s.revision_count,
       deliverables: s.deliverables ?? [],
@@ -109,6 +134,7 @@ export async function getPublicCreatorDetail(id: string) {
       tags: s.tags ?? [],
       isActive: s.is_active,
       isFeatured: s.is_featured,
+      mediaUrls: mediaByServiceId.get(s.id) ?? [],
     }));
 
     const portfolios: PublicPortfolioItem[] = await Promise.all(
@@ -161,17 +187,20 @@ export async function getPublicServiceDetail(id: string) {
       return null;
     }
 
-    const [creator, categories, tiersRes, addonsRes, portfoliosRes] = await Promise.all([
+    const [creator, categories, tiersRes, addonsRes, portfoliosRes, mediaRes] = await Promise.all([
       getPublicCreatorById(service.creator_id),
       getPublicCategories(),
-      supabase.from("service_package_tiers").select("*").eq("service_package_id", id).eq("is_active", true),
+      supabase.from("service_package_tiers").select("*").eq("service_package_id", id).eq("is_active", true).order("sort_order", { ascending: true }),
       supabase.from("service_addons").select("*").eq("service_package_id", id).eq("is_active", true),
       supabase.from("portfolios").select("*").eq("creator_id", service.creator_id).is("deleted_at", null),
+      supabase.from("service_media").select("*").eq("service_package_id", id).is("deleted_at", null).order("sort_order", { ascending: true }),
     ]);
 
     if (!creator) {
       return null;
     }
+
+    const mediaUrls = (mediaRes.data ?? []).map((media) => media.image_url);
 
     const mappedService: PublicServicePackage = {
       id: service.id,
@@ -181,8 +210,10 @@ export async function getPublicServiceDetail(id: string) {
       slug: service.slug,
       shortDescription: service.short_description ?? "",
       description: service.description ?? "",
-      coverImageUrl: service.cover_image_url ?? "",
-      basePrice: Number(service.base_price),
+      coverImageUrl: mediaUrls[0] ?? service.cover_image_url ?? "",
+      basePrice: Math.min(
+        ...(tiersRes.data?.map((tier) => Number(tier.price)) ?? [Number(service.base_price)]),
+      ),
       estimatedDays: service.estimated_days,
       revisionCount: service.revision_count,
       deliverables: service.deliverables ?? [],
@@ -190,6 +221,7 @@ export async function getPublicServiceDetail(id: string) {
       tags: service.tags ?? [],
       isActive: service.is_active,
       isFeatured: service.is_featured,
+      mediaUrls,
     };
 
     const tiers: PublicServiceTier[] = (tiersRes.data ?? []).map(t => ({
@@ -333,6 +365,30 @@ export async function getPublicCatalogData() {
       isFeatured: item.is_featured,
     }));
     const publicCreatorIds = new Set(publicCreators.map((creator) => creator.id));
+    const serviceIds = (servicesRes.data ?? []).map((item) => item.id);
+    const [tiersRes, mediaRes] = await Promise.all([
+      serviceIds.length > 0
+        ? supabase.from("service_package_tiers").select("*").in("service_package_id", serviceIds).eq("is_active", true)
+        : Promise.resolve({ data: [], error: null }),
+      serviceIds.length > 0
+        ? supabase.from("service_media").select("*").in("service_package_id", serviceIds).is("deleted_at", null).order("sort_order", { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    const pricesByServiceId = new Map<string, number[]>();
+    const mediaByServiceId = new Map<string, string[]>();
+
+    for (const tier of tiersRes.data ?? []) {
+      const current = pricesByServiceId.get(tier.service_package_id) ?? [];
+      current.push(Number(tier.price));
+      pricesByServiceId.set(tier.service_package_id, current);
+    }
+
+    for (const media of mediaRes.data ?? []) {
+      const current = mediaByServiceId.get(media.service_package_id) ?? [];
+      current.push(media.image_url);
+      mediaByServiceId.set(media.service_package_id, current);
+    }
+
     const services: PublicServicePackage[] = servicesRes.data
       .filter((item) => publicCreatorIds.has(item.creator_id))
       .map((item) => ({
@@ -343,8 +399,8 @@ export async function getPublicCatalogData() {
         slug: item.slug,
         shortDescription: item.short_description ?? "",
         description: item.description ?? "",
-        coverImageUrl: item.cover_image_url ?? "",
-        basePrice: Number(item.base_price),
+        coverImageUrl: mediaByServiceId.get(item.id)?.[0] ?? item.cover_image_url ?? "",
+        basePrice: Math.min(...(pricesByServiceId.get(item.id) ?? [Number(item.base_price)])),
         estimatedDays: item.estimated_days,
         revisionCount: item.revision_count,
         deliverables: item.deliverables ?? [],
@@ -352,6 +408,7 @@ export async function getPublicCatalogData() {
         tags: item.tags ?? [],
         isActive: item.is_active,
         isFeatured: item.is_featured,
+        mediaUrls: mediaByServiceId.get(item.id) ?? [],
       }));
     const activeServiceCreatorIds = new Set(
       services.map((service) => service.creatorId),

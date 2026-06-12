@@ -28,11 +28,11 @@ export default async function NewServicePage({ searchParams }: NewServicePagePro
       <CreatorServiceForm
         action={createCreatorServiceAction}
         categories={categories}
-        description="Buat paket jasa digital baru yang jelas dari sisi output, harga, estimasi, dan revisi."
+        description="Buat satu listing layanan dengan paket Basic wajib serta Medium dan Premium opsional."
         error={error}
         errorDetail={detail}
-        submitLabel="Simpan Paket"
-        title="Tambah Paket Layanan"
+        submitLabel="Simpan Layanan"
+        title="Tambah Layanan"
       />
     </PageContainer>
   );

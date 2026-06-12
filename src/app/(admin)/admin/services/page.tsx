@@ -94,7 +94,7 @@ export default async function AdminServicesPage({
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
                   <TableHead>Judul layanan</TableHead>
                   <TableHead>Kreator & kategori</TableHead>
-                  <TableHead>Harga dasar</TableHead>
+                  <TableHead>Harga mulai</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-right">Moderasi</TableHead>
                 </TableRow>

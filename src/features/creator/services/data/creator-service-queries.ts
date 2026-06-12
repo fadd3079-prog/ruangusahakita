@@ -12,17 +12,19 @@ export type CreatorServiceCategory = Pick<
 export type CreatorServicePackage = Tables["service_packages"]["Row"];
 export type CreatorServiceTier = Tables["service_package_tiers"]["Row"];
 export type CreatorServiceAddon = Tables["service_addons"]["Row"];
+export type CreatorServiceMedia = Tables["service_media"]["Row"];
 export type CreatorProfile = Tables["creator_profiles"]["Row"];
 
 export type CreatorServiceItem = {
   addons: readonly CreatorServiceAddon[];
   category: CreatorServiceCategory | null;
+  media: readonly CreatorServiceMedia[];
   service: CreatorServicePackage;
   tiers: readonly CreatorServiceTier[];
 };
 
 export type CreatorServiceEditData = CreatorServiceItem & {
-  primaryTier: CreatorServiceTier | null;
+  tiersByKey: Record<CreatorServiceTier["tier_key"], CreatorServiceTier | null>;
 };
 
 async function getCurrentUserId() {
@@ -71,7 +73,6 @@ export async function getCreatorServiceCategories() {
       .order("sort_order", { ascending: true });
 
     if (error) {
-      console.error("[creator-services] Failed to load service categories", error);
       return [];
     }
 
@@ -82,7 +83,6 @@ export async function getCreatorServiceCategories() {
     return data;
   } catch (error) {
     unstable_rethrow(error);
-    console.error("[creator-services] Failed to load service categories", error);
     return [];
   }
 }
@@ -142,7 +142,14 @@ export async function getCreatorServiceForEdit(serviceId: string) {
 
     return {
       ...item,
-      primaryTier: item.tiers[0] ?? null,
+      tiersByKey: {
+        basic:
+          item.tiers.find((tier) => tier.tier_key === "basic") ??
+          item.tiers[0] ??
+          null,
+        medium: item.tiers.find((tier) => tier.tier_key === "medium") ?? null,
+        premium: item.tiers.find((tier) => tier.tier_key === "premium") ?? null,
+      },
     };
   } catch {
     return null;
@@ -156,7 +163,7 @@ async function enrichServices(services: readonly CreatorServicePackage[]) {
     .map((service) => service.category_id)
     .filter((categoryId): categoryId is string => Boolean(categoryId));
 
-  const [categoriesResult, tiersResult, addonsResult] = await Promise.all([
+  const [categoriesResult, tiersResult, addonsResult, mediaResult] = await Promise.all([
     categoryIds.length > 0
       ? supabase.from("service_categories").select("id, name, slug").in("id", categoryIds)
       : Promise.resolve({ data: [] as CreatorServiceCategory[], error: null }),
@@ -170,6 +177,12 @@ async function enrichServices(services: readonly CreatorServicePackage[]) {
       .select("*")
       .in("service_package_id", serviceIds)
       .order("created_at", { ascending: true }),
+    supabase
+      .from("service_media")
+      .select("*")
+      .in("service_package_id", serviceIds)
+      .is("deleted_at", null)
+      .order("sort_order", { ascending: true }),
   ]);
 
   const categoryById = new Map(
@@ -177,6 +190,7 @@ async function enrichServices(services: readonly CreatorServicePackage[]) {
   );
   const tiersByServiceId = new Map<string, CreatorServiceTier[]>();
   const addonsByServiceId = new Map<string, CreatorServiceAddon[]>();
+  const mediaByServiceId = new Map<string, CreatorServiceMedia[]>();
 
   for (const tier of tiersResult.data ?? []) {
     const current = tiersByServiceId.get(tier.service_package_id) ?? [];
@@ -190,9 +204,16 @@ async function enrichServices(services: readonly CreatorServicePackage[]) {
     addonsByServiceId.set(addon.service_package_id, current);
   }
 
+  for (const media of mediaResult.data ?? []) {
+    const current = mediaByServiceId.get(media.service_package_id) ?? [];
+    current.push(media);
+    mediaByServiceId.set(media.service_package_id, current);
+  }
+
   return services.map((service): CreatorServiceItem => ({
     addons: addonsByServiceId.get(service.id) ?? [],
     category: service.category_id ? categoryById.get(service.category_id) ?? null : null,
+    media: mediaByServiceId.get(service.id) ?? [],
     service,
     tiers: tiersByServiceId.get(service.id) ?? [],
   }));

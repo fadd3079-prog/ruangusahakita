@@ -4,7 +4,7 @@ export type PublicAvailabilityStatus =
   | "busy"
   | "unavailable";
 
-export type PublicServiceTierName = "Basic" | "Standard" | "Premium";
+export type PublicServiceTierName = "Basic" | "Medium" | "Premium";
 
 export type PublicCreatorProfile = {
   readonly availabilityStatus: PublicAvailabilityStatus;
@@ -47,6 +47,7 @@ export type PublicServicePackage = {
   readonly id: string;
   readonly isActive: boolean;
   readonly isFeatured: boolean;
+  readonly mediaUrls: readonly string[];
   readonly requirements: readonly string[];
   readonly revisionCount: number;
   readonly shortDescription: string;
