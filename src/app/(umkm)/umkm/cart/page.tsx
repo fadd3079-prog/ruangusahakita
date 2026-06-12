@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BriefcaseBusiness, CheckCircle2, FileText, Sparkles, Trash2 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Button } from "@/components/ui/button";
 import { clearCart } from "@/features/cart/actions/cart-actions";
 import { CartGuidanceCards } from "@/features/cart/components/cart-guidance-cards";
@@ -123,10 +124,14 @@ export default async function UmkmCartPage({ searchParams }: UmkmCartPageProps) 
             <div className="space-y-6">
               <div className="flex justify-end">
                 <form action={clearCart}>
-                  <Button type="submit" variant="outline" className="bg-background">
-                    <Trash2 className="size-4" />
+                  <SubmitButton
+                    pendingLabel="Mengosongkan..."
+                    variant="outline"
+                    className="bg-background"
+                    icon={<Trash2 className="size-4" aria-hidden="true" />}
+                  >
                     Kosongkan Keranjang
-                  </Button>
+                  </SubmitButton>
                 </form>
               </div>
               <CartServiceSummary items={cart.items} />

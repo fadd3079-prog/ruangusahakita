@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Button } from "@/components/ui/button";
 import { CampaignBriefForm } from "@/features/briefs/components/campaign-brief-form";
 import { CheckoutGuidanceCard } from "@/features/checkout/components/checkout-guidance-card";
@@ -158,14 +159,14 @@ function CreateOrderPanel({ hasBrief }: { hasBrief: boolean }) {
       </div>
 
       <form action={createOrderFromCheckout} className="mt-5">
-        <Button
-          type="submit"
+        <SubmitButton
+          pendingLabel="Memproses..."
           disabled={!hasBrief}
           className="w-full bg-white text-primary hover:bg-white/90"
+          icon={<ArrowRight className="size-4" aria-hidden="true" />}
         >
           Buat Pesanan
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </Button>
+        </SubmitButton>
       </form>
 
       {!hasBrief ? (

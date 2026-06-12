@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Bell, Image as ImageIcon, Save, Shield, Trash2, Upload, User } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -191,19 +191,26 @@ export default async function CreatorSettingsPage({
                     className="h-11"
                     required
                   />
-                  <Button type="submit" className="rounded-full">
-                    <Upload className="size-4" />
+                  <SubmitButton
+                    pendingLabel="Mengunggah..."
+                    className="rounded-full"
+                    icon={<Upload className="size-4" />}
+                  >
                     Unggah Avatar
-                  </Button>
+                  </SubmitButton>
                 </form>
               </div>
               {avatarUrl ? (
                 <form action={deleteCreatorAvatarAction} className="mt-4 flex justify-end">
                   <input type="hidden" name="redirectTo" value="/creator/settings" />
-                  <Button type="submit" variant="outline" className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive">
-                    <Trash2 className="size-4" />
+                  <SubmitButton
+                    pendingLabel="Menghapus..."
+                    variant="outline"
+                    className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    icon={<Trash2 className="size-4" />}
+                  >
                     Hapus Avatar
-                  </Button>
+                  </SubmitButton>
                 </form>
               ) : null}
             </section>
@@ -248,18 +255,25 @@ export default async function CreatorSettingsPage({
                       className="h-11"
                       required
                     />
-                    <Button type="submit" className="rounded-full">
-                      <Upload className="size-4" />
+                    <SubmitButton
+                      pendingLabel="Mengunggah..."
+                      className="rounded-full"
+                      icon={<Upload className="size-4" />}
+                    >
                       Unggah Banner
-                    </Button>
+                    </SubmitButton>
                   </form>
                   {bannerUrl ? (
                     <form action={deleteCreatorBannerAction}>
                       <input type="hidden" name="redirectTo" value="/creator/settings" />
-                      <Button type="submit" variant="outline" className="w-full rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive">
-                        <Trash2 className="size-4" />
+                      <SubmitButton
+                        pendingLabel="Menghapus..."
+                        variant="outline"
+                        className="w-full rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        icon={<Trash2 className="size-4" />}
+                      >
                         Hapus Banner
-                      </Button>
+                      </SubmitButton>
                     </form>
                   ) : null}
                 </div>
@@ -419,10 +433,12 @@ export default async function CreatorSettingsPage({
                     <UrlField id="portfolioUrl" label="Portofolio eksternal" value={profile?.portfolio_url} />
                   </div>
 
-                  <Button type="submit">
-                    <Save className="mr-2 size-4" />
+                  <SubmitButton
+                    pendingLabel="Menyimpan..."
+                    icon={<Save className="mr-2 size-4" />}
+                  >
                     Simpan Profil
-                  </Button>
+                  </SubmitButton>
                 </div>
               </section>
             </form>

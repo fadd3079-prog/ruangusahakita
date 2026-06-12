@@ -1,7 +1,7 @@
 import { Plus, Save, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/common/submit-button";
 import {
   Card,
   CardContent,
@@ -79,10 +79,13 @@ export function CreatorServiceAddonManager({
               <option value="false">Tidak aktif</option>
             </select>
           </div>
-          <Button type="submit" className="h-10 w-full rounded-full">
-            <Plus className="size-4" />
+          <SubmitButton
+            pendingLabel="Menambahkan..."
+            className="h-10 w-full rounded-full"
+            icon={<Plus className="size-4" />}
+          >
             Tambah Add-on
-          </Button>
+          </SubmitButton>
         </form>
 
         {addons.length > 0 ? (
@@ -159,19 +162,22 @@ export function CreatorServiceAddonManager({
                   </select>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <Button type="submit" className="h-10 rounded-full">
-                    <Save className="size-4" />
+                  <SubmitButton
+                    pendingLabel="Memperbarui..."
+                    className="h-10 rounded-full"
+                    icon={<Save className="size-4" />}
+                  >
                     Simpan
-                  </Button>
-                  <Button
-                    type="submit"
+                  </SubmitButton>
+                  <SubmitButton
+                    pendingLabel="Menghapus..."
                     variant="outline"
                     formAction={deleteCreatorServiceAddonAction}
                     className="h-10 rounded-full border-destructive/30 bg-background text-destructive hover:bg-destructive/10"
+                    icon={<Trash2 className="size-4" />}
                   >
-                    <Trash2 className="size-4" />
                     Hapus
-                  </Button>
+                  </SubmitButton>
                 </div>
               </form>
             ))}

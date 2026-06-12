@@ -5,9 +5,9 @@ import { ArrowRight, CheckCircle2, ListChecks, PlusCircle } from "lucide-react";
 import { PortfolioCard } from "@/components/cards/portfolio-card";
 import { ReviewCard } from "@/components/cards/review-card";
 import { SectionHeading } from "@/components/common/section-heading";
+import { SubmitButton } from "@/components/common/submit-button";
 import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { addServiceToCart } from "@/features/cart/actions/cart-actions";
 import { ServiceDetailHeader } from "@/features/services/components/service-detail-header";
 import { ServiceTierOptions } from "@/features/services/components/service-tier-options";
@@ -224,10 +224,13 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   <input type="hidden" name="tierId" value={primaryTier.id} />
                 ) : null}
                 <input type="hidden" name="redirectTo" value="/umkm/cart" />
-                <input type="hidden" name="debug_source" value="BOTTOM_BUTTON" />
-                <Button type="submit" size="lg" className="h-11 w-full rounded-full px-5">
+                <SubmitButton
+                  pendingLabel="Menyimpan..."
+                  size="lg"
+                  className="h-11 w-full rounded-full px-5"
+                >
                   Tambah ke Keranjang
-                </Button>
+                </SubmitButton>
               </form>
               <form action={addServiceToCart}>
                 <input type="hidden" name="serviceId" value={service.id} />
@@ -235,16 +238,15 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   <input type="hidden" name="tierId" value={primaryTier.id} />
                 ) : null}
                 <input type="hidden" name="redirectTo" value="/umkm/checkout" />
-                <input type="hidden" name="debug_source" value="BOTTOM_BUTTON" />
-                <Button
-                  type="submit"
+                <SubmitButton
+                  pendingLabel="Memproses..."
                   size="lg"
                   variant="outline"
                   className="h-11 w-full rounded-full px-5"
+                  icon={<ArrowRight aria-hidden="true" />}
                 >
                   Pesan Sekarang
-                  <ArrowRight aria-hidden="true" />
-                </Button>
+                </SubmitButton>
               </form>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { Plus, Power, Save } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/common/submit-button";
 import {
   Card,
   CardContent,
@@ -50,10 +50,13 @@ export function CreatorServiceTierManager({
             defaultDeliverables=""
             defaultSortOrder={String(tiers.length + 1)}
           />
-          <Button type="submit" className="h-10 w-full rounded-full">
-            <Plus className="size-4" />
+          <SubmitButton
+            pendingLabel="Menambahkan..."
+            className="h-10 w-full rounded-full"
+            icon={<Plus className="size-4" />}
+          >
             Tambah Tier
-          </Button>
+          </SubmitButton>
         </form>
 
         {tiers.length > 0 ? (
@@ -101,19 +104,22 @@ export function CreatorServiceTierManager({
                 />
 
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <Button type="submit" className="h-10 rounded-full">
-                    <Save className="size-4" />
+                  <SubmitButton
+                    pendingLabel="Memperbarui..."
+                    className="h-10 rounded-full"
+                    icon={<Save className="size-4" />}
+                  >
                     Simpan
-                  </Button>
-                  <Button
-                    type="submit"
+                  </SubmitButton>
+                  <SubmitButton
+                    pendingLabel="Memproses..."
                     variant="outline"
                     formAction={toggleCreatorServiceTierStatusAction}
                     className="h-10 rounded-full bg-background"
+                    icon={<Power className="size-4" />}
                   >
-                    <Power className="size-4" />
                     {tier.is_active ? "Nonaktifkan" : "Aktifkan"}
-                  </Button>
+                  </SubmitButton>
                 </div>
               </form>
             ))}

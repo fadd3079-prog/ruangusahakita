@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -229,10 +230,14 @@ function PortfolioEditor({
 
           <form action={deleteCreatorPortfolioAction}>
             <input type="hidden" name="portfolioId" value={item.id} />
-            <Button type="submit" variant="outline" className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive">
-              <Trash2 className="size-4" />
+            <SubmitButton
+              pendingLabel="Menghapus..."
+              variant="outline"
+              className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+              icon={<Trash2 className="size-4" />}
+            >
               Hapus dari portofolio aktif
-            </Button>
+            </SubmitButton>
           </form>
         </div>
       </div>
@@ -325,10 +330,13 @@ function PortfolioForm({
         </div>
       </div>
 
-      <Button type="submit" className="rounded-full">
-        {item ? <Save className="size-4" /> : <Upload className="size-4" />}
+      <SubmitButton
+        pendingLabel={item ? "Menyimpan..." : "Mengunggah..."}
+        className="rounded-full"
+        icon={item ? <Save className="size-4" /> : <Upload className="size-4" />}
+      >
         {submitLabel}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

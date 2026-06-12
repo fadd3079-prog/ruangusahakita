@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, FileText, Info, ReceiptText, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { markSandboxPaymentAsPaid } from "@/features/payments/actions/payment-actions";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
@@ -127,9 +128,13 @@ export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
         <div className="mt-5 grid gap-2">
           <form action={markSandboxPaymentAsPaid}>
             <input type="hidden" name="paymentId" value={detail.payment.id} />
-            <Button type="submit" disabled={!canPay} className="h-11 w-full">
+            <SubmitButton
+              pendingLabel="Memproses..."
+              disabled={!canPay}
+              className="h-11 w-full"
+            >
               Tandai Pembayaran Berhasil
-            </Button>
+            </SubmitButton>
           </form>
           <Button asChild variant="outline" className="h-11 w-full">
             <Link href={`/umkm/orders/${detail.order.id}`}>

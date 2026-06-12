@@ -33,7 +33,7 @@ export function CatalogHero({
   ] as const;
 
   return (
-    <section className="border-b border-border/70 bg-background">
+    <section className="border-b border-border/70 bg-[linear-gradient(180deg,var(--background),var(--surface-soft))]">
       <PageContainer className="grid gap-8 py-12 sm:py-14 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:py-16">
         <div className="max-w-4xl">
           <p className="text-sm font-semibold text-primary">Katalog Kreator</p>
@@ -45,7 +45,7 @@ export function CatalogHero({
             dan ketersediaan.
           </p>
         </div>
-        <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+        <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
             <div className="flex items-center gap-3">
               <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">

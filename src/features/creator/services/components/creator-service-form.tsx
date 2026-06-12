@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, Image as ImageIcon, Info, Save } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -476,15 +477,15 @@ export function CreatorServiceForm({
                 Pastikan harga, output, estimasi, dan revisi sudah sesuai sebelum
                 layanan ditampilkan kepada UMKM.
               </p>
-              <Button
-                type="submit"
+              <SubmitButton
+                pendingLabel="Menyimpan..."
                 form={formId}
                 disabled={!hasCategories}
                 className="h-11 w-full"
+                icon={<Save className="size-4" />}
               >
-                <Save className="size-4" />
                 {submitLabel}
-              </Button>
+              </SubmitButton>
               <Button asChild variant="outline" className="h-11 w-full bg-background">
                 <Link href="/creator/services">Batal</Link>
               </Button>

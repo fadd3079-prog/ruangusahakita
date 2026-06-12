@@ -3,10 +3,9 @@
 import { useMemo, useState } from "react";
 import {
   ClipboardList,
+  ChevronDown,
   FileCheck2,
   ListChecks,
-  PanelLeftClose,
-  PanelLeftOpen,
   RotateCcw,
   SlidersHorizontal,
   Sparkles,
@@ -188,7 +187,7 @@ export function CatalogFilter({
   const [availability, setAvailability] =
     useState<AvailabilityFilterValue>("all");
   const [sort, setSort] = useState<CatalogSortValue>("relevant");
-  const [isFilterCollapsed, setIsFilterCollapsed] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const filterState: CatalogFilterState = {
     availability,
@@ -282,64 +281,70 @@ export function CatalogFilter({
   }
 
   return (
-    <div
-      className={cn(
-        "grid gap-6 lg:items-start",
-        isFilterCollapsed
-          ? "lg:grid-cols-[48px_minmax(0,1fr)]"
-          : "lg:grid-cols-[248px_minmax(0,1fr)]",
-      )}
-    >
-      <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div
-            className={cn(
-              "flex items-center gap-2 transition-opacity duration-200",
-              isFilterCollapsed ? "sr-only opacity-0" : "opacity-100",
-            )}
-          >
-            <SlidersHorizontal className="size-4 text-primary" aria-hidden="true" />
-            <p className="text-sm font-semibold text-foreground">Filter</p>
+    <div className="space-y-6">
+      <section className="sticky top-[4rem] z-30 rounded-2xl border border-border/80 bg-background/92 p-3 shadow-[var(--shadow-soft)] backdrop-blur-xl">
+        <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-end">
+          <div className="grid gap-3 lg:grid-cols-[minmax(260px,1.2fr)_repeat(3,minmax(150px,0.72fr))] lg:items-end">
+            <CatalogSearch
+              value={query}
+              onChange={setQuery}
+              labelClassName="sr-only"
+            />
+            <FilterSelect
+              label="Kategori"
+              value={categoryId}
+              onChange={setCategoryId}
+              options={[
+                { value: "all", label: "Semua kategori" },
+                ...categories.map((category) => ({
+                  value: category.id,
+                  label: category.name,
+                })),
+              ]}
+            />
+            <FilterSelect
+              label="Lokasi"
+              value={location}
+              onChange={setLocation}
+              options={[
+                { value: "all", label: "Semua lokasi" },
+                ...locations.map((item) => ({ value: item, label: item })),
+              ]}
+            />
+            <CatalogSort value={sort} onChange={setSort} />
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsFilterCollapsed((currentValue) => !currentValue)}
-            aria-label={isFilterCollapsed ? "Perluas filter" : "Ciutkan filter"}
-            className="h-8 w-8 shrink-0"
-          >
-            {isFilterCollapsed ? (
-              <PanelLeftOpen aria-hidden="true" className="size-4" />
-            ) : (
-              <PanelLeftClose aria-hidden="true" className="size-4" />
-            )}
-          </Button>
-        </div>
-        {!isFilterCollapsed ? (
-          <div>{renderFilterPanel()}</div>
-        ) : null}
-      </aside>
 
-      <div className="min-w-0 space-y-6">
-        <section className="marketplace-card flex flex-col gap-4 p-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 items-center gap-3">
-            <div className="flex-1 lg:max-w-md">
-              <CatalogSearch
-                value={query}
-                onChange={setQuery}
-                labelClassName="sr-only"
+          <div className="flex flex-wrap items-center justify-between gap-2 xl:justify-end">
+            <p className="text-sm font-medium text-muted-foreground">
+              {filteredItems.length} kreator
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                setShowAdvancedFilters((currentValue) => !currentValue)
+              }
+              className="h-10 rounded-full bg-card"
+            >
+              <SlidersHorizontal aria-hidden="true" className="size-4" />
+              Filter detail
+              <ChevronDown
+                aria-hidden="true"
+                className={cn(
+                  "size-4 transition-transform",
+                  showAdvancedFilters && "rotate-180",
+                )}
               />
-            </div>
+            </Button>
             <Sheet>
               <SheetTrigger asChild>
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 lg:hidden"
+                  className="h-10 rounded-full bg-card lg:hidden"
                 >
                   <SlidersHorizontal aria-hidden="true" />
-                  Filter
+                  Semua filter
                 </Button>
               </SheetTrigger>
               <SheetContent
@@ -356,13 +361,6 @@ export function CatalogFilter({
                 <div className="p-5">{renderFilterPanel()}</div>
               </SheetContent>
             </Sheet>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <p className="hidden text-sm text-muted-foreground sm:block">
-              {filteredItems.length} kreator ditemukan
-            </p>
-            <CatalogSort value={sort} onChange={setSort} labelClassName="sr-only" />
             <Button
               type="button"
               variant="ghost"
@@ -370,10 +368,47 @@ export function CatalogFilter({
               onClick={resetFilters}
               disabled={!hasActiveFilter}
               title="Reset filter"
-              className="h-11 w-11"
+              className="h-10 w-10 rounded-full"
             >
               <RotateCcw aria-hidden="true" className="size-4" />
             </Button>
+          </div>
+        </div>
+
+        {showAdvancedFilters ? (
+          <div className="mt-3 hidden border-t border-border/70 pt-3 lg:block">
+            {renderFilterPanel()}
+          </div>
+        ) : null}
+      </section>
+
+      <div className="min-w-0 space-y-6">
+        <section className="marketplace-card flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Sparkles className="size-4" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold tracking-tight text-foreground">
+                Pilih kreator berdasarkan kebutuhan campaign
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Bandingkan niche, portofolio, output paket jasa, estimasi, dan
+                revisi sebelum masuk checkout brief campaign.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {hasActiveFilter ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={resetFilters}
+                className="h-10 rounded-full bg-background"
+              >
+                Reset hasil
+              </Button>
+            ) : null}
           </div>
         </section>
 
@@ -418,7 +453,7 @@ function FilterPanel({
   onRatingChange,
 }: FilterPanelProps) {
   return (
-    <div className="marketplace-card grid gap-4 p-4">
+    <div className="grid gap-3 lg:grid-cols-5">
       <FilterSelect
         label="Kategori layanan"
         value={filterState.categoryId}
@@ -489,7 +524,7 @@ function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
         {label}
       </span>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-10 w-full rounded-xl bg-background">
+        <SelectTrigger className="h-10 w-full rounded-xl bg-card">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

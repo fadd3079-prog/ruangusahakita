@@ -29,15 +29,15 @@ export async function HomeStatsSection() {
   ] as const;
 
   return (
-    <section className="border-b border-border/70 bg-muted/30 py-8">
+    <section className="border-b border-border/70 bg-[linear-gradient(180deg,var(--background),var(--surface-soft))] py-8">
       <PageContainer>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <article
               key={stat.label}
-              className="rounded-lg border border-border/70 bg-card px-5 py-5 shadow-xs"
+              className="rounded-2xl border border-border/70 bg-card px-5 py-5 shadow-[var(--shadow-soft)]"
             >
-              <p className="text-3xl font-semibold tracking-tight text-foreground">
+              <p className="text-3xl font-semibold tracking-tight text-brand-navy">
                 {stat.value}
               </p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">

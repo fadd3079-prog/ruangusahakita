@@ -3,9 +3,9 @@ import Link from "next/link";
 import { ArrowRight, ExternalLink, FileWarning, Search } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -226,10 +226,14 @@ function ComplaintModerationForm({
           className="h-9 bg-background"
         />
       </div>
-      <Button type="submit" size="sm" className="ml-auto h-8 rounded-full">
+      <SubmitButton
+        pendingLabel="Memproses..."
+        size="sm"
+        className="ml-auto h-8 rounded-full"
+        icon={<ArrowRight className="ml-1 size-3" />}
+      >
         Simpan Status
-        <ArrowRight className="ml-1 size-3" />
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

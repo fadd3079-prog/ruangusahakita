@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -330,22 +331,26 @@ function CreatorLifecyclePanel({ data }: { data: CreatorOrderDetail }) {
       <div className="mt-5 grid gap-2">
         <form action={acceptCreatorOrder}>
           <input type="hidden" name="orderId" value={data.order.id} />
-          <Button type="submit" disabled={!canAccept} className="h-11 w-full">
-            <CheckCircle2 className="size-4" aria-hidden="true" />
+          <SubmitButton
+            pendingLabel="Memproses..."
+            disabled={!canAccept}
+            className="h-11 w-full"
+            icon={<CheckCircle2 className="size-4" aria-hidden="true" />}
+          >
             Terima Brief
-          </Button>
+          </SubmitButton>
         </form>
         <form action={startCreatorOrder}>
           <input type="hidden" name="orderId" value={data.order.id} />
-          <Button
-            type="submit"
+          <SubmitButton
+            pendingLabel="Memproses..."
             disabled={!canStart}
             variant="outline"
             className="h-11 w-full"
+            icon={<Play className="size-4" aria-hidden="true" />}
           >
-            <Play className="size-4" aria-hidden="true" />
             Mulai Pengerjaan
-          </Button>
+          </SubmitButton>
         </form>
       </div>
 

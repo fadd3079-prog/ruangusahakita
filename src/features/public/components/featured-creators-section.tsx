@@ -11,7 +11,7 @@ export async function FeaturedCreatorsSection() {
   const featuredCreators = await getPublicFeaturedCreators();
 
   return (
-    <section className="bg-muted/30 py-16 sm:py-20 lg:py-24">
+    <section className="section-y bg-muted/30">
       <PageContainer>
         <SectionHeading
           eyebrow="Kreator pilihan"
@@ -28,7 +28,7 @@ export async function FeaturedCreatorsSection() {
           }
         />
         {featuredCreators.length > 0 ? (
-          <div className="mt-10 grid auto-rows-fr gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-10 grid auto-rows-fr gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {featuredCreators.map((creator) => (
               <CreatorCard key={creator.id} creator={creator} />
             ))}

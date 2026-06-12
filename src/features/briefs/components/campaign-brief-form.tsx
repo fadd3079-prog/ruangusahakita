@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { FileUp, Image as ImageIcon, Info, Save, Sparkles } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createOrUpdateCampaignBrief } from "@/features/cart/actions/cart-actions";
@@ -168,10 +168,14 @@ export function CampaignBriefForm({
         ) : null}
 
         <div className="flex justify-end">
-          <Button type="submit" size="lg" className="h-11 px-5">
+          <SubmitButton
+            pendingLabel="Menyimpan..."
+            size="lg"
+            className="h-11 px-5"
+            icon={<Save aria-hidden="true" />}
+          >
             Simpan Brief Campaign
-            <Save aria-hidden="true" />
-          </Button>
+          </SubmitButton>
         </div>
       </form>
     </section>

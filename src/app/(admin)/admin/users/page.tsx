@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { CheckCircle2, Search, UserCircle } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -203,9 +203,14 @@ function StatusForm({
     <form action={updateAdminUserStatusAction}>
       <input type="hidden" name="profileId" value={profileId} />
       <input type="hidden" name="accountStatus" value={status} />
-      <Button type="submit" variant={variant} size="sm" className="h-8 rounded-full">
+      <SubmitButton
+        pendingLabel="Memproses..."
+        variant={variant}
+        size="sm"
+        className="h-8 rounded-full"
+      >
         {label}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

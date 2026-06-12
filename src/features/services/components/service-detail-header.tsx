@@ -3,8 +3,8 @@ import { Clock, FileCheck2, Image as ImageIcon, Layers3, MapPin, Star } from "lu
 
 import { PriceText } from "@/components/common/price-text";
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type {
   PublicCreatorProfile,
   PublicServiceCategory,
@@ -100,18 +100,20 @@ export function ServiceDetailHeader({
             <form action={addServiceToCart}>
               <input type="hidden" name="serviceId" value={service.id} />
               <input type="hidden" name="redirectTo" value="/umkm/cart" />
-              <input type="hidden" name="debug_source" value="TOP_BUTTON" />
-              <Button type="submit" className="h-11 w-full rounded-full">
+              <SubmitButton pendingLabel="Menyimpan..." className="h-11 w-full rounded-full">
                 Tambah ke Keranjang
-              </Button>
+              </SubmitButton>
             </form>
             <form action={addServiceToCart}>
               <input type="hidden" name="serviceId" value={service.id} />
               <input type="hidden" name="redirectTo" value="/umkm/checkout" />
-              <input type="hidden" name="debug_source" value="TOP_BUTTON" />
-              <Button type="submit" variant="outline" className="h-11 w-full rounded-full">
+              <SubmitButton
+                pendingLabel="Memproses..."
+                variant="outline"
+                className="h-11 w-full rounded-full"
+              >
                 Pesan Sekarang
-              </Button>
+              </SubmitButton>
             </form>
           </div>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">

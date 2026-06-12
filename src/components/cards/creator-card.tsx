@@ -51,9 +51,9 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
     .slice(0, 2);
 
   return (
-    <Card className="marketplace-card h-full overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
+    <Card className="marketplace-card group flex h-full flex-col overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
       <div
-        className="relative aspect-[16/9] bg-muted/50 bg-cover bg-center"
+        className="relative aspect-[16/9] shrink-0 bg-muted/50 bg-cover bg-center"
         style={
           visualUrl ? { backgroundImage: `url("${visualUrl}")` } : undefined
         }
@@ -119,7 +119,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
         </div>
 
         {primaryService ? (
-          <div className="rounded-2xl border border-border/70 bg-muted/35 p-3">
+          <div className="rounded-2xl border border-border/70 bg-muted/30 p-3">
             <div className="flex items-start gap-2">
               <Layers3
                 className="mt-0.5 size-4 shrink-0 text-primary"
@@ -159,7 +159,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
       <CardFooter
         className={
           primaryService
-            ? "mt-auto grid gap-2 border-t border-border/70 bg-muted/25 p-3 sm:grid-cols-2"
+            ? "mt-auto grid gap-2 border-t border-border/70 bg-muted/25 p-3"
             : "mt-auto border-t border-border/70 bg-muted/25 p-3"
         }
       >

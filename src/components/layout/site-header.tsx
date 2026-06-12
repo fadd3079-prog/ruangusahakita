@@ -23,6 +23,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { AppLogo } from "@/components/common/app-logo";
+import { SubmitButton } from "@/components/common/submit-button";
 import { PageContainer } from "@/components/layout/page-container";
 import { getCurrentAccountSummary } from "@/lib/auth/account";
 import { logoutAction } from "@/lib/auth/actions";
@@ -38,7 +39,7 @@ export async function SiteHeader() {
   const account = await getCurrentAccountSummary();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
+    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/88 backdrop-blur-xl supports-[backdrop-filter]:bg-background/78">
       <PageContainer className="flex h-16 items-center justify-between py-0">
         <AppLogo priority />
 
@@ -50,7 +51,7 @@ export async function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/75 hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {item.title}
             </Link>
@@ -96,10 +97,15 @@ export async function SiteHeader() {
                 <DropdownMenuSeparator />
                 <form action={logoutAction}>
                   <DropdownMenuItem asChild>
-                    <button type="submit" className="w-full">
-                      <LogOut className="size-4" aria-hidden="true" />
+                    <SubmitButton
+                      pendingLabel="Keluar..."
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto w-full justify-start rounded-md px-1.5 py-1 text-sm font-normal"
+                      icon={<LogOut className="size-4" aria-hidden="true" />}
+                    >
                       Keluar / ganti akun
-                    </button>
+                    </SubmitButton>
                   </DropdownMenuItem>
                 </form>
               </DropdownMenuContent>
@@ -187,10 +193,14 @@ export async function SiteHeader() {
                       </Badge>
                     </div>
                     <form action={logoutAction}>
-                      <Button type="submit" variant="outline" className="w-full">
-                        <UserRound className="size-4" aria-hidden="true" />
+                      <SubmitButton
+                        pendingLabel="Keluar..."
+                        variant="outline"
+                        className="w-full"
+                        icon={<UserRound className="size-4" aria-hidden="true" />}
+                      >
                         Keluar / ganti akun
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 ) : (

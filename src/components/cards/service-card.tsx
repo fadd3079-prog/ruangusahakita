@@ -30,9 +30,9 @@ export function ServiceCard({
   const visualUrl = service.coverImageUrl;
 
   return (
-    <Card className="marketplace-card h-full overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
+    <Card className="marketplace-card group flex h-full flex-col overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
       <div
-        className="grid aspect-[16/9] place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
+        className="grid aspect-[16/9] shrink-0 place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
         style={visualUrl ? { backgroundImage: `url("${visualUrl}")` } : undefined}
       >
         {visualUrl ? null : <ImageIcon className="size-10 opacity-40" aria-hidden="true" />}

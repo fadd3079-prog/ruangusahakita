@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -244,14 +245,14 @@ export default async function CreatorServicesPage({
                     </Button>
                     <form action={toggleCreatorServiceStatusAction}>
                       <input type="hidden" name="serviceId" value={item.service.id} />
-                      <Button
-                        type="submit"
+                      <SubmitButton
+                        pendingLabel="Memproses..."
                         variant="outline"
                         className="h-10 w-full rounded-full bg-background"
+                        icon={<Power className="size-4" />}
                       >
-                        <Power className="size-4" />
                         {item.service.is_active ? "Nonaktifkan" : "Aktifkan"}
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </CardFooter>
                 </Card>

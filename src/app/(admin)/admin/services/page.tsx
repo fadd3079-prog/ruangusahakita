@@ -3,9 +3,9 @@ import Link from "next/link";
 import { BriefcaseBusiness, Search } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -197,9 +197,14 @@ function ServiceModerationForm({
       <input type="hidden" name="serviceId" value={service.id} />
       <input type="hidden" name="isActive" value={String(nextActive)} />
       <input type="hidden" name="isFeatured" value={String(nextFeatured)} />
-      <Button type="submit" variant={variant} size="sm" className="h-8 rounded-full">
+      <SubmitButton
+        pendingLabel="Memproses..."
+        variant={variant}
+        size="sm"
+        className="h-8 rounded-full"
+      >
         {label}
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

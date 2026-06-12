@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/common/submit-button";
 import { removeCartItem } from "@/features/cart/actions/cart-actions";
 import { formatCurrency } from "@/lib/formatters/currency";
 
@@ -150,14 +150,14 @@ export function CartServiceSummary({ items }: CartServiceSummaryProps) {
                       </h4>
                       <form action={removeCartItem}>
                         <input type="hidden" name="itemId" value={item.id} />
-                        <Button
-                          type="submit"
+                        <SubmitButton
+                          pendingLabel="Menghapus..."
                           variant="outline"
                           size="sm"
                           className="h-8 bg-background"
                         >
                           Hapus
-                        </Button>
+                        </SubmitButton>
                       </form>
                     </div>
                     {item.addons.length > 0 ? (
