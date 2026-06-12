@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  buildCheckoutPath,
+  parseCheckoutSelection,
+} from "@/features/checkout/lib/checkout-source";
 
 const orderCreationErrorCodes = [
   "addon_unavailable",
@@ -21,16 +25,42 @@ function getOrderCreationErrorCode(message: string): OrderCreationErrorCode | "o
   return orderCreationErrorCodes.find((code) => message.includes(code)) ?? "order_create";
 }
 
-export async function createOrderFromCheckout() {
+function getText(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getTextList(formData: FormData, key: string) {
+  return formData
+    .getAll(key)
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+export async function createOrderFromCheckout(formData: FormData) {
+  const selection = parseCheckoutSelection({
+    addonIds: getTextList(formData, "addonIds"),
+    serviceId: getText(formData, "serviceId"),
+    source: getText(formData, "checkoutSource"),
+    tierId: getText(formData, "tierId"),
+  });
   const supabase = await createClient();
-  const { data: orderId, error } = await supabase.rpc(
-    "create_order_from_current_cart",
-  );
+  const { data: orderId, error } =
+    selection.source === "direct" && selection.tierId
+      ? await supabase.rpc("create_order_from_direct_selection", {
+          p_addon_ids: [...selection.addonIds],
+          p_service_id: selection.serviceId,
+          p_tier_id: selection.tierId,
+        })
+      : selection.source === "direct"
+        ? { data: null, error: { message: "service_unavailable" } }
+        : await supabase.rpc("create_order_from_current_cart");
 
   if (error || !orderId) {
     const code = getOrderCreationErrorCode(error?.message ?? "");
 
-    if (code === "cart_empty") {
+    if (selection.source === "cart" && code === "cart_empty") {
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -61,7 +91,7 @@ export async function createOrderFromCheckout() {
       }
     }
 
-    redirect(`/umkm/checkout?error=${code}`);
+    redirect(buildCheckoutPath(selection, { error: code }));
   }
 
   revalidatePath("/umkm/cart");

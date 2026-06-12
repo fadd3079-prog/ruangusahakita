@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -113,6 +114,7 @@ export type CreatorDashboardOverview = {
 
 export type AdminDashboardOverview = {
   activeComplaints: number;
+  dataStatus: DashboardDataStatus;
   orderStats: AdminOrderStats;
   paymentStats: AdminPaymentStats;
   recentComplaints: readonly DashboardComplaintSummary[];
@@ -120,7 +122,14 @@ export type AdminDashboardOverview = {
   recentPayments: readonly DashboardPaymentSummary[];
   serviceStats: AdminServiceStats;
   userStats: AdminUserStats;
+  warnings: readonly string[];
 };
+
+export type DashboardDataStatus =
+  | "available"
+  | "demo"
+  | "partial"
+  | "unavailable";
 
 export type AdminUserStats = {
   totalAdmins: number;
@@ -232,21 +241,36 @@ const emptyAdminPaymentStats: AdminPaymentStats = {
   totalPaidAmount: 0,
 };
 
-const emptyAdminOverview: AdminDashboardOverview = {
-  activeComplaints: 0,
-  orderStats: emptyAdminOrderStats,
-  paymentStats: emptyAdminPaymentStats,
-  recentComplaints: [],
-  recentOrders: [],
-  recentPayments: [],
-  serviceStats: emptyAdminServiceStats,
-  userStats: emptyAdminUserStats,
-};
+function createEmptyAdminOverview(
+  dataStatus: DashboardDataStatus,
+  warnings: readonly string[],
+): AdminDashboardOverview {
+  return {
+    activeComplaints: 0,
+    dataStatus,
+    orderStats: emptyAdminOrderStats,
+    paymentStats: emptyAdminPaymentStats,
+    recentComplaints: [],
+    recentOrders: [],
+    recentPayments: [],
+    serviceStats: emptyAdminServiceStats,
+    userStats: emptyAdminUserStats,
+    warnings,
+  };
+}
+
+const emptyAdminOverview = createEmptyAdminOverview("unavailable", [
+  "Data admin belum dapat dimuat.",
+]);
 
 async function withDashboardClient<T>(
   fallback: T,
   callback: (supabase: DashboardClient) => Promise<T>,
 ) {
+  if (isDemoMode()) {
+    return fallback;
+  }
+
   try {
     const supabase = await createClient();
     return await callback(supabase);
@@ -871,36 +895,65 @@ export async function getAdminPaymentStats() {
 }
 
 export async function getAdminDashboardOverview() {
+  if (isDemoMode()) {
+    return createEmptyAdminOverview("demo", [
+      "Mode demo aktif. Ringkasan ditampilkan tanpa membaca Supabase.",
+    ]);
+  }
+
   return withDashboardClient<AdminDashboardOverview>(
     emptyAdminOverview,
     async (supabase) => {
       if (!(await isCurrentAdmin(supabase))) {
-        return emptyAdminOverview;
+        return createEmptyAdminOverview("unavailable", [
+          "Sesi admin aktif tidak dapat diverifikasi.",
+        ]);
       }
 
-      const [
-        userStats,
-        serviceStats,
-        orderStats,
-        paymentStats,
-        recentOrdersRaw,
-        recentPayments,
-        recentComplaints,
-        activeComplaints,
-      ] = await Promise.all([
-        getAdminUserStats(),
-        getAdminServiceStats(),
-        getAdminOrderStats(),
-        getAdminPaymentStats(),
-        getRecentAdminOrders(supabase, 5),
-        getRecentPayments(supabase, 5),
-        getRecentComplaints(supabase, 5),
-        getActiveComplaintCount(supabase),
-      ]);
-      const recentOrders = await enrichOrders(supabase, recentOrdersRaw, "both");
+      const labels = [
+        "Ringkasan pengguna",
+        "Ringkasan layanan",
+        "Ringkasan pesanan",
+        "Ringkasan pembayaran",
+        "Pesanan terbaru",
+        "Pembayaran terbaru",
+        "Komplain terbaru",
+        "Jumlah komplain aktif",
+      ] as const;
+      const results = await Promise.allSettled([
+        loadAdminUserStats(supabase),
+        loadAdminServiceStats(supabase),
+        loadAdminOrderStats(supabase),
+        loadAdminPaymentStats(supabase),
+        loadRecentAdminOrders(supabase, 5),
+        loadRecentPayments(supabase, 5),
+        loadRecentComplaints(supabase, 5),
+        loadActiveComplaintCount(supabase),
+      ] as const);
+      const warnings = results.flatMap((result, index) =>
+        result.status === "rejected"
+          ? [`${labels[index]} tidak dapat dimuat.`]
+          : [],
+      );
+
+      const userStats = getSettledValue(results[0], emptyAdminUserStats);
+      const serviceStats = getSettledValue(results[1], emptyAdminServiceStats);
+      const orderStats = getSettledValue(results[2], emptyAdminOrderStats);
+      const paymentStats = getSettledValue(results[3], emptyAdminPaymentStats);
+      const recentOrders = getSettledValue(results[4], []);
+      const recentPayments = getSettledValue(results[5], []);
+      const recentComplaints = getSettledValue(results[6], []);
+      const activeComplaints = getSettledValue(results[7], 0);
+      const dataStatus: DashboardDataStatus =
+        warnings.length === 0
+          ? "available"
+          : warnings.length === results.length
+            ? "unavailable"
+            : "partial";
 
       return {
         activeComplaints,
+        dataStatus,
         orderStats,
         paymentStats,
         recentComplaints,
@@ -908,12 +961,151 @@ export async function getAdminDashboardOverview() {
         recentPayments,
         serviceStats,
         userStats,
+        warnings,
       };
     },
   );
 }
 
-async function getRecentPayments(supabase: DashboardClient, limit: number) {
+function getSettledValue<T>(
+  result: PromiseSettledResult<T>,
+  fallback: T,
+): T {
+  return result.status === "fulfilled" ? result.value : fallback;
+}
+
+async function loadAdminUserStats(supabase: DashboardClient) {
+  const [totalResult, umkmResult, creatorResult, adminResult] = await Promise.all([
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "umkm"),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "creator"),
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin"),
+  ]);
+
+  if (
+    totalResult.error ||
+    umkmResult.error ||
+    creatorResult.error ||
+    adminResult.error
+  ) {
+    throw new Error("admin_user_stats_unavailable");
+  }
+
+  return {
+    totalAdmins: adminResult.count ?? 0,
+    totalCreators: creatorResult.count ?? 0,
+    totalUmkm: umkmResult.count ?? 0,
+    totalUsers: totalResult.count ?? 0,
+  } satisfies AdminUserStats;
+}
+
+async function loadAdminServiceStats(supabase: DashboardClient) {
+  const [categoryResult, serviceResult, activeResult] = await Promise.all([
+    supabase
+      .from("service_categories")
+      .select("id", { count: "exact", head: true }),
+    supabase
+      .from("service_packages")
+      .select("id", { count: "exact", head: true }),
+    supabase
+      .from("service_packages")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .is("deleted_at", null),
+  ]);
+
+  if (categoryResult.error || serviceResult.error || activeResult.error) {
+    throw new Error("admin_service_stats_unavailable");
+  }
+
+  return {
+    activeServices: activeResult.count ?? 0,
+    totalCategories: categoryResult.count ?? 0,
+    totalServices: serviceResult.count ?? 0,
+  } satisfies AdminServiceStats;
+}
+
+async function loadAdminOrderStats(supabase: DashboardClient) {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error || !data) {
+    throw new Error("admin_order_stats_unavailable");
+  }
+
+  return {
+    activeOrders: data.filter((order) => isActiveOrderStatus(order.order_status))
+      .length,
+    grossTransactionValue: data.reduce(
+      (total, order) => total + toNumber(order.total_amount),
+      0,
+    ),
+    platformRevenue: data.reduce(
+      (total, order) =>
+        total + toNumber(order.platform_fee) + toNumber(order.admin_fee),
+      0,
+    ),
+    totalOrders: data.length,
+  } satisfies AdminOrderStats;
+}
+
+async function loadAdminPaymentStats(supabase: DashboardClient) {
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error || !data) {
+    throw new Error("admin_payment_stats_unavailable");
+  }
+
+  return {
+    failedOrExpired: data.filter(
+      (payment) =>
+        payment.payment_status === "failed" ||
+        payment.payment_status === "expired",
+    ).length,
+    pending: data.filter((payment) => payment.payment_status === "pending").length,
+    refunded: data.filter(
+      (payment) =>
+        payment.payment_status === "refunded" ||
+        payment.payment_status === "partially_refunded",
+    ).length,
+    totalPaid: data.filter((payment) => payment.payment_status === "paid").length,
+    totalPaidAmount: data
+      .filter((payment) => payment.payment_status === "paid")
+      .reduce((total, payment) => total + toNumber(payment.amount), 0),
+  } satisfies AdminPaymentStats;
+}
+
+async function loadRecentAdminOrders(supabase: DashboardClient, limit: number) {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) {
+    throw new Error("admin_recent_orders_unavailable");
+  }
+
+  return enrichOrders(supabase, data, "both");
+}
+
+async function loadRecentPayments(supabase: DashboardClient, limit: number) {
   const { data, error } = await supabase
     .from("payments")
     .select("*")
@@ -921,16 +1113,20 @@ async function getRecentPayments(supabase: DashboardClient, limit: number) {
     .limit(limit);
 
   if (error || !data) {
-    return [];
+    throw new Error("admin_recent_payments_unavailable");
   }
 
   const orderIds = getUniqueValues(data.map((payment) => payment.order_id));
-  const { data: orders } =
+  const { data: orders, error: orderError } =
     orderIds.length > 0
       ? await supabase.from("orders").select("*").in("id", orderIds)
-      : { data: [] as OrderRow[] };
-  const orderById = new Map((orders ?? []).map((order) => [order.id, order]));
+      : { data: [] as OrderRow[], error: null };
 
+  if (orderError) {
+    throw new Error("admin_recent_payment_orders_unavailable");
+  }
+
+  const orderById = new Map((orders ?? []).map((order) => [order.id, order]));
   return data.map((payment): DashboardPaymentSummary => ({
     amount: toNumber(payment.amount),
     createdAt: payment.created_at,
@@ -944,7 +1140,7 @@ async function getRecentPayments(supabase: DashboardClient, limit: number) {
   }));
 }
 
-async function getRecentComplaints(supabase: DashboardClient, limit: number) {
+async function loadRecentComplaints(supabase: DashboardClient, limit: number) {
   const { data, error } = await supabase
     .from("complaints")
     .select("*")
@@ -952,16 +1148,20 @@ async function getRecentComplaints(supabase: DashboardClient, limit: number) {
     .limit(limit);
 
   if (error || !data) {
-    return [];
+    throw new Error("admin_recent_complaints_unavailable");
   }
 
   const orderIds = getUniqueValues(data.map((complaint) => complaint.order_id));
-  const { data: orders } =
+  const { data: orders, error: orderError } =
     orderIds.length > 0
       ? await supabase.from("orders").select("*").in("id", orderIds)
-      : { data: [] as OrderRow[] };
-  const orderById = new Map((orders ?? []).map((order) => [order.id, order]));
+      : { data: [] as OrderRow[], error: null };
 
+  if (orderError) {
+    throw new Error("admin_recent_complaint_orders_unavailable");
+  }
+
+  const orderById = new Map((orders ?? []).map((order) => [order.id, order]));
   return data.map((complaint): DashboardComplaintSummary => ({
     createdAt: complaint.created_at,
     id: complaint.id,
@@ -972,14 +1172,14 @@ async function getRecentComplaints(supabase: DashboardClient, limit: number) {
   }));
 }
 
-async function getActiveComplaintCount(supabase: DashboardClient) {
+async function loadActiveComplaintCount(supabase: DashboardClient) {
   const { count, error } = await supabase
     .from("complaints")
     .select("id", { count: "exact", head: true })
     .in("complaint_status", [...activeComplaintStatuses]);
 
   if (error || typeof count !== "number") {
-    return 0;
+    throw new Error("admin_active_complaints_unavailable");
   }
 
   return count;

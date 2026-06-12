@@ -10,15 +10,18 @@ import type {
   CheckoutBriefData,
   CheckoutUmkmData,
 } from "@/features/cart/data/cart-queries";
+import type { CheckoutSelection } from "@/features/checkout/lib/checkout-source";
 
 type CampaignBriefFormProps = {
   brief: CheckoutBriefData | null;
+  checkoutSelection?: CheckoutSelection;
   saved?: boolean;
   umkm: CheckoutUmkmData | null;
 };
 
 export function CampaignBriefForm({
   brief,
+  checkoutSelection = { source: "cart" },
   saved = false,
   umkm,
 }: CampaignBriefFormProps) {
@@ -30,7 +33,7 @@ export function CampaignBriefForm({
       aria-labelledby="campaign-brief-form-title"
       className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-card)]"
     >
-      <div className="border-b border-border/70 bg-[linear-gradient(135deg,var(--surface-elevated),var(--surface-soft))] p-5 sm:p-6">
+      <div className="border-b border-border/70 bg-[linear-gradient(135deg,var(--surface-elevated),var(--surface-soft))] p-4 sm:p-5">
         <div className="flex items-start gap-4">
           <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
             <Sparkles className="size-5" aria-hidden="true" />
@@ -39,13 +42,12 @@ export function CampaignBriefForm({
             <p className="text-sm font-semibold text-primary">Brief Campaign</p>
             <h2
               id="campaign-brief-form-title"
-              className="mt-2 text-2xl font-semibold tracking-tight text-foreground"
+              className="mt-1.5 text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
             >
               Lengkapi arahan konten untuk kreator
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Simpan arahan campaign agar kreator memahami tujuan promosi,
-              target audiens, gaya konten, dan referensi sejak awal.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Beri arahan singkat dan jelas untuk kreator.
             </p>
           </div>
         </div>
@@ -53,8 +55,20 @@ export function CampaignBriefForm({
 
       <form
         action={createOrUpdateCampaignBrief}
-        className="space-y-6 p-5 sm:p-6"
+        className="space-y-6 p-4 sm:p-5"
       >
+        <input type="hidden" name="checkoutSource" value={checkoutSelection.source} />
+        {checkoutSelection.source === "direct" ? (
+          <>
+            <input type="hidden" name="serviceId" value={checkoutSelection.serviceId} />
+            {checkoutSelection.tierId ? (
+              <input type="hidden" name="tierId" value={checkoutSelection.tierId} />
+            ) : null}
+            {checkoutSelection.addonIds.map((addonId) => (
+              <input key={addonId} type="hidden" name="addonIds" value={addonId} />
+            ))}
+          </>
+        ) : null}
         <FormGroup
           title="Profil usaha"
           description="Bagian ini membantu kreator memahami konteks UMKM dan fokus promosi."
@@ -257,11 +271,11 @@ type FormGroupProps = {
 
 function FormGroup({ children, description, title }: FormGroupProps) {
   return (
-    <fieldset className="rounded-2xl border border-border/70 bg-background p-4 sm:p-5">
-      <legend className="px-1 text-base font-semibold tracking-tight text-foreground">
+    <fieldset className="border-0 border-t border-border/70 pt-5 first:border-t-0 first:pt-0">
+      <legend className="text-base font-semibold tracking-tight text-foreground">
         {title}
       </legend>
-      <p className="mb-5 mt-2 text-sm leading-6 text-muted-foreground">
+      <p className="mb-4 mt-1.5 text-sm leading-6 text-muted-foreground">
         {description}
       </p>
       <div className="space-y-4">{children}</div>

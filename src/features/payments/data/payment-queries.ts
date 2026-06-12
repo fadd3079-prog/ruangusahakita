@@ -1,3 +1,4 @@
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -25,6 +26,10 @@ type CurrentUmkmContext = {
 };
 
 async function getCurrentUmkmContext(): Promise<CurrentUmkmContext | null> {
+  if (isDemoMode()) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
 

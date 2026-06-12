@@ -52,20 +52,20 @@ export function DashboardHero({
   title,
 }: DashboardHeroProps) {
   return (
-    <section className="overflow-hidden rounded-[22px] border border-primary/15 bg-[linear-gradient(135deg,rgba(12,41,73,0.98),rgba(17,73,85,0.94))] text-primary-foreground shadow-[0_20px_56px_rgba(12,41,73,0.16)]">
-      <div className="grid gap-7 p-6 sm:p-7 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-end">
-        <div>
+    <section className="min-w-0 overflow-hidden rounded-[20px] border border-primary/15 bg-[linear-gradient(135deg,rgba(12,41,73,0.98),rgba(17,73,85,0.94))] text-primary-foreground shadow-[0_20px_56px_rgba(12,41,73,0.16)]">
+      <div className="grid min-w-0 gap-6 p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-end">
+        <div className="min-w-0">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
             {eyebrow}
           </p>
-          <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+          <h1 className="mt-3 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             {title}
           </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-primary-foreground/74 sm:text-base">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-primary-foreground/74 sm:text-base">
             {description}
           </p>
           {actions.length > 0 ? (
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {actions.map((action) => (
                 <Button
                   key={action.href}
@@ -89,7 +89,7 @@ export function DashboardHero({
         </div>
 
         {highlights.length > 0 ? (
-          <div className="grid gap-2 rounded-2xl border border-white/12 bg-white/8 p-3 backdrop-blur-sm">
+          <div className="grid min-w-0 gap-2 rounded-2xl border border-white/12 bg-white/8 p-3 backdrop-blur-sm">
             {highlights.map((highlight) => (
               <div
                 key={highlight.label}
@@ -98,7 +98,7 @@ export function DashboardHero({
                 <span className="text-sm text-primary-foreground/70">
                   {highlight.label}
                 </span>
-                <span className="text-lg font-semibold">
+                <span className="min-w-0 truncate text-base font-semibold">
                   {highlight.value}
                 </span>
               </div>
@@ -116,7 +116,7 @@ type DashboardMetricGridProps = {
 
 export function DashboardMetricGrid({ metrics }: DashboardMetricGridProps) {
   return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(190px,1fr))]">
       {metrics.map((metric) => (
         <DashboardMetricCard key={metric.label} metric={metric} />
       ))}
@@ -128,18 +128,18 @@ function DashboardMetricCard({ metric }: { metric: DashboardMetric }) {
   const Icon = metric.icon;
 
   return (
-    <Card className="dashboard-surface">
-      <CardContent className="space-y-4 p-5">
+    <Card className="dashboard-surface min-w-0 overflow-hidden">
+      <CardContent className="space-y-3 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-muted-foreground">
               {metric.label}
             </p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+            <p className="mt-1.5 truncate text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               {metric.value}
             </p>
           </div>
-          <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
             <Icon className="size-5" aria-hidden="true" />
           </div>
         </div>
@@ -169,12 +169,12 @@ export function DashboardPanel({
   return (
     <Card
       className={cn(
-        "dashboard-surface",
+        "dashboard-surface min-w-0 overflow-hidden",
         className,
       )}
     >
-      <CardHeader className="gap-3 p-5 pb-3 sm:flex sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <CardHeader className="gap-3 p-4 pb-3 sm:flex sm:flex-row sm:items-start sm:justify-between sm:p-5 sm:pb-3">
+        <div className="min-w-0">
           <CardTitle className="text-lg">{title}</CardTitle>
           {description ? (
             <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
@@ -183,7 +183,7 @@ export function DashboardPanel({
           ) : null}
         </div>
         {action ? (
-          <Button asChild variant={action.variant ?? "outline"}>
+          <Button asChild variant={action.variant ?? "outline"} className="shrink-0">
             <Link href={action.href}>
               {action.label}
               <ArrowRight aria-hidden="true" />
@@ -191,7 +191,7 @@ export function DashboardPanel({
           </Button>
         ) : null}
       </CardHeader>
-      <CardContent className="p-5 pt-0">{children}</CardContent>
+      <CardContent className="min-w-0 p-4 pt-0 sm:p-5 sm:pt-0">{children}</CardContent>
     </Card>
   );
 }
@@ -207,7 +207,7 @@ export function DashboardList({
 }: DashboardListProps) {
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-5 text-sm text-muted-foreground">
+      <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
         {emptyText}
       </div>
     );
@@ -240,7 +240,7 @@ export function DashboardList({
             <Link
               key={`${item.title}-${item.href}`}
               href={item.href}
-              className="rounded-2xl border border-border/70 bg-background/80 p-4 transition-colors hover:border-primary/30 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="min-w-0 rounded-xl border border-border/70 bg-background/80 p-4 transition-[border-color,background-color] duration-200 hover:border-primary/30 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {content}
             </Link>
@@ -250,7 +250,7 @@ export function DashboardList({
         return (
           <div
             key={`${item.title}-${item.description}`}
-            className="rounded-2xl border border-border/70 bg-background/80 p-4"
+            className="min-w-0 rounded-xl border border-border/70 bg-background/80 p-4"
           >
             {content}
           </div>
@@ -271,7 +271,7 @@ type DashboardQuickActionsProps = {
 
 export function DashboardQuickActions({ actions }: DashboardQuickActionsProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(210px,1fr))]">
       {actions.map((action) => {
         const Icon = action.icon;
 
@@ -279,7 +279,7 @@ export function DashboardQuickActions({ actions }: DashboardQuickActionsProps) {
           <Link
             key={action.href}
             href={action.href}
-            className="group rounded-2xl border border-border/70 bg-card/90 p-4 shadow-[var(--shadow-soft)] transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="group min-w-0 rounded-xl border border-border/70 bg-card/90 p-4 shadow-[var(--shadow-soft)] transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transform-none"
           >
             <div className="flex items-start gap-3">
               <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">

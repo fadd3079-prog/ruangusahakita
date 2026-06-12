@@ -1,3 +1,4 @@
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -109,6 +110,10 @@ function unique(values: readonly (string | null | undefined)[]) {
 }
 
 async function getCurrentUmkmContext(): Promise<CurrentUmkmContext | null> {
+  if (isDemoMode()) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -145,6 +150,10 @@ async function getCurrentUmkmContext(): Promise<CurrentUmkmContext | null> {
 }
 
 async function getCurrentCreatorContext(): Promise<CurrentCreatorContext | null> {
+  if (isDemoMode()) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
 

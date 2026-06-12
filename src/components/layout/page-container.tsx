@@ -18,7 +18,7 @@ type PageContainerProps = {
 export function PageContainer({
   children,
   className,
-  maxWidth = "full",
+  maxWidth = "content",
 }: PageContainerProps) {
   return (
     <div

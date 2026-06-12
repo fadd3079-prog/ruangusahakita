@@ -1,4 +1,5 @@
-import { CheckCircle2, Clock, FilePenLine } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, Clock, FilePenLine } from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
 import { SubmitButton } from "@/components/common/submit-button";
@@ -12,6 +13,8 @@ import {
 } from "@/components/ui/card";
 import { addServiceToCart } from "@/features/cart/actions/cart-actions";
 import type { PublicServiceTier } from "@/features/catalog/data/catalog-types";
+import { buildCheckoutPath } from "@/features/checkout/lib/checkout-source";
+import { Button } from "@/components/ui/button";
 
 type ServiceTierOptionsProps = {
   serviceId: string;
@@ -84,18 +87,19 @@ export function ServiceTierOptions({ serviceId, tiers }: ServiceTierOptionsProps
                 Tambah ke Keranjang
               </SubmitButton>
             </form>
-            <form action={addServiceToCart}>
-              <input type="hidden" name="serviceId" value={serviceId} />
-              <input type="hidden" name="tierId" value={tier.id} />
-              <input type="hidden" name="redirectTo" value="/umkm/checkout" />
-              <SubmitButton
-                pendingLabel="Melanjutkan..."
-                variant="outline"
-                className="h-10 w-full rounded-full bg-background"
+            <Button asChild variant="outline" className="h-10 w-full rounded-full bg-background">
+              <Link
+                href={buildCheckoutPath({
+                  addonIds: [],
+                  serviceId,
+                  source: "direct",
+                  tierId: tier.id,
+                })}
               >
                 Pesan Sekarang
-              </SubmitButton>
-            </form>
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
           </CardFooter>
         </Card>
       ))}

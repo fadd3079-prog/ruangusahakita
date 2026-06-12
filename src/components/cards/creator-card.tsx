@@ -161,7 +161,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
       <CardFooter
         className={
           primaryService
-            ? "mt-auto grid gap-2 border-t border-border/70 bg-muted/25 p-3"
+            ? "mt-auto grid gap-2 border-t border-border/70 bg-muted/25 p-3 sm:grid-cols-2"
             : "mt-auto border-t border-border/70 bg-muted/25 p-3"
         }
       >

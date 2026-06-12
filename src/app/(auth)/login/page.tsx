@@ -41,6 +41,10 @@ function getRouteError(params: Record<string, string | string[] | undefined>) {
     return "Link masuk tidak valid atau sudah kedaluwarsa.";
   }
 
+  if (error === "unavailable") {
+    return "Layanan autentikasi sedang tidak tersedia. Coba lagi setelah konfigurasi Supabase aktif.";
+  }
+
   return undefined;
 }
 

@@ -31,7 +31,7 @@ export function CheckoutOrderSummary({
   return (
     <aside
       aria-labelledby="checkout-order-summary-title"
-      className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-card)] lg:sticky lg:top-24"
+      className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-card)]"
     >
       <div className="bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white">
         <p className="text-sm font-semibold text-white/75">
@@ -57,7 +57,7 @@ export function CheckoutOrderSummary({
               {item.categoryName}
             </Badge>
           </div>
-          <h3 className="mt-3 text-lg font-semibold tracking-tight text-foreground">
+          <h3 className="mt-3 break-words text-lg font-semibold tracking-tight text-foreground">
             {item.serviceTitle}
           </h3>
           <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
@@ -112,12 +112,12 @@ type MiniMetricProps = {
 
 function MiniMetric({ icon: Icon, label, value }: MiniMetricProps) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl bg-muted/35 px-3 py-2 text-sm">
-      <span className="inline-flex items-center gap-2 text-muted-foreground">
+    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-muted/35 px-3 py-2 text-sm">
+      <span className="inline-flex min-w-0 items-center gap-2 text-muted-foreground">
         <Icon className="size-4 text-primary" aria-hidden="true" />
         {label}
       </span>
-      <span className="font-semibold text-foreground">{value}</span>
+      <span className="min-w-0 text-right font-semibold text-foreground">{value}</span>
     </div>
   );
 }

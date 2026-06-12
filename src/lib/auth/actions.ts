@@ -4,12 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "../supabase/server";
 import { createAdminClient } from "../supabase/admin";
-import { getDashboardPathByRole } from "./guards";
+import { getPostLoginDestination, getOnboardingPathByRole } from "./routing";
 import type { UserRole } from "./roles";
-import {
-  getOnboardingPathByRole,
-  shouldStartOnboarding,
-} from "@/features/onboarding/lib/profile-completion";
+import { isDemoMode } from "@/lib/config/demo-mode";
 
 type PublicRegisterRole = Exclude<UserRole, "admin">;
 type RegisterStep =
@@ -20,6 +17,11 @@ type RegisterStep =
   | "cleanup delete user"
   | "signIn after bootstrap";
 type LoginStep = "profiles select";
+
+const authUnavailableMessage =
+  "Layanan autentikasi sedang tidak tersedia. Coba lagi setelah konfigurasi Supabase aktif.";
+const demoModeMessage =
+  "Mode demo aktif. Login dan registrasi dinonaktifkan; dashboard dapat dibuka langsung dari navigasi.";
 
 function getRequiredText(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -64,53 +66,59 @@ function getLoginProfileError(step: LoginStep, userId: string, error: unknown) {
 export async function loginAction(formData: FormData) {
   const email = getRequiredText(formData, "email").toLowerCase();
   const password = getRequiredText(formData, "password");
+  const redirectTo = getRequiredText(formData, "redirectTo");
 
   if (!email || !password) {
     return { error: "Email dan password wajib diisi." };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    return { error: "Email atau password tidak valid." };
+  if (isDemoMode()) {
+    return { error: demoModeMessage };
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id, role, account_status, onboarding_completed, onboarding_skipped_at")
-    .eq("id", data.user.id)
-    .single();
+  let destination: string;
 
-  if (profileError || !profile) {
-    await supabase.auth.signOut();
-    return getLoginProfileError("profiles select", data.user.id, profileError);
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return { error: "Email atau password tidak valid." };
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select(
+        "id, role, account_status, onboarding_completed, onboarding_skipped_at",
+      )
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      await supabase.auth.signOut().catch(() => undefined);
+      return getLoginProfileError("profiles select", data.user.id, profileError);
+    }
+
+    if (profile.account_status !== "active") {
+      await supabase.auth.signOut().catch(() => undefined);
+      return { error: "Akun belum aktif atau sedang dibatasi. Hubungi admin." };
+    }
+
+    await supabase
+      .from("profiles")
+      .update({ last_login_at: new Date().toISOString() })
+      .eq("id", data.user.id);
+
+    destination = getPostLoginDestination(profile, redirectTo);
+  } catch {
+    return { error: authUnavailableMessage };
   }
-
-  if (profile.account_status !== "active") {
-    await supabase.auth.signOut();
-    return { error: "Akun belum aktif atau sedang dibatasi. Hubungi admin." };
-  }
-
-  await supabase
-    .from("profiles")
-    .update({ last_login_at: new Date().toISOString() })
-    .eq("id", data.user.id);
 
   revalidatePath("/", "layout");
-  if (shouldStartOnboarding(profile)) {
-    redirect(getOnboardingPathByRole(profile.role));
-  }
-
-  const redirectTo = formData.get("redirectTo");
-  if (typeof redirectTo === "string" && redirectTo.startsWith("/")) {
-    redirect(redirectTo);
-  }
-
-  redirect(getDashboardPathByRole(profile.role));
+  redirect(destination);
 }
 
 export async function registerAction(formData: FormData) {
@@ -131,6 +139,10 @@ export async function registerAction(formData: FormData) {
     return { error: "Role tidak valid." };
   }
 
+  if (isDemoMode()) {
+    return { error: demoModeMessage };
+  }
+
   const role = roleValue;
   const supabase = await createClient();
   let adminClient: ReturnType<typeof createAdminClient>;
@@ -141,82 +153,122 @@ export async function registerAction(formData: FormData) {
     return { error: "Registrasi belum dapat diproses karena konfigurasi server belum lengkap." };
   }
 
-  const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
+  try {
+    const { data: authData, error: authError } =
+      await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+        },
+      });
+
+    if (authError) {
+      if (
+        authError.message?.includes("User already registered") ||
+        authError.status === 422
+      ) {
+        return {
+          error:
+            "Email ini sudah terdaftar. Silakan gunakan email lain atau masuk ke akun Anda.",
+        };
+      }
+      return getRegisterError(
+        "admin create user",
+        authError,
+        "Registrasi gagal. Periksa email dan password lalu coba lagi.",
+      );
+    }
+
+    if (!authData.user) {
+      return { error: "Akun belum dapat dibuat. Coba lagi beberapa saat." };
+    }
+
+    const { error: profileError } = await adminClient.from("profiles").insert({
+      id: authData.user.id,
+      role,
       full_name: fullName,
-    },
-  });
-
-  if (authError) {
-    if (authError.message?.includes("User already registered") || authError.status === 422) {
-      return { error: "Email ini sudah terdaftar. Silakan gunakan email lain atau masuk ke akun Anda." };
-    }
-    return getRegisterError("admin create user", authError, "Registrasi gagal. Periksa email dan password lalu coba lagi.");
-  }
-
-  if (!authData.user) {
-    return { error: "Akun belum dapat dibuat. Coba lagi beberapa saat." };
-  }
-
-  const { error: profileError } = await adminClient.from("profiles").insert({
-    id: authData.user.id,
-    role,
-    full_name: fullName,
-    email,
-  });
-
-  if (profileError) {
-    const { error: cleanupError } = await adminClient.auth.admin.deleteUser(authData.user.id);
-
-    if (cleanupError) {
-      return getRegisterError("cleanup delete user", cleanupError, "Gagal membersihkan akun sementara.");
-    }
-
-    return getRegisterError("profiles insert", profileError, "Gagal membuat profil pengguna.");
-  }
-
-  let roleProfileError: { message: string } | null = null;
-  let roleProfileStep: Extract<RegisterStep, "umkm_profiles insert" | "creator_profiles insert"> = "umkm_profiles insert";
-
-  if (role === "umkm") {
-    const { error } = await adminClient.from("umkm_profiles").insert({
-      user_id: authData.user.id,
-      business_name: fullName,
-      owner_name: fullName,
+      email,
     });
-    roleProfileError = error;
-    roleProfileStep = "umkm_profiles insert";
-  }
 
-  if (role === "creator") {
-    const { error } = await adminClient.from("creator_profiles").insert({
-      user_id: authData.user.id,
-      display_name: fullName,
-    });
-    roleProfileError = error;
-    roleProfileStep = "creator_profiles insert";
-  }
+    if (profileError) {
+      const { error: cleanupError } =
+        await adminClient.auth.admin.deleteUser(authData.user.id);
 
-  if (roleProfileError) {
-    const { error: cleanupError } = await adminClient.auth.admin.deleteUser(authData.user.id);
+      if (cleanupError) {
+        return getRegisterError(
+          "cleanup delete user",
+          cleanupError,
+          "Gagal membersihkan akun sementara.",
+        );
+      }
 
-    if (cleanupError) {
-      return getRegisterError("cleanup delete user", cleanupError, "Gagal membersihkan akun sementara.");
+      return getRegisterError(
+        "profiles insert",
+        profileError,
+        "Gagal membuat profil pengguna.",
+      );
     }
 
-    return getRegisterError(roleProfileStep, roleProfileError, "Gagal menyiapkan profil role pengguna.");
-  }
+    let roleProfileError: { message: string } | null = null;
+    let roleProfileStep: Extract<
+      RegisterStep,
+      "umkm_profiles insert" | "creator_profiles insert"
+    > = "umkm_profiles insert";
 
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    if (role === "umkm") {
+      const { error } = await adminClient.from("umkm_profiles").insert({
+        user_id: authData.user.id,
+        business_name: fullName,
+        owner_name: fullName,
+      });
+      roleProfileError = error;
+      roleProfileStep = "umkm_profiles insert";
+    }
 
-  if (signInError) {
-    return getRegisterError("signIn after bootstrap", signInError, "Akun berhasil dibuat, tetapi sesi login belum dapat dibuat. Silakan masuk dari halaman login.");
+    if (role === "creator") {
+      const { error } = await adminClient.from("creator_profiles").insert({
+        user_id: authData.user.id,
+        display_name: fullName,
+      });
+      roleProfileError = error;
+      roleProfileStep = "creator_profiles insert";
+    }
+
+    if (roleProfileError) {
+      const { error: cleanupError } =
+        await adminClient.auth.admin.deleteUser(authData.user.id);
+
+      if (cleanupError) {
+        return getRegisterError(
+          "cleanup delete user",
+          cleanupError,
+          "Gagal membersihkan akun sementara.",
+        );
+      }
+
+      return getRegisterError(
+        roleProfileStep,
+        roleProfileError,
+        "Gagal menyiapkan profil role pengguna.",
+      );
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      return getRegisterError(
+        "signIn after bootstrap",
+        signInError,
+        "Akun berhasil dibuat, tetapi sesi login belum dapat dibuat. Silakan masuk dari halaman login.",
+      );
+    }
+  } catch {
+    return { error: authUnavailableMessage };
   }
 
   revalidatePath("/", "layout");
@@ -225,8 +277,15 @@ export async function registerAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  if (!isDemoMode()) {
+    try {
+      const supabase = await createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Redirecting to login is still safe when the auth provider is unavailable.
+    }
+  }
+
   revalidatePath("/", "layout");
   redirect("/login?logged_out=1");
 }

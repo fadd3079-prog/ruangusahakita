@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import {
   BarChart3,
   Building2,
+  CircleAlert,
   CreditCard,
   FileWarning,
   LayoutDashboard,
@@ -15,6 +16,11 @@ import {
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -187,6 +193,22 @@ export default async function AdminDashboardPage() {
   return (
     <PageContainer>
       <div className="space-y-6">
+        {dashboard.dataStatus !== "available" ? (
+          <Alert className="border-amber-200 bg-amber-50/80 text-amber-950">
+            <CircleAlert aria-hidden="true" />
+            <AlertTitle>
+              {dashboard.dataStatus === "demo"
+                ? "Dashboard berjalan dalam mode demo"
+                : dashboard.dataStatus === "partial"
+                  ? "Sebagian data admin belum tersedia"
+                  : "Data admin belum tersedia"}
+            </AlertTitle>
+            <AlertDescription className="text-amber-900/80">
+              {dashboard.warnings.join(" ")}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         <DashboardHero
           eyebrow="Dashboard Admin"
           title="Pantau kesehatan marketplace jasa digital dari satu tempat."

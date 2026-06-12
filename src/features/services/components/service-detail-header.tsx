@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, FileCheck2, Image as ImageIcon, Layers3, MapPin, Star } from "lucide-react";
+import { ArrowRight, Clock, FileCheck2, Image as ImageIcon, Layers3, MapPin, Star } from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
 import { PageContainer } from "@/components/layout/page-container";
@@ -11,6 +11,8 @@ import type {
   PublicServicePackage,
 } from "@/features/catalog/data/catalog-types";
 import { addServiceToCart } from "@/features/cart/actions/cart-actions";
+import { buildCheckoutPath } from "@/features/checkout/lib/checkout-source";
+import { Button } from "@/components/ui/button";
 
 type ServiceDetailHeaderProps = {
   service: PublicServicePackage;
@@ -123,17 +125,19 @@ export function ServiceDetailHeader({
                 Tambah ke Keranjang
               </SubmitButton>
             </form>
-            <form action={addServiceToCart}>
-              <input type="hidden" name="serviceId" value={service.id} />
-              <input type="hidden" name="redirectTo" value="/umkm/checkout" />
-              <SubmitButton
-                pendingLabel="Melanjutkan..."
-                variant="outline"
-                className="h-11 w-full rounded-full"
+            <Button asChild variant="outline" className="h-11 w-full rounded-full">
+              <Link
+                href={buildCheckoutPath({
+                  addonIds: [],
+                  serviceId: service.id,
+                  source: "direct",
+                  tierId: null,
+                })}
               >
                 Pesan Sekarang
-              </SubmitButton>
-            </form>
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
           </div>
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
             Pilih tier yang paling sesuai sebelum melanjutkan brief campaign.

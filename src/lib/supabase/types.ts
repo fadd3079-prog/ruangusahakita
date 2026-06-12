@@ -1496,6 +1496,14 @@ export interface Database {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      create_order_from_direct_selection: {
+        Args: {
+          p_addon_ids?: string[]
+          p_service_id: string
+          p_tier_id: string
+        }
+        Returns: string
+      }
       mark_sandbox_payment_as_paid: {
         Args: {
           target_payment_id: string

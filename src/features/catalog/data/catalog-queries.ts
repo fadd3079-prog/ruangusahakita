@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/config/demo-mode";
 import type { 
   PublicServiceCategory, 
   PublicCreatorProfile, 
@@ -14,6 +15,10 @@ import type {
 import { createPortfolioThumbnailSignedUrl } from "@/lib/storage/urls";
 
 export async function getPublicCategories(): Promise<readonly PublicServiceCategory[]> {
+  if (isDemoMode()) {
+    return [];
+  }
+
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -39,6 +44,10 @@ export async function getPublicCategories(): Promise<readonly PublicServiceCateg
 }
 
 export async function getPublicCreatorById(id: string): Promise<PublicCreatorProfile | null> {
+  if (isDemoMode()) {
+    return null;
+  }
+
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -80,6 +89,10 @@ export async function getPublicCreatorById(id: string): Promise<PublicCreatorPro
 }
 
 export async function getPublicCreatorDetail(id: string) {
+  if (isDemoMode()) {
+    return null;
+  }
+
   try {
     const supabase = await createClient();
 
@@ -172,6 +185,10 @@ export async function getPublicCreatorDetail(id: string) {
 }
 
 export async function getPublicServiceDetail(id: string) {
+  if (isDemoMode()) {
+    return null;
+  }
+
   try {
     const supabase = await createClient();
 
@@ -281,6 +298,10 @@ export async function getPublicServiceDetail(id: string) {
 }
 
 export async function getPublicFeaturedCreators(): Promise<readonly PublicCreatorProfile[]> {
+  if (isDemoMode()) {
+    return [];
+  }
+
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -322,6 +343,14 @@ export async function getPublicFeaturedCreators(): Promise<readonly PublicCreato
 }
 
 export async function getPublicCatalogData() {
+  if (isDemoMode()) {
+    return {
+      creators: [] as PublicCreatorProfile[],
+      services: [] as PublicServicePackage[],
+      categories: [] as PublicServiceCategory[],
+    };
+  }
+
   try {
     const supabase = await createClient();
 

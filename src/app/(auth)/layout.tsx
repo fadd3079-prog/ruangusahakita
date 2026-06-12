@@ -1,11 +1,23 @@
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { AppLogo } from "@/components/common/app-logo";
+import { getPostLoginPath } from "@/lib/auth/routing";
+import { getCurrentProfile } from "@/lib/auth/session";
+import { isDemoMode } from "@/lib/config/demo-mode";
 
 type AuthLayoutProps = {
   children: ReactNode;
 };
 
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export default async function AuthLayout({ children }: AuthLayoutProps) {
+  if (!isDemoMode()) {
+    const profile = await getCurrentProfile();
+
+    if (profile?.account_status === "active") {
+      redirect(getPostLoginPath(profile));
+    }
+  }
+
   return (
     <div className="flex min-h-svh bg-background">
       <div

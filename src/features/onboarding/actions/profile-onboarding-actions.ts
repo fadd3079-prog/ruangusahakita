@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { getDashboardPathByRole } from "@/lib/auth/guards";
+import { getDashboardPathByRole } from "@/lib/auth/routing";
 import type { UserRole } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 

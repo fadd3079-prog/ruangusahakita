@@ -1,5 +1,6 @@
-import { getDashboardPathByRole } from "@/lib/auth/guards";
+import { getDashboardPathByRole } from "@/lib/auth/routing";
 import type { AccountStatus, UserRole } from "@/lib/auth/roles";
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 
 export type CurrentAccountSummary = {
@@ -37,59 +38,69 @@ function getInitials(value: string) {
 }
 
 export async function getCurrentAccountSummary(): Promise<CurrentAccountSummary | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (isDemoMode()) {
     return null;
   }
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("id, email, full_name, avatar_url, role, account_status, onboarding_completed, onboarding_skipped_at")
-    .eq("id", user.id)
-    .single<ProfileRow>();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (error || !profile || profile.account_status !== "active") {
+    if (!user) {
+      return null;
+    }
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select(
+        "id, email, full_name, avatar_url, role, account_status, onboarding_completed, onboarding_skipped_at",
+      )
+      .eq("id", user.id)
+      .maybeSingle<ProfileRow>();
+
+    if (error || !profile || profile.account_status !== "active") {
+      return null;
+    }
+
+    let roleDisplayName: string | null = null;
+
+    if (profile.role === "umkm") {
+      const { data } = await supabase
+        .from("umkm_profiles")
+        .select("business_name, owner_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      roleDisplayName = data?.business_name ?? data?.owner_name ?? null;
+    }
+
+    if (profile.role === "creator") {
+      const { data } = await supabase
+        .from("creator_profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      roleDisplayName = data?.display_name ?? null;
+    }
+
+    const displayName = roleDisplayName ?? profile.full_name ?? profile.email;
+
+    return {
+      id: profile.id,
+      email: profile.email,
+      role: profile.role,
+      accountStatus: profile.account_status,
+      onboardingCompleted: profile.onboarding_completed,
+      onboardingSkippedAt: profile.onboarding_skipped_at,
+      displayName,
+      dashboardHref: getDashboardPathByRole(profile.role),
+      initials: getInitials(displayName || profile.email) || "RU",
+      avatarUrl: profile.avatar_url,
+    };
+  } catch {
     return null;
   }
-
-  let roleDisplayName: string | null = null;
-
-  if (profile.role === "umkm") {
-    const { data } = await supabase
-      .from("umkm_profiles")
-      .select("business_name, owner_name")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    roleDisplayName = data?.business_name ?? data?.owner_name ?? null;
-  }
-
-  if (profile.role === "creator") {
-    const { data } = await supabase
-      .from("creator_profiles")
-      .select("display_name")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    roleDisplayName = data?.display_name ?? null;
-  }
-
-  const displayName = roleDisplayName ?? profile.full_name ?? profile.email;
-
-  return {
-    id: profile.id,
-    email: profile.email,
-    role: profile.role,
-    accountStatus: profile.account_status,
-    onboardingCompleted: profile.onboarding_completed,
-    onboardingSkippedAt: profile.onboarding_skipped_at,
-    displayName,
-    dashboardHref: getDashboardPathByRole(profile.role),
-    initials: getInitials(displayName || profile.email) || "RU",
-    avatarUrl: profile.avatar_url,
-  };
 }

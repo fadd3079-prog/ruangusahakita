@@ -1,19 +1,16 @@
 import { redirect } from "next/navigation";
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { getCurrentProfile } from "./session";
 import type { UserRole } from "./roles";
+import { getPostLoginPath } from "./routing";
 
-export function getDashboardPathByRole(role: UserRole): string {
-  switch (role) {
-    case "admin":
-      return "/admin/dashboard";
-    case "creator":
-      return "/creator/dashboard";
-    case "umkm":
-      return "/umkm/dashboard";
-  }
-}
+export { getDashboardPathByRole } from "./routing";
 
 export async function requireRole(requiredRole: UserRole) {
+  if (isDemoMode()) {
+    return null;
+  }
+
   const profile = await getCurrentProfile();
 
   if (!profile) {
@@ -25,8 +22,8 @@ export async function requireRole(requiredRole: UserRole) {
   }
 
   if (profile.role !== requiredRole) {
-    redirect(getDashboardPathByRole(profile.role));
+    redirect(getPostLoginPath(profile));
   }
 
-  return true;
+  return profile;
 }

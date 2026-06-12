@@ -1,3 +1,4 @@
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import type { StorageBucket } from "@/lib/storage/buckets";
 import { createStorageSignedUrl } from "@/lib/storage/urls";
@@ -77,6 +78,10 @@ async function getCurrentUmkmProfile(supabase: Supabase) {
 }
 
 export async function getCurrentUmkmBriefDetail(briefId: string) {
+  if (isDemoMode()) {
+    return null;
+  }
+
   try {
     const supabase = await createClient();
     const umkm = await getCurrentUmkmProfile(supabase);

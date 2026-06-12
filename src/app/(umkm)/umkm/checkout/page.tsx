@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, ShieldCheck, ShoppingCart, Sparkles } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { SubmitButton } from "@/components/common/submit-button";
@@ -11,6 +11,10 @@ import { CheckoutOrderSummary } from "@/features/checkout/components/checkout-or
 import { CheckoutStepper } from "@/features/checkout/components/checkout-stepper";
 import { getCurrentCheckoutData } from "@/features/cart/data/cart-queries";
 import { createOrderFromCheckout } from "@/features/orders/actions/order-actions";
+import {
+  parseCheckoutSelection,
+  type CheckoutSelection,
+} from "@/features/checkout/lib/checkout-source";
 
 export const metadata: Metadata = {
   title: "Checkout Brief Campaign - Ruang Usaha Kita",
@@ -20,8 +24,12 @@ export const metadata: Metadata = {
 
 type UmkmCheckoutPageProps = {
   searchParams: Promise<{
+    addonIds?: string | string[];
     error?: string;
     saved?: string;
+    serviceId?: string;
+    source?: string;
+    tierId?: string;
   }>;
 };
 
@@ -51,56 +59,57 @@ function getErrorMessage(error?: string) {
 export default async function UmkmCheckoutPage({
   searchParams,
 }: UmkmCheckoutPageProps) {
-  const [checkoutData, params] = await Promise.all([
-    getCurrentCheckoutData(),
-    searchParams,
-  ]);
+  const params = await searchParams;
+  const checkoutSelection = parseCheckoutSelection(params);
+  const checkoutData = await getCurrentCheckoutData(checkoutSelection);
   const selectedItem = checkoutData.cart.items[0] ?? null;
+  const resolvedCheckoutSelection =
+    checkoutSelection.source === "direct" && selectedItem?.tierId
+      ? { ...checkoutSelection, tierId: selectedItem.tierId }
+      : checkoutSelection;
   const errorMessage = getErrorMessage(params.error);
 
   if (!selectedItem) {
-    return <CheckoutEmptyState errorMessage={errorMessage} />;
+    return (
+      <CheckoutEmptyState
+        errorMessage={errorMessage}
+        source={checkoutSelection.source}
+      />
+    );
   }
 
   return (
     <main>
       <PageContainer>
-        <div className="space-y-8">
-          <section className="overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[var(--shadow-card)]">
-            <div className="grid gap-6 bg-[linear-gradient(135deg,var(--surface-elevated),var(--surface-soft))] p-6 sm:p-8 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-end">
-              <div>
+        <div className="space-y-6">
+          <section className="overflow-hidden rounded-[20px] border border-border/70 bg-card shadow-[var(--shadow-card)]">
+            <div className="grid gap-5 bg-[linear-gradient(135deg,var(--surface-elevated),var(--surface-soft))] p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <div className="min-w-0">
                 <p className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
                   <Sparkles className="size-4" aria-hidden="true" />
-                  Checkout UMKM
+                  {checkoutSelection.source === "direct"
+                    ? "Pesanan langsung"
+                    : "Checkout keranjang"}
                 </p>
-                <h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                  Checkout brief campaign
+                <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                  Lengkapi brief campaign
                 </h1>
-                <p className="mt-5 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
-                  Lengkapi arahan campaign agar kreator memahami tujuan promosi,
-                  target audiens, gaya konten, dan kebutuhan revisi sejak awal.
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                  Tinjau layanan, isi arahan, lalu buat pesanan.
                 </p>
               </div>
-
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
-                <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                  Fokus tahap ini
-                </h2>
-                <ul className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
-                  {[
-                    "Pastikan detail layanan sudah sesuai.",
-                    "Isi brief campaign secara natural dan jelas.",
-                    "Order dan pembayaran pending sandbox dibuat setelah brief siap.",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <CheckCircle2
-                        className="mt-1 size-4 shrink-0 text-primary"
-                        aria-hidden="true"
-                      />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+              <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-background/80 px-4 py-3">
+                <ShoppingCart className="size-5 shrink-0 text-primary" aria-hidden="true" />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                    Sumber checkout
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">
+                    {checkoutSelection.source === "direct"
+                      ? "Pesan Sekarang"
+                      : "Keranjang"}
+                  </p>
+                </div>
               </div>
             </div>
           </section>
@@ -113,16 +122,17 @@ export default async function UmkmCheckoutPage({
 
           <CheckoutStepper />
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-6">
+          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(340px,380px)] 2xl:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="min-w-0 space-y-6">
               <CheckoutGuidanceCard />
               <CampaignBriefForm
                 brief={checkoutData.brief}
+                checkoutSelection={resolvedCheckoutSelection}
                 saved={params.saved === "1"}
                 umkm={checkoutData.umkm}
               />
             </div>
-            <div className="space-y-6">
+            <div className="min-w-0 space-y-4 xl:sticky xl:top-6 xl:self-start">
               <CheckoutOrderSummary
                 item={selectedItem}
                 businessName={checkoutData.umkm?.businessName ?? "UMKM"}
@@ -131,7 +141,10 @@ export default async function UmkmCheckoutPage({
                 adminFee={checkoutData.cart.adminFee}
                 totalPayment={checkoutData.cart.totalPayment}
               />
-              <CreateOrderPanel hasBrief={Boolean(checkoutData.brief)} />
+              <CreateOrderPanel
+                checkoutSelection={resolvedCheckoutSelection}
+                hasBrief={Boolean(checkoutData.brief)}
+              />
             </div>
           </div>
         </div>
@@ -140,7 +153,13 @@ export default async function UmkmCheckoutPage({
   );
 }
 
-function CreateOrderPanel({ hasBrief }: { hasBrief: boolean }) {
+function CreateOrderPanel({
+  checkoutSelection,
+  hasBrief,
+}: {
+  checkoutSelection: CheckoutSelection;
+  hasBrief: boolean;
+}) {
   return (
     <section className="overflow-hidden rounded-2xl border border-primary/20 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white shadow-[var(--shadow-card)]">
       <div className="flex items-start gap-3">
@@ -152,13 +171,24 @@ function CreateOrderPanel({ hasBrief }: { hasBrief: boolean }) {
             Buat pesanan dari brief ini
           </h2>
           <p className="mt-2 text-sm leading-6 text-white/72">
-            Sistem akan menghitung ulang total dari database, membuat status
-            pesanan awal, pembayaran pending sandbox, dan invoice awal.
+            Total dihitung ulang sebelum pesanan dan invoice dibuat.
           </p>
         </div>
       </div>
 
       <form action={createOrderFromCheckout} className="mt-5">
+        <input type="hidden" name="checkoutSource" value={checkoutSelection.source} />
+        {checkoutSelection.source === "direct" ? (
+          <>
+            <input type="hidden" name="serviceId" value={checkoutSelection.serviceId} />
+            {checkoutSelection.tierId ? (
+              <input type="hidden" name="tierId" value={checkoutSelection.tierId} />
+            ) : null}
+            {checkoutSelection.addonIds.map((addonId) => (
+              <input key={addonId} type="hidden" name="addonIds" value={addonId} />
+            ))}
+          </>
+        ) : null}
         <SubmitButton
           pendingLabel="Melanjutkan..."
           disabled={!hasBrief}
@@ -178,7 +208,13 @@ function CreateOrderPanel({ hasBrief }: { hasBrief: boolean }) {
   );
 }
 
-function CheckoutEmptyState({ errorMessage }: { errorMessage: string | null }) {
+function CheckoutEmptyState({
+  errorMessage,
+  source,
+}: {
+  errorMessage: string | null;
+  source: CheckoutSelection["source"];
+}) {
   return (
     <main>
       <PageContainer>
@@ -193,11 +229,14 @@ function CheckoutEmptyState({ errorMessage }: { errorMessage: string | null }) {
               <BriefcaseBusiness className="size-6" aria-hidden="true" />
             </div>
             <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
-              Belum ada layanan di keranjang
+              {source === "direct"
+                ? "Layanan tidak tersedia"
+                : "Belum ada layanan di keranjang"}
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-              Pilih paket jasa digital terlebih dahulu agar brief campaign dapat
-              disusun dengan konteks yang jelas.
+              {source === "direct"
+                ? "Pilih kembali layanan dan tier yang tersedia."
+                : "Pilih layanan terlebih dahulu agar brief memiliki konteks yang jelas."}
             </p>
             <Button asChild className="mt-5">
               <Link href="/katalog">Cari Kreator</Link>

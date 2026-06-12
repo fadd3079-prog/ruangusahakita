@@ -13,6 +13,11 @@ import { removeImageAssetById, uploadImageAsset } from "@/lib/storage/image-asse
 import { validateImageFile } from "@/lib/storage/validate-file";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import {
+  buildCheckoutPath,
+  parseCheckoutSelection,
+  type CheckoutSelection,
+} from "@/features/checkout/lib/checkout-source";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 type UmkmProfile = Database["public"]["Tables"]["umkm_profiles"]["Row"];
@@ -70,12 +75,26 @@ function getSelectedIds(formData: FormData, key: string) {
     .filter((value): value is string => typeof value === "string" && value.length > 0);
 }
 
+function getCheckoutSelection(formData: FormData): CheckoutSelection {
+  return parseCheckoutSelection({
+    addonIds: getSelectedIds(formData, "addonIds"),
+    serviceId: getText(formData, "serviceId"),
+    source: getText(formData, "checkoutSource"),
+    tierId: getText(formData, "tierId"),
+  });
+}
+
 function sanitizeRedirectPath(value: string) {
   if (value === "/umkm/checkout") {
     return value;
   }
 
   return "/umkm/cart";
+}
+
+function addRedirectError(path: string, error: string) {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}error=${encodeURIComponent(error)}`;
 }
 
 async function requireUmkmContext(fallbackPath?: string): Promise<UmkmContext> {
@@ -139,7 +158,12 @@ function validateBriefAssetFiles(
     });
 
     if (!validation.ok) {
-      redirect(`${redirectPath}?error=${getBriefAssetValidationError(validation.code)}`);
+      redirect(
+        addRedirectError(
+          redirectPath,
+          getBriefAssetValidationError(validation.code),
+        ),
+      );
     }
 
     if (validation.file) {
@@ -186,7 +210,7 @@ async function uploadBriefAssets(
           removeImageAssetById(context.supabase, assetId),
         ),
       );
-      redirect(`${redirectPath}?error=brief_asset_upload`);
+      redirect(addRedirectError(redirectPath, "brief_asset_upload"));
     }
 
     uploadedAssetIds.push(result.asset.id);
@@ -543,11 +567,13 @@ export async function createOrUpdateCampaignBrief(formData: FormData) {
   const businessCategory = getText(formData, "businessCategory");
   const promotedFocus = getText(formData, "promotedFocus");
   const campaignGoal = getText(formData, "campaignGoal");
-  const assetFiles = validateBriefAssetFiles(formData, "/umkm/checkout");
+  const checkoutSelection = getCheckoutSelection(formData);
+  const checkoutPath = buildCheckoutPath(checkoutSelection);
+  const assetFiles = validateBriefAssetFiles(formData, checkoutPath);
   const removeAssetIds = getSelectedIds(formData, "removeBriefAssetIds");
 
   if (!businessName || !businessCategory || !promotedFocus || !campaignGoal) {
-    redirect("/umkm/checkout?error=brief_required");
+    redirect(buildCheckoutPath(checkoutSelection, { error: "brief_required" }));
   }
 
   const context = await requireUmkmContext();
@@ -590,14 +616,14 @@ export async function createOrUpdateCampaignBrief(formData: FormData) {
       });
 
   if (result.error) {
-    redirect("/umkm/checkout?error=brief_save");
+    redirect(buildCheckoutPath(checkoutSelection, { error: "brief_save" }));
   }
 
   await removeBriefAssets(context, briefId, removeAssetIds);
-  await uploadBriefAssets(context, briefId, assetFiles, "/umkm/checkout");
+  await uploadBriefAssets(context, briefId, assetFiles, checkoutPath);
 
   revalidatePath("/umkm/checkout");
   revalidatePath("/umkm/briefs");
   revalidatePath(`/umkm/briefs/${briefId}`);
-  redirect("/umkm/checkout?saved=1");
+  redirect(buildCheckoutPath(checkoutSelection, { saved: "1" }));
 }

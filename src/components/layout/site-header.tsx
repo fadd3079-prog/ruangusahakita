@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { LayoutDashboard, LogOut, Menu, UserRound } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, ShoppingCart, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,10 @@ import {
 import { AppLogo } from "@/components/common/app-logo";
 import { SubmitButton } from "@/components/common/submit-button";
 import { PageContainer } from "@/components/layout/page-container";
-import { getCurrentAccountSummary } from "@/lib/auth/account";
+import {
+  getCurrentAccountSummary,
+  type CurrentAccountSummary,
+} from "@/lib/auth/account";
 import { logoutAction } from "@/lib/auth/actions";
 import { authNavigation, publicNavigation } from "@/lib/constants/navigation";
 
@@ -35,8 +38,13 @@ const roleLabels = {
   admin: "Admin",
 } as const;
 
-export async function SiteHeader() {
-  const account = await getCurrentAccountSummary();
+type SiteHeaderProps = {
+  account?: CurrentAccountSummary | null;
+};
+
+export async function SiteHeader({ account: accountProp }: SiteHeaderProps = {}) {
+  const account =
+    accountProp === undefined ? await getCurrentAccountSummary() : accountProp;
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/88 backdrop-blur-xl supports-[backdrop-filter]:bg-background/78">
@@ -59,6 +67,13 @@ export async function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          {!account || account.role === "umkm" ? (
+            <Button asChild variant="outline" size="icon" className="rounded-full" title="Keranjang">
+              <Link href="/umkm/cart" aria-label="Buka keranjang">
+                <ShoppingCart aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : null}
           {account ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -152,6 +167,15 @@ export async function SiteHeader() {
               >
                 {[
                   ...publicNavigation,
+                  ...(!account || account.role === "umkm"
+                    ? [
+                        {
+                          title: "Keranjang",
+                          href: "/umkm/cart",
+                          icon: "cart" as const,
+                        },
+                      ]
+                    : []),
                   ...(account
                     ? [
                         {

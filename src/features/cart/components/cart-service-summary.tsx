@@ -42,9 +42,9 @@ export function CartServiceSummary({ items }: CartServiceSummaryProps) {
   return (
     <section
       aria-labelledby="cart-service-summary-title"
-      className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[var(--shadow-card)]"
+      className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-[var(--shadow-card)]"
     >
-      <div className="flex flex-col gap-3 border-b border-border/70 bg-[linear-gradient(135deg,var(--surface-elevated),var(--surface-soft))] p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+      <div className="flex flex-col gap-3 border-b border-border/70 bg-[linear-gradient(135deg,var(--surface-elevated),var(--surface-soft))] p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
         <div>
           <p className="text-sm font-semibold text-primary">Keranjang UMKM</p>
           <h2
@@ -59,15 +59,15 @@ export function CartServiceSummary({ items }: CartServiceSummaryProps) {
         </Badge>
       </div>
 
-      <div className="space-y-5 p-5 sm:p-6">
+      <div className="space-y-4 p-4 sm:p-5">
         {items.length > 0 ? (
           items.map((item) => (
             <article
               key={item.id}
               className="overflow-hidden rounded-2xl border border-border/70 bg-background shadow-[var(--shadow-soft)]"
             >
-              <div className="flex flex-col gap-4 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white lg:flex-row lg:items-start lg:justify-between">
-                <div>
+              <div className="flex flex-col gap-4 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-4 text-white lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0">
                   <div className="flex flex-wrap gap-2">
                     <Badge className="rounded-lg bg-white/15 text-white hover:bg-white/20">
                       {item.tierName}
@@ -79,7 +79,7 @@ export function CartServiceSummary({ items }: CartServiceSummaryProps) {
                       {item.categoryName}
                     </Badge>
                   </div>
-                  <h3 className="mt-4 text-2xl font-semibold tracking-tight text-white">
+                  <h3 className="mt-3 break-words text-xl font-semibold tracking-tight text-white">
                     {item.serviceTitle}
                   </h3>
                   <p className="mt-3 flex items-center gap-2 text-sm text-white/75">
@@ -98,7 +98,7 @@ export function CartServiceSummary({ items }: CartServiceSummaryProps) {
                 </div>
               </div>
 
-              <div className="p-5">
+              <div className="p-4">
                 <div className="grid gap-3 sm:grid-cols-3">
                   <ServiceMetric
                     icon={Layers3}

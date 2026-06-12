@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 
-import { getDashboardPathByRole } from "@/lib/auth/guards";
+import { getDashboardPathByRole } from "@/lib/auth/routing";
 import type { UserRole } from "@/lib/auth/roles";
+import { isDemoMode } from "@/lib/config/demo-mode";
 import type { StorageBucket } from "@/lib/storage/buckets";
 import { createStorageSignedUrl } from "@/lib/storage/urls";
 import { createClient } from "@/lib/supabase/server";
@@ -65,6 +66,22 @@ function redirectIfWrongRole(role: UserRole, expectedRole: UserRole) {
 }
 
 export async function getCurrentUmkmOnboardingData(): Promise<UmkmOnboardingData> {
+  if (isDemoMode()) {
+    return {
+      account: {
+        account_status: "active",
+        email: "demo-umkm@ruangusahakita.local",
+        full_name: "Demo UMKM",
+        id: "demo-umkm",
+        onboarding_completed: false,
+        onboarding_skipped_at: null,
+        role: "umkm",
+      },
+      logoPreviewUrl: null,
+      profile: null,
+    };
+  }
+
   const account = await getCurrentAccount();
   redirectIfWrongRole(account.role, "umkm");
 
@@ -86,6 +103,21 @@ export async function getCurrentUmkmOnboardingData(): Promise<UmkmOnboardingData
 }
 
 export async function getCurrentCreatorOnboardingData(): Promise<CreatorOnboardingData> {
+  if (isDemoMode()) {
+    return {
+      account: {
+        account_status: "active",
+        email: "demo-kreator@ruangusahakita.local",
+        full_name: "Demo Kreator",
+        id: "demo-creator",
+        onboarding_completed: false,
+        onboarding_skipped_at: null,
+        role: "creator",
+      },
+      profile: null,
+    };
+  }
+
   const account = await getCurrentAccount();
   redirectIfWrongRole(account.role, "creator");
 

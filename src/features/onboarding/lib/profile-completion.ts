@@ -1,6 +1,9 @@
-import { getDashboardPathByRole } from "@/lib/auth/guards";
-import type { UserRole } from "@/lib/auth/roles";
 import type { Database } from "@/lib/supabase/types";
+
+export {
+  getOnboardingPathByRole,
+  shouldStartOnboarding,
+} from "@/lib/auth/routing";
 
 type Tables = Database["public"]["Tables"];
 
@@ -18,27 +21,6 @@ export type CreatorProfileCompletionInput = Pick<
   Tables["creator_profiles"]["Row"],
   "availability_status" | "bio" | "city" | "display_name" | "niche" | "province"
 > | null;
-
-export function getOnboardingPathByRole(role: UserRole) {
-  if (role === "creator") {
-    return "/creator/onboarding";
-  }
-
-  if (role === "umkm") {
-    return "/umkm/onboarding";
-  }
-
-  return getDashboardPathByRole(role);
-}
-
-export function shouldStartOnboarding(profile: OnboardingProfile) {
-  return (
-    profile.role !== "admin" &&
-    profile.account_status === "active" &&
-    !profile.onboarding_completed &&
-    !profile.onboarding_skipped_at
-  );
-}
 
 function hasText(value: string | null | undefined) {
   return typeof value === "string" && value.trim().length >= 2;

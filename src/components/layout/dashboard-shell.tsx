@@ -41,7 +41,7 @@ export function DashboardShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           <DashboardTopbar accountPreview={accountPreview} variant={variant} />
-          <main className="min-h-0 flex-1 overflow-y-auto py-5 lg:py-8">
+          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain py-5 lg:py-7">
             {children}
           </main>
         </div>

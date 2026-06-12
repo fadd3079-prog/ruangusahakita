@@ -99,9 +99,9 @@
     0 18px 44px -32px rgb(12 41 73 / 26%);
   --shadow-dashboard: 0 1px 2px rgb(12 41 73 / 5%),
     0 14px 34px -28px rgb(12 41 73 / 24%);
-  --page-gutter-mobile: 1.25rem;
-  --page-gutter-tablet: 2rem;
-  --page-gutter-desktop: 6.25rem;
+  --page-gutter-mobile: 1rem;
+  --page-gutter-tablet: 1.5rem;
+  --page-gutter-desktop: 2.5rem;
   --section-gap-sm: 3rem;
   --section-gap-md: 4rem;
   --section-gap-lg: 6rem;
@@ -196,6 +196,7 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     line-height: 1.5;
     text-rendering: optimizeLegibility;
+    overflow-wrap: anywhere;
   }
 
   ::selection {
@@ -260,6 +261,18 @@
     border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
     border-radius: 18px;
     box-shadow: var(--shadow-card);
+  }
+
+  .layout-stack {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
+  }
+
+  .layout-grid {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
   }
 
   .surface-soft {

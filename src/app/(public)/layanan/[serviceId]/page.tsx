@@ -14,6 +14,9 @@ import { ServiceTierOptions } from "@/features/services/components/service-tier-
 import { formatCurrency } from "@/lib/formatters/currency";
 import { getPublicServiceDetail } from "@/features/catalog/data/catalog-queries";
 import type { PublicServiceAddon, PublicPortfolioItem } from "@/features/catalog/data/catalog-types";
+import { buildCheckoutPath } from "@/features/checkout/lib/checkout-source";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 type ServicePageProps = {
   params: Promise<{
@@ -232,22 +235,19 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                   Tambah ke Keranjang
                 </SubmitButton>
               </form>
-              <form action={addServiceToCart}>
-                <input type="hidden" name="serviceId" value={service.id} />
-                {primaryTier ? (
-                  <input type="hidden" name="tierId" value={primaryTier.id} />
-                ) : null}
-                <input type="hidden" name="redirectTo" value="/umkm/checkout" />
-                <SubmitButton
-                  pendingLabel="Melanjutkan..."
-                  size="lg"
-                  variant="outline"
-                  className="h-11 w-full rounded-full px-5"
-                  icon={<ArrowRight aria-hidden="true" />}
+              <Button asChild size="lg" variant="outline" className="h-11 w-full rounded-full px-5">
+                <Link
+                  href={buildCheckoutPath({
+                    addonIds: [],
+                    serviceId: service.id,
+                    source: "direct",
+                    tierId: primaryTier?.id ?? null,
+                  })}
                 >
                   Pesan Sekarang
-                </SubmitButton>
-              </form>
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
             </div>
           </div>
         </PageContainer>

@@ -1,54 +1,37 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-type AppRole = "admin" | "creator" | "umkm";
-type AuthProfile = {
-  id: string;
-  role: AppRole;
-  account_status: string;
-  onboarding_completed: boolean;
-  onboarding_skipped_at: string | null;
-};
-
-const authRoutes = new Set(["/login", "/register", "/forgot-password"]);
-
-function getDashboardPath(role: AppRole) {
-  if (role === "admin") return "/admin/dashboard";
-  if (role === "creator") return "/creator/dashboard";
-  return "/umkm/dashboard";
-}
-
-function getOnboardingPath(role: AppRole) {
-  if (role === "creator") return "/creator/onboarding";
-  if (role === "umkm") return "/umkm/onboarding";
-  return getDashboardPath(role);
-}
-
-function shouldStartOnboarding(profile: AuthProfile) {
-  return (
-    profile.role !== "admin" &&
-    profile.account_status === "active" &&
-    !profile.onboarding_completed &&
-    !profile.onboarding_skipped_at
-  );
-}
-
-function isProtectedRoute(path: string) {
-  return path.startsWith("/umkm") || path.startsWith("/creator") || path.startsWith("/admin");
-}
-
-function getRequiredRole(path: string): AppRole | null {
-  if (path.startsWith("/admin")) return "admin";
-  if (path.startsWith("/creator")) return "creator";
-  if (path.startsWith("/umkm")) return "umkm";
-  return null;
-}
+import {
+  getRequiredRole,
+  getRouteRedirect,
+  shouldBypassDashboardAuth,
+  type AuthRouteState,
+} from "@/lib/auth/routing";
+import type { Profile } from "@/lib/auth/roles";
+import { isDemoMode } from "@/lib/config/demo-mode";
 
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  const pathname = request.nextUrl.pathname;
+  const demoMode = isDemoMode();
 
+  if (demoMode) {
+    if (
+      shouldBypassDashboardAuth(true, pathname) &&
+      request.method !== "GET" &&
+      request.method !== "HEAD"
+    ) {
+      return NextResponse.json(
+        {
+          error: "Demo mode hanya menyediakan akses baca ke dashboard.",
+        },
+        { status: 403 },
+      );
+    }
+
+    return NextResponse.next({ request });
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -58,105 +41,81 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          );
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           );
         },
       },
-    }
+    },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let authState: AuthRouteState = { kind: "guest" };
 
-  const path = request.nextUrl.pathname;
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  function redirectTo(pathname: string, error?: string) {
-    const url = request.nextUrl.clone();
-    url.pathname = pathname;
-    url.search = "";
+    if (user) {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select(
+          "id, role, account_status, onboarding_completed, onboarding_skipped_at",
+        )
+        .eq("id", user.id)
+        .maybeSingle<Profile>();
 
-    if (error) {
-      url.searchParams.set("error", error);
+      authState =
+        error || !profile
+          ? { kind: "missing-profile" }
+          : { kind: "profile", profile };
     }
-
-    const response = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      response.cookies.set(cookie);
-    });
-    return response;
+  } catch {
+    authState = { kind: "guest" };
   }
 
-  const protectedRoute = isProtectedRoute(path);
+  const destination = getRouteRedirect(pathname, authState);
 
-  if (!user) {
-    if (protectedRoute) {
-      return redirectTo("/login");
-    }
-
+  if (!destination) {
     return supabaseResponse;
   }
 
-  if (!authRoutes.has(path) && !protectedRoute) {
-    return supabaseResponse;
+  const redirectUrl = new URL(destination, request.url);
+
+  if (
+    authState.kind === "guest" &&
+    destination === "/login" &&
+    getRequiredRole(pathname)
+  ) {
+    redirectUrl.searchParams.set(
+      "redirectTo",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    );
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role, account_status, onboarding_completed, onboarding_skipped_at")
-    .eq("id", user.id)
-    .single<AuthProfile>();
-
-  if (authRoutes.has(path)) {
-    if (profile?.account_status === "active") {
-      if (shouldStartOnboarding(profile)) {
-        return redirectTo(getOnboardingPath(profile.role));
-      }
-
-      return redirectTo(getDashboardPath(profile.role));
-    }
-
-    return supabaseResponse;
-  }
-
-  if (!profile) {
-    return redirectTo("/login", "profile");
-  }
-
-  if (profile.account_status !== "active") {
-    return redirectTo("/login", "inactive");
-  }
-
-  const requiredRole = getRequiredRole(path);
-
-  if (requiredRole && profile.role !== requiredRole) {
-    if (shouldStartOnboarding(profile)) {
-      return redirectTo(getOnboardingPath(profile.role));
-    }
-
-    return redirectTo(getDashboardPath(profile.role));
-  }
-
-  const onboardingPath = getOnboardingPath(profile.role);
-
-  if (path === onboardingPath && profile.onboarding_completed) {
-    return redirectTo(getDashboardPath(profile.role));
-  }
-
-  if (path !== onboardingPath && shouldStartOnboarding(profile)) {
-    return redirectTo(onboardingPath);
-  }
-
-  return supabaseResponse;
+  const response = NextResponse.redirect(redirectUrl);
+  supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+  return response;
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/",
+    "/katalog/:path*",
+    "/cara-kerja/:path*",
+    "/bantuan/:path*",
+    "/kreator/:path*",
+    "/layanan/:path*",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/callback",
+    "/admin/:path*",
+    "/umkm/:path*",
+    "/creator/:path*",
   ],
 };

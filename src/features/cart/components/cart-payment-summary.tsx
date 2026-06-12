@@ -24,7 +24,7 @@ export function CartPaymentSummary({
   return (
     <aside
       aria-labelledby="cart-payment-summary-title"
-      className="overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(150deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)] lg:sticky lg:top-24"
+      className="min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(150deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)] xl:sticky xl:top-6 xl:self-start"
     >
       <div className="p-5">
         <div className="flex items-center gap-3">
@@ -47,7 +47,7 @@ export function CartPaymentSummary({
             <WalletCards className="size-4 text-white" aria-hidden="true" />
             Nominal yang akan dilanjutkan
           </p>
-          <p className="mt-3 text-4xl font-semibold tracking-tight text-white">
+          <p className="mt-3 break-words text-3xl font-semibold tracking-tight text-white">
             {formatCurrency(totalPayment)}
           </p>
         </div>
@@ -59,8 +59,7 @@ export function CartPaymentSummary({
         </dl>
 
         <p className="mt-5 text-sm leading-6 text-white/68">
-          Pastikan detail layanan dan brief sudah sesuai sebelum melanjutkan ke
-          tahap berikutnya. Nominal dihitung ulang dari data layanan di server.
+          Total akan dihitung ulang di server sebelum pesanan dibuat.
         </p>
 
         <Button

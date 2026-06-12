@@ -1,5 +1,6 @@
 import { unstable_rethrow } from "next/navigation";
 
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -28,6 +29,10 @@ export type CreatorServiceEditData = CreatorServiceItem & {
 };
 
 async function getCurrentUserId() {
+  if (isDemoMode()) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -64,6 +69,10 @@ export async function getCurrentCreatorProfile() {
 }
 
 export async function getCreatorServiceCategories() {
+  if (isDemoMode()) {
+    return [];
+  }
+
   try {
     const supabase = await createClient();
     const { data, error } = await supabase

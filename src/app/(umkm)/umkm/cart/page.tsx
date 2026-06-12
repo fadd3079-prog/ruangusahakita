@@ -76,29 +76,28 @@ export default async function UmkmCartPage({ searchParams }: UmkmCartPageProps) 
   return (
     <main>
       <PageContainer>
-        <div className="space-y-8">
-          <section className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
-            <div className="grid gap-8 p-6 sm:p-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-end">
+        <div className="space-y-6">
+          <section className="overflow-hidden rounded-[20px] border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
+            <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-end">
               <div>
                 <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
                   <Sparkles className="size-4" aria-hidden="true" />
                   UMKM Checkout
                 </p>
-                <h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                  Keranjang layanan untuk brief campaign yang lebih terarah.
+                <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                  Tinjau layanan pilihan Anda.
                 </h1>
-                <p className="mt-5 max-w-3xl text-sm leading-6 text-white/72 sm:text-base">
-                  Tinjau paket jasa digital, kreator, output, estimasi pengerjaan,
-                  revisi, add-on, dan total sebelum menyusun brief campaign.
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/72 sm:text-base">
+                  Periksa tier, add-on, estimasi, dan total sebelum checkout.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur">
+              <div className="rounded-xl border border-white/10 bg-white/10 p-4 backdrop-blur">
                 <FileText className="size-5 text-white" aria-hidden="true" />
-                <h2 className="mt-4 text-xl font-semibold tracking-tight text-white">
-                  Ringkas sebelum lanjut
+                <h2 className="mt-3 text-lg font-semibold tracking-tight text-white">
+                  Sebelum checkout
                 </h2>
-                <ul className="mt-4 space-y-3 text-sm leading-6 text-white/72">
+                <ul className="mt-3 space-y-2 text-sm leading-5 text-white/72">
                   {[
                     "Paket jasa dan tier sudah dipilih.",
                     "Add-on dihitung ulang dari database.",
@@ -120,8 +119,8 @@ export default async function UmkmCartPage({ searchParams }: UmkmCartPageProps) 
           {errorMessage ? <StatusPanel tone="error" message={errorMessage} /> : null}
           {successMessage ? <StatusPanel tone="success" message={successMessage} /> : null}
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-6">
+          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(340px,380px)] 2xl:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="min-w-0 space-y-6">
               <div className="flex justify-end">
                 <form action={clearCart}>
                   <SubmitButton

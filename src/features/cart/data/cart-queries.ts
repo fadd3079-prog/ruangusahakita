@@ -1,9 +1,11 @@
 import { unstable_noStore as noStore } from "next/cache";
 
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import type { StorageBucket } from "@/lib/storage/buckets";
 import { createStorageSignedUrl } from "@/lib/storage/urls";
 import type { Database } from "@/lib/supabase/types";
+import type { CheckoutSelection } from "@/features/checkout/lib/checkout-source";
 
 type Tables = Database["public"]["Tables"];
 
@@ -84,12 +86,17 @@ export type CheckoutUmkmData = {
 export type CurrentCheckoutData = {
   brief: CheckoutBriefData | null;
   cart: CurrentCart;
+  source: CheckoutSelection["source"];
   umkm: CheckoutUmkmData | null;
 };
 
 const adminFee = 5000;
 
 async function getCurrentUmkmProfile() {
+  if (isDemoMode()) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -146,6 +153,10 @@ function unique(values: readonly (string | null | undefined)[]) {
 
 export async function getCurrentCart(): Promise<CurrentCart> {
   noStore();
+  if (isDemoMode()) {
+    return emptyCart();
+  }
+
   try {
     const umkm = await getCurrentUmkmProfile();
 
@@ -205,15 +216,30 @@ export async function getCurrentCart(): Promise<CurrentCart> {
   }
 }
 
-export async function getCurrentCheckoutData(): Promise<CurrentCheckoutData> {
+export async function getCurrentCheckoutData(
+  selection: CheckoutSelection = { source: "cart" },
+): Promise<CurrentCheckoutData> {
+  if (isDemoMode()) {
+    return {
+      brief: null,
+      cart: emptyCart(),
+      source: selection.source,
+      umkm: null,
+    };
+  }
+
   try {
     const umkm = await getCurrentUmkmProfile();
-    const cart = await getCurrentCart();
+    const cart =
+      selection.source === "direct"
+        ? await getDirectCheckoutCart(selection)
+        : await getCurrentCart();
 
     if (!umkm) {
       return {
         brief: null,
         cart,
+        source: selection.source,
         umkm: null,
       };
     }
@@ -233,6 +259,7 @@ export async function getCurrentCheckoutData(): Promise<CurrentCheckoutData> {
     return {
       brief: brief ? mapBrief(brief, assets) : null,
       cart,
+      source: selection.source,
       umkm: {
         businessCategory: umkm.business_category,
         businessName: umkm.business_name,
@@ -244,9 +271,110 @@ export async function getCurrentCheckoutData(): Promise<CurrentCheckoutData> {
     return {
       brief: null,
       cart: emptyCart(),
+      source: selection.source,
       umkm: null,
     };
   }
+}
+
+async function getDirectCheckoutCart(
+  selection: Extract<CheckoutSelection, { source: "direct" }>,
+): Promise<CurrentCart> {
+  const supabase = await createClient();
+  const { data: service, error: serviceError } = await supabase
+    .from("service_packages")
+    .select("*")
+    .eq("id", selection.serviceId)
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (serviceError || !service) {
+    return emptyCart();
+  }
+
+  const tierQuery = supabase
+    .from("service_package_tiers")
+    .select("*")
+    .eq("service_package_id", service.id)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  const { data: tiers, error: tierError } = selection.tierId
+    ? await tierQuery.eq("id", selection.tierId).limit(1)
+    : await tierQuery.limit(1);
+  const tier = tiers?.[0] ?? null;
+
+  if (tierError || !tier) {
+    return emptyCart();
+  }
+
+  const [creatorResult, categoryResult, addonResult] = await Promise.all([
+    supabase
+      .from("creator_profiles")
+      .select("*")
+      .eq("id", service.creator_id)
+      .maybeSingle(),
+    service.category_id
+      ? supabase
+          .from("service_categories")
+          .select("*")
+          .eq("id", service.category_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    selection.addonIds.length > 0
+      ? supabase
+          .from("service_addons")
+          .select("*")
+          .eq("service_package_id", service.id)
+          .eq("is_active", true)
+          .in("id", [...selection.addonIds])
+      : Promise.resolve({ data: [] as AddonRow[], error: null }),
+  ]);
+
+  if (
+    creatorResult.error ||
+    !creatorResult.data ||
+    addonResult.error ||
+    (addonResult.data?.length ?? 0) !== selection.addonIds.length
+  ) {
+    return emptyCart();
+  }
+
+  const addons = (addonResult.data ?? []).map((addon) => ({
+    id: addon.id,
+    name: addon.name,
+    price: toNumber(addon.price),
+  }));
+  const tierPrice = toNumber(tier.price);
+  const addonTotal = addons.reduce((total, addon) => total + addon.price, 0);
+  const item: CartDisplayItem = {
+    addonTotal,
+    addons,
+    categoryDescription:
+      categoryResult.data?.description ??
+      "Layanan digital untuk kebutuhan promosi UMKM.",
+    categoryName: categoryResult.data?.name ?? "Layanan digital",
+    creatorName: creatorResult.data.display_name,
+    deliverables: tier.deliverables ?? service.deliverables ?? [],
+    estimatedDays: tier.estimated_days,
+    id: `${service.id}:${tier.id}`,
+    revisionCount: tier.revision_count,
+    serviceId: service.id,
+    serviceTitle: service.title,
+    subtotal: tierPrice + addonTotal,
+    tierId: tier.id,
+    tierName: tier.name,
+    tierPrice,
+  };
+
+  return {
+    addonTotal,
+    adminFee,
+    cart: null,
+    items: [item],
+    serviceSubtotal: tierPrice,
+    totalPayment: tierPrice + addonTotal + adminFee,
+  };
 }
 
 async function enrichCartItems(items: readonly CartItemRow[]) {

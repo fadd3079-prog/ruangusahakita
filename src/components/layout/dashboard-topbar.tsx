@@ -1,4 +1,5 @@
-import { Menu } from "lucide-react";
+import Link from "next/link";
+import { Menu, ShoppingCart } from "lucide-react";
 
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +69,13 @@ export function DashboardTopbar({ accountPreview, variant }: DashboardTopbarProp
         </div>
 
         <div className="flex items-center gap-3">
+          {variant === "umkm" ? (
+            <Button asChild variant="outline" size="icon" className="rounded-full">
+              <Link href="/umkm/cart" aria-label="Buka keranjang">
+                <ShoppingCart aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : null}
           <Badge variant="secondary" className="rounded-full">Live</Badge>
           <div className="hidden items-center gap-2 rounded-full border bg-card px-2 py-1 sm:flex">
             <div

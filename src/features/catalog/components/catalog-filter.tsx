@@ -25,7 +25,9 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
+  SheetClose,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
@@ -247,6 +249,14 @@ export function CatalogFilter({
     rating !== "all" ||
     availability !== "all" ||
     sort !== "relevant";
+  const activeFilterCount = [
+    categoryId !== "all",
+    location !== "all",
+    niche !== "all",
+    price !== "all",
+    rating !== "all",
+    availability !== "all",
+  ].filter(Boolean).length;
 
   function resetFilters() {
     setQuery("");
@@ -282,8 +292,62 @@ export function CatalogFilter({
 
   return (
     <div className="space-y-6">
-      <section className="sticky top-[4rem] z-30 rounded-2xl border border-border/80 bg-background/92 p-3 shadow-[var(--shadow-soft)] backdrop-blur-xl">
-        <div className="grid gap-3 xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-end">
+      <section className="sticky top-[4rem] z-30 rounded-2xl border border-border/80 bg-background/94 p-2.5 shadow-[var(--shadow-soft)] backdrop-blur-xl sm:p-3">
+        <div className="flex items-center gap-2 lg:hidden">
+          <CatalogSearch
+            value={query}
+            onChange={setQuery}
+            labelClassName="sr-only"
+            className="min-w-0 flex-1"
+          />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 shrink-0 rounded-xl bg-card px-3"
+              >
+                <SlidersHorizontal aria-hidden="true" className="size-4" />
+                <span>Filter</span>
+                {activeFilterCount > 0 ? (
+                  <span className="grid size-5 place-items-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
+                    {activeFilterCount}
+                  </span>
+                ) : null}
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              className="max-h-[82dvh] gap-0 overflow-hidden rounded-t-2xl p-0"
+            >
+              <SheetHeader className="border-b px-4 py-3 text-left">
+                <SheetTitle>Filter katalog</SheetTitle>
+                <SheetDescription>
+                  Saring kreator dan urutkan hasil.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+                <CatalogSort value={sort} onChange={setSort} />
+                {renderFilterPanel()}
+              </div>
+              <SheetFooter className="mt-0 grid grid-cols-2 border-t bg-background p-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={resetFilters}
+                  disabled={!hasActiveFilter}
+                >
+                  Reset
+                </Button>
+                <SheetClose asChild>
+                  <Button type="button">Lihat {filteredItems.length} kreator</Button>
+                </SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        <div className="hidden gap-3 lg:grid xl:grid-cols-[minmax(280px,1fr)_auto] xl:items-end">
           <div className="grid gap-3 lg:grid-cols-[minmax(260px,1.2fr)_repeat(3,minmax(150px,0.72fr))] lg:items-end">
             <CatalogSearch
               value={query}
@@ -336,31 +400,6 @@ export function CatalogFilter({
                 )}
               />
             </Button>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-full bg-card lg:hidden"
-                >
-                  <SlidersHorizontal aria-hidden="true" />
-                  Semua filter
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="left"
-                className="w-[min(24rem,calc(100vw-2rem))] overflow-y-auto p-0"
-              >
-                <SheetHeader className="border-b p-5 text-left">
-                  <SheetTitle>Filter katalog</SheetTitle>
-                  <SheetDescription>
-                    Pilih kategori, lokasi, niche, harga, rating, dan
-                    ketersediaan kreator.
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="p-5">{renderFilterPanel()}</div>
-              </SheetContent>
-            </Sheet>
             <Button
               type="button"
               variant="ghost"
@@ -377,7 +416,19 @@ export function CatalogFilter({
 
         {showAdvancedFilters ? (
           <div className="mt-3 hidden border-t border-border/70 pt-3 lg:block">
-            {renderFilterPanel()}
+            <AdvancedFilterPanel
+              availability={availability}
+              niche={niche}
+              niches={niches}
+              onAvailabilityChange={(value) =>
+                setAvailability(value as AvailabilityFilterValue)
+              }
+              onNicheChange={setNiche}
+              onPriceChange={(value) => setPrice(value as PriceFilterValue)}
+              onRatingChange={(value) => setRating(value as RatingFilterValue)}
+              price={price}
+              rating={rating}
+            />
           </div>
         ) : null}
       </section>
@@ -499,6 +550,62 @@ function FilterPanel({
       <FilterSelect
         label="Ketersediaan kreator"
         value={filterState.availability}
+        onChange={onAvailabilityChange}
+        options={availabilityOptions}
+      />
+    </div>
+  );
+}
+
+type AdvancedFilterPanelProps = {
+  availability: AvailabilityFilterValue;
+  niche: string;
+  niches: readonly string[];
+  onAvailabilityChange: (value: string) => void;
+  onNicheChange: (value: string) => void;
+  onPriceChange: (value: string) => void;
+  onRatingChange: (value: string) => void;
+  price: PriceFilterValue;
+  rating: RatingFilterValue;
+};
+
+function AdvancedFilterPanel({
+  availability,
+  niche,
+  niches,
+  onAvailabilityChange,
+  onNicheChange,
+  onPriceChange,
+  onRatingChange,
+  price,
+  rating,
+}: AdvancedFilterPanelProps) {
+  return (
+    <div className="grid gap-3 lg:grid-cols-4">
+      <FilterSelect
+        label="Niche"
+        value={niche}
+        onChange={onNicheChange}
+        options={[
+          { value: "all", label: "Semua niche" },
+          ...niches.map((item) => ({ value: item, label: item })),
+        ]}
+      />
+      <FilterSelect
+        label="Harga"
+        value={price}
+        onChange={onPriceChange}
+        options={priceOptions}
+      />
+      <FilterSelect
+        label="Rating"
+        value={rating}
+        onChange={onRatingChange}
+        options={ratingOptions}
+      />
+      <FilterSelect
+        label="Ketersediaan"
+        value={availability}
         onChange={onAvailabilityChange}
         options={availabilityOptions}
       />

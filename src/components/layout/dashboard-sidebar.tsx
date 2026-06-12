@@ -97,12 +97,12 @@ export function DashboardSidebar({
         isDrawer
           ? "h-full bg-background"
           : "h-dvh shrink-0 border-r border-border/70 bg-background/94 transition-[width] duration-200 ease-out",
-        !isDrawer && (collapsed ? "w-[80px]" : "w-[264px]"),
+        !isDrawer && (collapsed ? "w-[72px]" : "w-[248px]"),
         className,
       )}
     >
-      <div className="flex h-full flex-col p-3">
-        <div className="mb-6 flex min-h-12 items-center justify-between gap-2">
+      <div className="flex h-full min-w-0 flex-col p-3">
+        <div className="mb-4 flex min-h-12 items-center justify-between gap-2">
           <AppLogo showText={!collapsed || isDrawer} />
           {!isDrawer && onToggleCollapsed ? (
             <Button
@@ -122,7 +122,7 @@ export function DashboardSidebar({
           ) : null}
         </div>
 
-        <div className={cn("mb-4 rounded-2xl border border-border/70 bg-muted/40 p-3", collapsed && !isDrawer && "sr-only")}>
+        <div className={cn("mb-3 rounded-xl border border-border/70 bg-muted/40 p-3", collapsed && !isDrawer && "sr-only")}>
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
             Dashboard {roleLabel}
           </p>
@@ -147,7 +147,7 @@ export function DashboardSidebar({
                 aria-current={isActive ? "page" : undefined}
                 title={collapsed && !isDrawer ? item.title : undefined}
                 className={cn(
-                  "inline-flex min-h-10 items-center rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                  "inline-flex min-h-10 min-w-0 items-center rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                   collapsed && !isDrawer
                     ? "justify-center px-2"
                     : "gap-2 px-3 py-2.5",
@@ -157,7 +157,7 @@ export function DashboardSidebar({
                 )}
               >
                 <Icon aria-hidden="true" className="size-4" />
-                <span className={cn(collapsed && !isDrawer && "sr-only")}>
+                <span className={cn("truncate", collapsed && !isDrawer && "sr-only")}>
                   {item.title}
                 </span>
               </Link>

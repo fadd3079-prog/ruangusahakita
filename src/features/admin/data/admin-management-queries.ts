@@ -1,3 +1,4 @@
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -50,29 +51,37 @@ const activeOrderStatuses: readonly Enums["order_status"][] = [
 ];
 
 async function getAdminClient() {
-  const supabase = await createClient();
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !userData.user) {
+  if (isDemoMode()) {
     return null;
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role, account_status")
-    .eq("id", userData.user.id)
-    .maybeSingle();
+  try {
+    const supabase = await createClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-  if (
-    profileError ||
-    !profile ||
-    profile.role !== "admin" ||
-    profile.account_status !== "active"
-  ) {
+    if (userError || !userData.user) {
+      return null;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, account_status")
+      .eq("id", userData.user.id)
+      .maybeSingle();
+
+    if (
+      profileError ||
+      !profile ||
+      profile.role !== "admin" ||
+      profile.account_status !== "active"
+    ) {
+      return null;
+    }
+
+    return supabase;
+  } catch {
     return null;
   }
-
-  return supabase;
 }
 
 function toNumber(value: number | string | null | undefined) {
