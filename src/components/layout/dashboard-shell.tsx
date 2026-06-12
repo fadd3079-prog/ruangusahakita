@@ -27,7 +27,7 @@ export function DashboardShell({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--surface),var(--background))]">
+    <div className="h-dvh overflow-hidden bg-[linear-gradient(180deg,var(--surface),var(--background))] [--page-gutter-desktop:2rem] [--page-gutter-mobile:1rem] [--page-gutter-tablet:1.5rem]">
       <div className="flex h-full min-w-0">
         <DashboardSidebar
           variant={variant}

@@ -99,6 +99,12 @@
     0 18px 44px -32px rgb(12 41 73 / 26%);
   --shadow-dashboard: 0 1px 2px rgb(12 41 73 / 5%),
     0 14px 34px -28px rgb(12 41 73 / 24%);
+  --page-gutter-mobile: 1.25rem;
+  --page-gutter-tablet: 2rem;
+  --page-gutter-desktop: 6.25rem;
+  --section-gap-sm: 3rem;
+  --section-gap-md: 4rem;
+  --section-gap-lg: 6rem;
   --selection: color-mix(in srgb, var(--brand-teal-600) 22%, white);
   --selection-foreground: var(--brand-navy-950);
   --sidebar: #f7faf9;
@@ -184,6 +190,7 @@
     @apply bg-background text-foreground;
     min-height: 100vh;
     background:
+      radial-gradient(circle at top left, rgb(22 113 99 / 7%), transparent 28rem),
       linear-gradient(180deg, var(--background) 0%, var(--surface) 100%);
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -216,6 +223,12 @@
     text-wrap: pretty;
   }
 
+  input,
+  textarea,
+  select {
+    background-color: var(--card);
+  }
+
   a {
     color: inherit;
     text-underline-offset: 0.18em;
@@ -244,33 +257,52 @@
 @layer utilities {
   .surface-card {
     background: var(--card);
-    border: 1px solid var(--border);
+    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+    border-radius: 18px;
     box-shadow: var(--shadow-card);
   }
 
   .surface-soft {
     background: var(--surface-soft);
-    border: 1px solid var(--border);
+    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+    border-radius: 18px;
   }
 
   .surface-elevated {
     background: var(--surface-elevated);
-    border: 1px solid var(--border);
+    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+    border-radius: 18px;
     box-shadow: var(--shadow-soft);
   }
 
   .marketplace-card {
     background: var(--card);
-    border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
     border-radius: 18px;
-    box-shadow: var(--shadow-marketplace);
+    box-shadow: var(--shadow-soft);
   }
 
   .dashboard-surface {
-    background: color-mix(in srgb, var(--card) 94%, var(--surface-soft));
+    background: color-mix(in srgb, var(--card) 96%, var(--surface-soft));
     border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
     border-radius: 18px;
     box-shadow: var(--shadow-dashboard);
+  }
+
+  .section-y {
+    padding-block: var(--section-gap-sm);
+  }
+
+  @media (min-width: 640px) {
+    .section-y {
+      padding-block: var(--section-gap-md);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .section-y {
+      padding-block: var(--section-gap-lg);
+    }
   }
 
   .premium-focus {

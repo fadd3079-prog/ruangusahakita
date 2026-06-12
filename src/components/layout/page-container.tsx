@@ -23,7 +23,7 @@ export function PageContainer({
   return (
     <div
       className={cn(
-        "mx-auto w-full px-5 sm:px-8 lg:px-[100px]",
+        "mx-auto w-full px-[var(--page-gutter-mobile)] sm:px-[var(--page-gutter-tablet)] lg:px-[var(--page-gutter-desktop)]",
         maxWidthClasses[maxWidth],
         className,
       )}
