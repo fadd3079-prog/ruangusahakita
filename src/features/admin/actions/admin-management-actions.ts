@@ -180,3 +180,25 @@ export async function updateAdminComplaintStatusAction(formData: FormData) {
   revalidatePath("/admin/reports");
   redirect("/admin/complaints?updated=1");
 }
+
+export async function updateAdminReviewVisibilityAction(formData: FormData) {
+  const reviewId = getText(formData, "reviewId");
+
+  if (!reviewId) {
+    redirect("/admin/complaints?error=invalid");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_set_review_visibility", {
+    next_visible: getBoolean(formData, "isVisible"),
+    target_review_id: reviewId,
+  });
+
+  if (error) {
+    redirect(`/admin/complaints?error=${getAdminErrorCode(error.message)}`);
+  }
+
+  revalidatePath("/admin/complaints");
+  revalidatePath("/katalog");
+  redirect("/admin/complaints?review_updated=1");
+}

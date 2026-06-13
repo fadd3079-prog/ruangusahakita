@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getAdminAnalyticsDashboard } from "@/features/admin/data/admin-analytics-queries";
+import {
+  createAnalyticsInsights,
+  getAdminAnalyticsDashboard,
+  type AnalyticsBucket,
+  type AnalyticsInsight,
+  type AnalyticsRecentEvent,
+} from "@/features/admin/data/admin-analytics-queries";
 import { getAdminReportMetrics } from "@/features/admin/data/admin-management-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { createClient } from "@/lib/supabase/server";
@@ -41,9 +47,11 @@ function escapeHtml(value: string | number) {
 
 function createHtmlReport({
   analytics,
+  insights,
   report,
 }: {
   analytics: Awaited<ReturnType<typeof getAdminAnalyticsDashboard>>;
+  insights: readonly AnalyticsInsight[];
   report: Awaited<ReturnType<typeof getAdminReportMetrics>>;
 }) {
   const rows = [
@@ -93,6 +101,9 @@ ${rows
 ${rows.map((row) => `<tr><th>${escapeHtml(row[0])}</th><td>${escapeHtml(row[1])}</td></tr>`).join("")}
 </tbody>
 </table>
+${createHtmlSection("Funnel", analytics.conversionFunnel)}
+${createHtmlSection("Device", analytics.deviceBreakdown)}
+${createHtmlSection("Source / Referrer", analytics.sourceBreakdown)}
 <h2>Top Pages</h2>
 <table>
 <thead><tr><th>Path</th><th>Event</th></tr></thead>
@@ -100,9 +111,52 @@ ${rows.map((row) => `<tr><th>${escapeHtml(row[0])}</th><td>${escapeHtml(row[1])}
 ${analytics.topPages.map((item) => `<tr><td>${escapeHtml(item.label)}</td><td>${escapeHtml(item.value)}</td></tr>`).join("")}
 </tbody>
 </table>
+${createHtmlSection("Top Layanan", analytics.servicePerformance)}
+${createHtmlSection("Top Kreator", analytics.creatorPerformance)}
+${createHtmlSection("Order Trend", analytics.orderTrend)}
+${createHtmlSection("Revenue Trend", analytics.revenueTrend)}
+<h2>Insight</h2>
+<table>
+<thead><tr><th>Insight</th><th>Nilai</th><th>Detail</th></tr></thead>
+<tbody>
+${insights.map((item) => `<tr><td>${escapeHtml(item.label)}</td><td>${escapeHtml(item.value)}</td><td>${escapeHtml(item.detail)}</td></tr>`).join("")}
+</tbody>
+</table>
+<h2>Recent Activity</h2>
+<table>
+<thead><tr><th>Event</th><th>Role</th><th>Path</th><th>Source</th><th>Device</th><th>Waktu</th></tr></thead>
+<tbody>
+${analytics.recentEvents.map(createHtmlEventRow).join("")}
+</tbody>
+</table>
 </main>
 </body>
 </html>`;
+}
+
+function createHtmlSection(title: string, items: readonly AnalyticsBucket[]) {
+  return `<h2>${escapeHtml(title)}</h2>
+<table>
+<thead><tr><th>Label</th><th>Value</th></tr></thead>
+<tbody>
+${items.map((item) => `<tr><td>${escapeHtml(item.label)}</td><td>${escapeHtml(item.value)}</td></tr>`).join("")}
+</tbody>
+</table>`;
+}
+
+function createHtmlEventRow(event: AnalyticsRecentEvent) {
+  return `<tr><td>${escapeHtml(event.eventType)}</td><td>${escapeHtml(event.role)}</td><td>${escapeHtml(event.path)}</td><td>${escapeHtml(event.source ?? "direct")}</td><td>${escapeHtml([event.deviceType, event.browserName].filter(Boolean).join(" / ") || "-")}</td><td>${escapeHtml(event.createdAt)}</td></tr>`;
+}
+
+function sectionRows(
+  title: string,
+  items: readonly AnalyticsBucket[],
+): readonly (readonly (string | number)[])[] {
+  return [
+    [],
+    [title, "Value"],
+    ...items.map((item) => [item.label, item.value] as const),
+  ];
 }
 
 export async function GET(request: NextRequest) {
@@ -115,9 +169,10 @@ export async function GET(request: NextRequest) {
     getAdminReportMetrics(),
     getAdminAnalyticsDashboard({ limit: 25 }),
   ]);
+  const insights = createAnalyticsInsights(analytics);
 
   if (format === "html" || format === "print") {
-    return new NextResponse(createHtmlReport({ analytics, report }), {
+    return new NextResponse(createHtmlReport({ analytics, insights, report }), {
       headers: {
         "content-type": "text/html; charset=utf-8",
       },
@@ -135,12 +190,30 @@ export async function GET(request: NextRequest) {
     ["Event 30 Hari", analytics.summary.totalEvents],
     ["Page Views", analytics.summary.totalPageViews],
     ["Conversion", `${analytics.summary.conversionRate.toFixed(1)}%`],
+    ...sectionRows("Funnel", analytics.conversionFunnel),
+    ...sectionRows("Device", analytics.deviceBreakdown),
+    ...sectionRows("Source / Referrer", analytics.sourceBreakdown),
+    ...sectionRows("Top Pages", analytics.topPages),
+    ...sectionRows("Top Layanan", analytics.servicePerformance),
+    ...sectionRows("Top Kreator", analytics.creatorPerformance),
+    ...sectionRows("Order Trend", analytics.orderTrend),
+    ...sectionRows("Completed Order Trend", analytics.completedOrderTrend),
+    ...sectionRows("Revenue Trend", analytics.revenueTrend),
+    ...sectionRows("Event Type", analytics.eventCounts),
     [],
-    ["Top Pages", "Views"],
-    ...analytics.topPages.map((item) => [item.label, item.value] as const),
+    ["Insight", "Value", "Detail"],
+    ...insights.map((item) => [item.label, item.value, item.detail] as const),
     [],
-    ["Event Type", "Count"],
-    ...analytics.eventCounts.map((item) => [item.label, item.value] as const),
+    ["Recent Event", "Role", "Path", "Source", "Device", "Browser", "Created At"],
+    ...analytics.recentEvents.map((event) => [
+      event.eventType,
+      event.role,
+      event.path,
+      event.source ?? "direct",
+      event.deviceType ?? "-",
+      event.browserName ?? "-",
+      event.createdAt,
+    ] as const),
   ];
 
   return new NextResponse(createCsv(rows), {

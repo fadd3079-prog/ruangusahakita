@@ -1,68 +1,139 @@
-const orderStatusFilters = [
-  "Semua",
-  "Menunggu Pembayaran",
-  "Konten Diproduksi",
-  "Hasil Dikirim",
-  "Revisi Diminta",
-  "Selesai",
-] as const;
+import { Search } from "lucide-react";
 
-const paymentStatusFilters = [
-  "Semua Pembayaran",
-  "Dibayar",
-  "Menunggu Pembayaran",
-  "Kedaluwarsa",
-] as const;
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import type { Database } from "@/lib/supabase/types";
+
+type OrderStatus = Database["public"]["Enums"]["order_status"];
+type PaymentStatus = Database["public"]["Enums"]["payment_status"];
+
+export type OrderListFilters = {
+  paymentStatus: PaymentStatus | "all";
+  query: string;
+  sort: "latest" | "deadline" | "total";
+  status: OrderStatus | "all";
+};
 
 type OrderFilterBarProps = {
+  filters?: OrderListFilters;
   showPaymentFilter?: boolean;
 };
 
-export function OrderFilterBar({ showPaymentFilter = false }: OrderFilterBarProps) {
+const orderStatusOptions: readonly { label: string; value: OrderStatus | "all" }[] = [
+  { label: "Semua status", value: "all" },
+  { label: "Menunggu pembayaran", value: "awaiting_payment" },
+  { label: "Menunggu kreator", value: "waiting_creator_confirmation" },
+  { label: "Dikerjakan", value: "in_progress" },
+  { label: "Hasil dikirim", value: "submitted" },
+  { label: "Revisi diminta", value: "revision_requested" },
+  { label: "Selesai", value: "completed" },
+];
+
+const paymentStatusOptions: readonly { label: string; value: PaymentStatus | "all" }[] = [
+  { label: "Semua pembayaran", value: "all" },
+  { label: "Dibayar", value: "paid" },
+  { label: "Menunggu", value: "pending" },
+  { label: "Gagal", value: "failed" },
+  { label: "Kedaluwarsa", value: "expired" },
+];
+
+const sortOptions: readonly { label: string; value: OrderListFilters["sort"] }[] = [
+  { label: "Terbaru", value: "latest" },
+  { label: "Deadline", value: "deadline" },
+  { label: "Total tertinggi", value: "total" },
+];
+
+export function OrderFilterBar({
+  filters = {
+    paymentStatus: "all",
+    query: "",
+    sort: "latest",
+    status: "all",
+  },
+  showPaymentFilter = false,
+}: OrderFilterBarProps) {
   return (
     <section
       aria-label="Filter status pesanan"
-      className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]"
+      className="rounded-2xl border border-border/70 bg-card p-4 shadow-[var(--shadow-soft)]"
     >
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-primary">Filter UI</p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
-            Pilih status untuk monitoring
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Filter ini masih tampilan awal dan belum mengubah query data.
-          </p>
+      <form className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_180px_180px_160px_auto] lg:items-end">
+        <label className="grid gap-2">
+          <span className="text-xs font-semibold uppercase text-muted-foreground">
+            Cari
+          </span>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              name="q"
+              defaultValue={filters.query}
+              placeholder="Nomor, layanan, atau nama"
+              className="h-11 pl-9"
+            />
+          </div>
+        </label>
+        <SelectField
+          label="Status pesanan"
+          name="status"
+          options={orderStatusOptions}
+          value={filters.status}
+        />
+        {showPaymentFilter ? (
+          <SelectField
+            label="Pembayaran"
+            name="payment"
+            options={paymentStatusOptions}
+            value={filters.paymentStatus}
+          />
+        ) : (
+          <input type="hidden" name="payment" value="all" />
+        )}
+        <SelectField
+          label="Urutkan"
+          name="sort"
+          options={sortOptions}
+          value={filters.sort}
+        />
+        <div className="grid grid-cols-2 gap-2 lg:flex">
+          <Button type="submit" className="h-11">
+            Terapkan
+          </Button>
+          <Button asChild type="button" variant="outline" className="h-11">
+            <a href="?">Reset</a>
+          </Button>
         </div>
-        <div className="space-y-3">
-          <FilterButtonGroup labels={orderStatusFilters} />
-          {showPaymentFilter ? <FilterButtonGroup labels={paymentStatusFilters} /> : null}
-        </div>
-      </div>
+      </form>
     </section>
   );
 }
 
-type FilterButtonGroupProps = {
-  labels: readonly string[];
-};
-
-function FilterButtonGroup({ labels }: FilterButtonGroupProps) {
+function SelectField<TValue extends string>({
+  label,
+  name,
+  options,
+  value,
+}: {
+  label: string;
+  name: string;
+  options: readonly { label: string; value: TValue }[];
+  value: TValue;
+}) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {labels.map((label, index) => (
-        <button
-          key={label}
-          type="button"
-          className={
-            index === 0
-              ? "rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
-              : "rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted"
-          }
-        >
-          {label}
-        </button>
-      ))}
-    </div>
+    <label className="grid gap-2">
+      <span className="text-xs font-semibold uppercase text-muted-foreground">
+        {label}
+      </span>
+      <select
+        name={name}
+        defaultValue={value}
+        className="h-11 rounded-xl border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-[3px] focus:ring-ring/20"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }

@@ -71,8 +71,7 @@ export default async function CreatorDashboardPage() {
     isCreatorProfileComplete(currentCreator);
   const displayName = currentCreator?.display_name ?? "Profil kreator belum lengkap";
   const niche = currentCreator?.niche ?? "Belum diisi";
-  const completedOrders =
-    currentCreator?.completed_orders_count ?? dashboard.metrics.completedOrders;
+  const completedOrders = dashboard.metrics.completedOrders;
 
   const metrics: readonly DashboardMetric[] = [
     {

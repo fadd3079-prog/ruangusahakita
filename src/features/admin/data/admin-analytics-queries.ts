@@ -32,6 +32,7 @@ export type AdminAnalyticsFilters = {
 
 export type AdminAnalyticsDashboard = {
   categoryPerformance: readonly AnalyticsBucket[];
+  completedOrderTrend: readonly AnalyticsBucket[];
   conversionFunnel: readonly AnalyticsBucket[];
   creatorPerformance: readonly AnalyticsBucket[];
   creatorGrowth: readonly AnalyticsBucket[];
@@ -39,7 +40,10 @@ export type AdminAnalyticsDashboard = {
   eventCounts: readonly AnalyticsBucket[];
   eventsByDay: readonly AnalyticsBucket[];
   hasMoreRecentEvents: boolean;
+  orderTrend: readonly AnalyticsBucket[];
   recentEvents: readonly AnalyticsRecentEvent[];
+  revenueTrend: readonly AnalyticsBucket[];
+  roleBreakdown: readonly AnalyticsBucket[];
   servicePerformance: readonly AnalyticsBucket[];
   sourceBreakdown: readonly AnalyticsBucket[];
   summary: {
@@ -81,6 +85,7 @@ const eventTypes = [
 
 const emptyAnalyticsDashboard: AdminAnalyticsDashboard = {
   categoryPerformance: [],
+  completedOrderTrend: [],
   conversionFunnel: [],
   creatorPerformance: [],
   creatorGrowth: [],
@@ -88,7 +93,10 @@ const emptyAnalyticsDashboard: AdminAnalyticsDashboard = {
   eventCounts: [],
   eventsByDay: [],
   hasMoreRecentEvents: false,
+  orderTrend: [],
   recentEvents: [],
+  revenueTrend: [],
+  roleBreakdown: [],
   servicePerformance: [],
   sourceBreakdown: [],
   summary: {
@@ -173,6 +181,51 @@ function createDayBuckets(events: readonly AnalyticsEventRow[]) {
     .map(([label, value]) => ({ label, value }));
 }
 
+function createOrderCountBuckets(
+  orders: readonly Pick<
+    Tables["orders"]["Row"],
+    "completed_at" | "created_at" | "order_status"
+  >[],
+  mode: "created" | "completed",
+) {
+  const map = new Map<string, number>();
+
+  for (const order of orders) {
+    if (mode === "completed" && order.order_status !== "completed") {
+      continue;
+    }
+
+    const dateValue =
+      mode === "completed" ? order.completed_at ?? order.created_at : order.created_at;
+    increment(map, getDateKey(dateValue));
+  }
+
+  return Array.from(map.entries())
+    .sort(([first], [second]) => first.localeCompare(second))
+    .map(([label, value]) => ({ label, value }));
+}
+
+function createRevenueBuckets(
+  orders: readonly Pick<
+    Tables["orders"]["Row"],
+    "admin_fee" | "created_at" | "payment_status" | "platform_fee"
+  >[],
+) {
+  const map = new Map<string, number>();
+
+  for (const order of orders) {
+    if (order.payment_status !== "paid") {
+      continue;
+    }
+
+    increment(map, getDateKey(order.created_at), Number(order.platform_fee) + Number(order.admin_fee));
+  }
+
+  return Array.from(map.entries())
+    .sort(([first], [second]) => first.localeCompare(second))
+    .map(([label, value]) => ({ label, value }));
+}
+
 function getPathLabel(path: string) {
   return path.split("?", 1)[0] || "/";
 }
@@ -198,6 +251,56 @@ function createFunnel(events: readonly AnalyticsEventRow[]) {
     { label: "Order", value: map.get("order_created") ?? 0 },
     { label: "Pembayaran paid", value: map.get("payment_paid") ?? 0 },
   ];
+}
+
+function isNonAdminAnalyticsEvent(event: AnalyticsEventRow) {
+  return (
+    event.role !== "admin" &&
+    !event.path.startsWith("/admin") &&
+    !(event.referrer?.includes("/admin") ?? false)
+  );
+}
+
+function replaceBucketLabels(
+  items: readonly AnalyticsBucket[],
+  labels: ReadonlyMap<string, string>,
+) {
+  return items.map((item) => ({
+    ...item,
+    label: labels.get(item.label) ?? item.label,
+  }));
+}
+
+async function getServiceLabels(
+  supabase: Awaited<ReturnType<typeof getAdminSupabase>>,
+  serviceIds: readonly string[],
+) {
+  if (!supabase || serviceIds.length === 0) {
+    return new Map<string, string>();
+  }
+
+  const { data } = await supabase
+    .from("service_packages")
+    .select("id, title")
+    .in("id", serviceIds);
+
+  return new Map((data ?? []).map((item) => [item.id, item.title]));
+}
+
+async function getCreatorLabels(
+  supabase: Awaited<ReturnType<typeof getAdminSupabase>>,
+  creatorIds: readonly string[],
+) {
+  if (!supabase || creatorIds.length === 0) {
+    return new Map<string, string>();
+  }
+
+  const { data } = await supabase
+    .from("creator_profiles")
+    .select("id, display_name")
+    .in("id", creatorIds);
+
+  return new Map((data ?? []).map((item) => [item.id, item.display_name]));
 }
 
 function createRecentEvent(event: AnalyticsEventRow): AnalyticsRecentEvent {
@@ -411,6 +514,8 @@ export async function getAdminAnalyticsDashboard(
     let recentQuery = supabase
       .from("analytics_events")
       .select("*")
+      .neq("role", "admin")
+      .not("path", "like", "/admin%")
       .order("created_at", { ascending: false })
       .range(offset, offset + limit);
 
@@ -433,11 +538,13 @@ export async function getAdminAnalyticsDashboard(
 
     const since = new Date();
     since.setDate(since.getDate() - 29);
-    const [eventsResult, recentResult, umkmGrowth, creatorGrowth, categoryPerformance] =
+    const [eventsResult, recentResult, umkmGrowth, creatorGrowth, categoryPerformance, ordersResult] =
       await Promise.all([
         supabase
           .from("analytics_events")
           .select("*")
+          .neq("role", "admin")
+          .not("path", "like", "/admin%")
           .gte("created_at", since.toISOString())
           .order("created_at", { ascending: false })
           .limit(1000),
@@ -445,18 +552,29 @@ export async function getAdminAnalyticsDashboard(
         getGrowthBuckets(supabase, "umkm"),
         getGrowthBuckets(supabase, "creator"),
         getCategoryPerformance(supabase),
+        supabase
+          .from("orders")
+          .select("created_at, completed_at, order_status, payment_status, platform_fee, admin_fee")
+          .gte("created_at", since.toISOString())
+          .order("created_at", { ascending: true })
+          .limit(1000),
       ]);
 
     if (eventsResult.error || recentResult.error) {
       return emptyAnalyticsDashboard;
     }
 
-    const events = eventsResult.data ?? [];
-    const recentEvents = (recentResult.data ?? []).slice(0, limit).map(createRecentEvent);
+    const events = (eventsResult.data ?? []).filter(isNonAdminAnalyticsEvent);
+    const recentEvents = (recentResult.data ?? [])
+      .filter(isNonAdminAnalyticsEvent)
+      .slice(0, limit)
+      .map(createRecentEvent);
+    const orders = ordersResult.data ?? [];
     const eventCountMap = new Map<string, number>();
     const deviceMap = new Map<string, number>();
     const sourceMap = new Map<string, number>();
     const pageMap = new Map<string, number>();
+    const roleMap = new Map<string, number>();
     const serviceMap = new Map<string, number>();
     const creatorMap = new Map<string, number>();
     const activeUsers = new Set<string>();
@@ -466,6 +584,7 @@ export async function getAdminAnalyticsDashboard(
       increment(deviceMap, event.device_type);
       increment(sourceMap, event.source);
       increment(pageMap, getPathLabel(event.path));
+      increment(roleMap, event.role);
 
       if (event.user_id) {
         activeUsers.add(event.user_id);
@@ -483,18 +602,32 @@ export async function getAdminAnalyticsDashboard(
     const totalPageViews = eventCountMap.get("page_view") ?? 0;
     const orderCreated = eventCountMap.get("order_created") ?? 0;
     const conversionRate = totalPageViews > 0 ? (orderCreated / totalPageViews) * 100 : 0;
+    const serviceLabels = await getServiceLabels(
+      supabase,
+      Array.from(serviceMap.keys()).filter(isUuid),
+    );
+    const creatorLabels = await getCreatorLabels(
+      supabase,
+      Array.from(creatorMap.keys()).filter(isUuid),
+    );
+    const servicePerformance = replaceBucketLabels(toBuckets(serviceMap, 6), serviceLabels);
+    const creatorPerformance = replaceBucketLabels(toBuckets(creatorMap, 6), creatorLabels);
 
     return {
       categoryPerformance,
+      completedOrderTrend: createOrderCountBuckets(orders, "completed"),
       conversionFunnel: createFunnel(events),
-      creatorPerformance: toBuckets(creatorMap, 6),
+      creatorPerformance,
       creatorGrowth,
       deviceBreakdown: toBuckets(deviceMap, 5),
       eventCounts: toBuckets(eventCountMap, 10),
       eventsByDay: createDayBuckets(events),
       hasMoreRecentEvents: (recentResult.data ?? []).length > limit,
+      orderTrend: createOrderCountBuckets(orders, "created"),
       recentEvents,
-      servicePerformance: toBuckets(serviceMap, 6),
+      revenueTrend: createRevenueBuckets(orders),
+      roleBreakdown: toBuckets(roleMap, 4),
+      servicePerformance,
       sourceBreakdown: toBuckets(sourceMap, 6),
       summary: {
         activeVisitors: activeUsers.size,

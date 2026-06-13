@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { getCurrentAccountSummary } from "@/lib/auth/account";
 import { requireRole } from "@/lib/auth/guards";
 import { getCurrentCartItemCount } from "@/features/cart/data/cart-queries";
+import { getCurrentUnreadNotificationCount } from "@/features/notifications/data/notification-queries";
 
 type UmkmLayoutProps = {
   children: ReactNode;
@@ -11,9 +12,10 @@ type UmkmLayoutProps = {
 
 export default async function UmkmLayout({ children }: UmkmLayoutProps) {
   await requireRole("umkm");
-  const [account, cartCount] = await Promise.all([
+  const [account, cartCount, notificationCount] = await Promise.all([
     getCurrentAccountSummary(),
     getCurrentCartItemCount(),
+    getCurrentUnreadNotificationCount(),
   ]);
 
   return (
@@ -28,6 +30,7 @@ export default async function UmkmLayout({ children }: UmkmLayoutProps) {
           : null
       }
       cartCount={cartCount}
+      notificationCount={notificationCount}
       variant="umkm"
     >
       {children}

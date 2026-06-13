@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { getCurrentUnreadNotificationCount } from "@/features/notifications/data/notification-queries";
 import { getCurrentAccountSummary } from "@/lib/auth/account";
 import { requireRole } from "@/lib/auth/guards";
 
@@ -10,7 +11,10 @@ type CreatorLayoutProps = {
 
 export default async function CreatorLayout({ children }: CreatorLayoutProps) {
   await requireRole("creator");
-  const account = await getCurrentAccountSummary();
+  const [account, notificationCount] = await Promise.all([
+    getCurrentAccountSummary(),
+    getCurrentUnreadNotificationCount(),
+  ]);
 
   return (
     <DashboardShell
@@ -23,6 +27,7 @@ export default async function CreatorLayout({ children }: CreatorLayoutProps) {
             }
           : null
       }
+      notificationCount={notificationCount}
       variant="creator"
     >
       {children}

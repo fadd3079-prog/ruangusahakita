@@ -6,6 +6,7 @@ import { SubmitButton } from "@/components/common/submit-button";
 import { TruncateText } from "@/components/common/truncate-text";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -34,6 +35,10 @@ const availabilityLabels = {
 type AdminCreatorsPageProps = {
   searchParams: Promise<{
     error?: string;
+    featured?: string;
+    q?: string;
+    sort?: string;
+    verified?: string;
     updated?: string;
   }>;
 };
@@ -59,6 +64,33 @@ export default async function AdminCreatorsPage({
   const params = await searchParams;
   const creators = await getAdminCreators();
   const errorMessage = getErrorMessage(params.error);
+  const filters = getFilters(params);
+  const filteredCreators = creators
+    .filter((creator) => {
+      const searchable = `${creator.display_name} ${creator.niche ?? ""} ${creator.city ?? ""} ${creator.province ?? ""}`.toLowerCase();
+      const matchesQuery = filters.query ? searchable.includes(filters.query) : true;
+      const matchesVerified =
+        filters.verified === "all"
+          ? true
+          : creator.is_verified === (filters.verified === "verified");
+      const matchesFeatured =
+        filters.featured === "all"
+          ? true
+          : creator.is_featured === (filters.featured === "featured");
+
+      return matchesQuery && matchesVerified && matchesFeatured;
+    })
+    .toSorted((left, right) => {
+      if (filters.sort === "rating") {
+        return right.realAverageRating - left.realAverageRating;
+      }
+
+      if (filters.sort === "completed") {
+        return right.realCompletedOrdersCount - left.realCompletedOrdersCount;
+      }
+
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+    });
 
   return (
     <PageContainer>
@@ -88,16 +120,63 @@ export default async function AdminCreatorsPage({
           </Alert>
         ) : null}
 
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Cari nama atau niche..."
-            className="h-11 bg-card pl-9"
+        <form className="grid gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-[var(--shadow-soft)] lg:grid-cols-[minmax(240px,1fr)_170px_170px_170px_auto] lg:items-end">
+          <label className="grid gap-2">
+            <span className="text-xs font-semibold uppercase text-muted-foreground">
+              Cari
+            </span>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                name="q"
+                defaultValue={filters.query}
+                placeholder="Nama, niche, lokasi"
+                className="h-11 bg-card pl-9"
+              />
+            </div>
+          </label>
+          <SelectField
+            label="Verifikasi"
+            name="verified"
+            options={[
+              { label: "Semua", value: "all" },
+              { label: "Terverifikasi", value: "verified" },
+              { label: "Belum", value: "unverified" },
+            ]}
+            value={filters.verified}
           />
-        </div>
+          <SelectField
+            label="Unggulan"
+            name="featured"
+            options={[
+              { label: "Semua", value: "all" },
+              { label: "Unggulan", value: "featured" },
+              { label: "Reguler", value: "regular" },
+            ]}
+            value={filters.featured}
+          />
+          <SelectField
+            label="Urutkan"
+            name="sort"
+            options={[
+              { label: "Terbaru", value: "latest" },
+              { label: "Rating", value: "rating" },
+              { label: "Selesai", value: "completed" },
+            ]}
+            value={filters.sort}
+          />
+          <div className="grid grid-cols-2 gap-2 lg:flex">
+            <Button type="submit" className="h-11">
+              Terapkan
+            </Button>
+            <Button asChild type="button" variant="outline" className="h-11">
+              <a href="?">Reset</a>
+            </Button>
+          </div>
+        </form>
 
         <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
-          {creators.length > 0 ? (
+          {filteredCreators.length > 0 ? (
             <Table className="table-fixed">
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -109,7 +188,7 @@ export default async function AdminCreatorsPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {creators.map((creator) => (
+                {filteredCreators.map((creator) => (
                   <TableRow key={creator.id}>
                     <TableCell className="min-w-0">
                       <div className="flex items-center gap-3">
@@ -160,11 +239,11 @@ export default async function AdminCreatorsPage({
                       <div className="mb-1 flex items-center gap-2">
                         <Star className="size-4 fill-primary text-primary" />
                         <span className="font-semibold">
-                          {Number(creator.average_rating ?? 0).toFixed(1)}
+                          {creator.realAverageRating.toFixed(1)}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {creator.completed_orders_count} pesanan selesai
+                        {creator.realCompletedOrdersCount} pesanan selesai
                       </p>
                     </TableCell>
                     <TableCell>
@@ -189,12 +268,68 @@ export default async function AdminCreatorsPage({
             </Table>
           ) : (
             <div className="p-12 text-center text-sm text-muted-foreground">
-              Belum ada kreator
+              Belum ada kreator yang sesuai
             </div>
           )}
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+function getFilters(params: Awaited<AdminCreatorsPageProps["searchParams"]>) {
+  const verified = isVerifiedFilter(params.verified) ? params.verified : "all";
+  const featured = isFeaturedFilter(params.featured) ? params.featured : "all";
+  const sort = isSortFilter(params.sort) ? params.sort : "latest";
+
+  return {
+    featured,
+    query: params.q?.trim().toLowerCase() ?? "",
+    sort,
+    verified,
+  };
+}
+
+function isVerifiedFilter(value?: string): value is "all" | "verified" | "unverified" {
+  return value === "all" || value === "verified" || value === "unverified";
+}
+
+function isFeaturedFilter(value?: string): value is "all" | "featured" | "regular" {
+  return value === "all" || value === "featured" || value === "regular";
+}
+
+function isSortFilter(value?: string): value is "latest" | "rating" | "completed" {
+  return value === "latest" || value === "rating" || value === "completed";
+}
+
+function SelectField<TValue extends string>({
+  label,
+  name,
+  options,
+  value,
+}: {
+  label: string;
+  name: string;
+  options: readonly { label: string; value: TValue }[];
+  value: TValue;
+}) {
+  return (
+    <label className="grid gap-2">
+      <span className="text-xs font-semibold uppercase text-muted-foreground">
+        {label}
+      </span>
+      <select
+        name={name}
+        defaultValue={value}
+        className="h-11 rounded-xl border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-[3px] focus:ring-ring/20"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

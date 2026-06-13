@@ -8,9 +8,20 @@ function redirectTo(origin: string, path: string) {
   return NextResponse.redirect(new URL(path, origin));
 }
 
+function getSafeNextPath(url: URL) {
+  const next = url.searchParams.get("next");
+
+  if (next === "/reset-password") {
+    return next;
+  }
+
+  return null;
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const nextPath = getSafeNextPath(url);
 
   if (isDemoMode()) {
     return redirectTo(url.origin, "/login");
@@ -53,7 +64,7 @@ export async function GET(request: Request) {
       return redirectTo(url.origin, "/login?error=inactive");
     }
 
-    return redirectTo(url.origin, getPostLoginPath(profile));
+    return redirectTo(url.origin, nextPath ?? getPostLoginPath(profile));
   } catch {
     return redirectTo(url.origin, "/login?error=unavailable");
   }

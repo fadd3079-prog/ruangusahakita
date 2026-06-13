@@ -1575,6 +1575,49 @@ export interface Database {
           }
         ]
       }
+      messages: {
+        Row: {
+          id: string
+          order_id: string
+          sender_id: string
+          message: string
+          attachment_urls: string[] | null
+          is_internal: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          sender_id: string
+          message: string
+          attachment_urls?: string[] | null
+          is_internal?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          sender_id?: string
+          message?: string
+          attachment_urls?: string[] | null
+          is_internal?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       notifications: {
         Row: {
           id: string
@@ -1623,6 +1666,24 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      get_creator_public_stats: {
+        Args: {
+          target_creator_ids: string[]
+        }
+        Returns: {
+          creator_id: string
+          completed_orders_count: number
+          average_rating: number
+          review_count: number
+          completed_revenue: number
+        }[]
+      }
+      refresh_creator_profile_stats: {
+        Args: {
+          target_creator_id: string
+        }
+        Returns: undefined
+      }
       accept_creator_order: {
         Args: {
           target_order_id: string
@@ -1660,8 +1721,23 @@ export interface Database {
         }
         Returns: string
       }
+      admin_set_review_visibility: {
+        Args: {
+          next_visible: boolean
+          target_review_id: string
+        }
+        Returns: string
+      }
       approve_order_delivery: {
         Args: {
+          target_order_id: string
+        }
+        Returns: string
+      }
+      create_order_complaint: {
+        Args: {
+          complaint_description: string
+          complaint_subject: string
           target_order_id: string
         }
         Returns: string
@@ -1684,10 +1760,23 @@ export interface Database {
         }
         Returns: string
       }
+      mark_notification_read: {
+        Args: {
+          target_notification_id: string
+        }
+        Returns: string
+      }
       request_order_revision: {
         Args: {
           reference_urls: string[]
           revision_note: string
+          target_order_id: string
+        }
+        Returns: string
+      }
+      send_order_message: {
+        Args: {
+          message_body: string
           target_order_id: string
         }
         Returns: string
@@ -1706,6 +1795,17 @@ export interface Database {
           submission_description: string
           submission_title: string
           target_order_id: string
+        }
+        Returns: string
+      }
+      submit_order_review: {
+        Args: {
+          communication_value: number
+          quality_value: number
+          rating_value: number
+          review_comment: string
+          target_order_id: string
+          timeliness_value: number
         }
         Returns: string
       }

@@ -5,6 +5,7 @@ import { ClipboardList } from "lucide-react";
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import { OrderFilterBar } from "@/features/orders/components/order-filter-bar";
+import type { OrderListFilters } from "@/features/orders/components/order-filter-bar";
 import { OrderPageHero } from "@/features/orders/components/order-page-hero";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
@@ -14,6 +15,7 @@ import {
 } from "@/features/orders/data/order-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
+import type { Database } from "@/lib/supabase/types";
 
 export const metadata: Metadata = {
   title: "Pesanan Saya - Ruang Usaha Kita",
@@ -21,8 +23,49 @@ export const metadata: Metadata = {
     "Daftar pesanan UMKM untuk memantau status pesanan, pembayaran, brief campaign, hasil konten, dan revisi.",
 };
 
-export default async function UmkmOrdersPage() {
-  const orders = await getCurrentUmkmOrders();
+type OrderStatus = Database["public"]["Enums"]["order_status"];
+type PaymentStatus = Database["public"]["Enums"]["payment_status"];
+
+type UmkmOrdersPageProps = {
+  searchParams?: Promise<{
+    payment?: string;
+    q?: string;
+    sort?: string;
+    status?: string;
+  }>;
+};
+
+const orderStatuses: readonly OrderStatus[] = [
+  "draft",
+  "awaiting_payment",
+  "paid",
+  "waiting_creator_confirmation",
+  "brief_accepted",
+  "in_progress",
+  "submitted",
+  "revision_requested",
+  "revised",
+  "completed",
+  "cancelled",
+  "refunded",
+];
+
+const paymentStatuses: readonly PaymentStatus[] = [
+  "pending",
+  "paid",
+  "failed",
+  "expired",
+  "refunded",
+  "partially_refunded",
+];
+
+export default async function UmkmOrdersPage({ searchParams }: UmkmOrdersPageProps) {
+  const [orders, params] = await Promise.all([
+    getCurrentUmkmOrders(),
+    searchParams ?? Promise.resolve({ payment: undefined, q: undefined, sort: undefined, status: undefined }),
+  ]);
+  const filters = parseFilters(params);
+  const visibleOrders = filterOrders(orders, filters);
   const totalPayment = orders.reduce(
     (total, order) => total + order.totalAmount,
     0,
@@ -40,9 +83,9 @@ export default async function UmkmOrdersPage() {
             metricLabel="Total pembayaran"
             metricValue={totalPayment}
           />
-          <OrderFilterBar showPaymentFilter />
-          {orders.length > 0 ? (
-            <OrderList orders={orders} />
+          <OrderFilterBar filters={filters} showPaymentFilter />
+          {visibleOrders.length > 0 ? (
+            <OrderList orders={visibleOrders} />
           ) : (
             <EmptyOrdersState />
           )}
@@ -50,6 +93,64 @@ export default async function UmkmOrdersPage() {
       </PageContainer>
     </main>
   );
+}
+
+function parseFilters(params: Awaited<NonNullable<UmkmOrdersPageProps["searchParams"]>>): OrderListFilters {
+  const status = orderStatuses.includes(params.status as OrderStatus)
+    ? (params.status as OrderStatus)
+    : "all";
+  const paymentStatus = paymentStatuses.includes(params.payment as PaymentStatus)
+    ? (params.payment as PaymentStatus)
+    : "all";
+  const sort = params.sort === "deadline" || params.sort === "total" ? params.sort : "latest";
+
+  return {
+    paymentStatus,
+    query: params.q?.trim() ?? "",
+    sort,
+    status,
+  };
+}
+
+function filterOrders(
+  orders: readonly UmkmOrderListItem[],
+  filters: OrderListFilters,
+) {
+  const query = filters.query.toLowerCase();
+
+  return orders
+    .filter((order) => {
+      const searchTarget = [
+        order.orderNumber,
+        order.serviceTitle,
+        order.creatorName,
+        order.tierName,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return (
+        (!query || searchTarget.includes(query)) &&
+        (filters.status === "all" || order.orderStatus === filters.status) &&
+        (filters.paymentStatus === "all" || order.paymentStatus === filters.paymentStatus)
+      );
+    })
+    .sort((first, second) => {
+      if (filters.sort === "total") {
+        return second.totalAmount - first.totalAmount;
+      }
+
+      if (filters.sort === "deadline") {
+        return toTime(first.deadline) - toTime(second.deadline);
+      }
+
+      return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime();
+    });
+}
+
+function toTime(value: string | null) {
+  return value ? new Date(value).getTime() : Number.MAX_SAFE_INTEGER;
 }
 
 function OrderList({ orders }: { orders: readonly UmkmOrderListItem[] }) {

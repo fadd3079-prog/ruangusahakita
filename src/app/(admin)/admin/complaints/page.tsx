@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ExternalLink, FileWarning, Search } from "lucide-react";
+import { ArrowRight, ExternalLink, FileWarning, Search, Star } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { SubmitButton } from "@/components/common/submit-button";
@@ -15,9 +15,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { updateAdminComplaintStatusAction } from "@/features/admin/actions/admin-management-actions";
-import { getAdminComplaints } from "@/features/admin/data/admin-management-queries";
-import type { AdminComplaintRow } from "@/features/admin/data/admin-management-queries";
+import {
+  updateAdminComplaintStatusAction,
+  updateAdminReviewVisibilityAction,
+} from "@/features/admin/actions/admin-management-actions";
+import {
+  getAdminComplaints,
+  getAdminReviews,
+} from "@/features/admin/data/admin-management-queries";
+import type {
+  AdminComplaintRow,
+  AdminReviewRow,
+} from "@/features/admin/data/admin-management-queries";
 import type { Database } from "@/lib/supabase/types";
 import { formatDate } from "@/lib/formatters/date";
 import { cn } from "@/lib/utils";
@@ -64,6 +73,8 @@ const errorMessages = {
 type AdminComplaintsPageProps = {
   searchParams: Promise<{
     error?: string;
+    q?: string;
+    review_updated?: string;
     updated?: string;
   }>;
 };
@@ -80,7 +91,13 @@ export default async function AdminComplaintsPage({
   searchParams,
 }: AdminComplaintsPageProps) {
   const params = await searchParams;
-  const complaints = await getAdminComplaints();
+  const [complaints, reviews] = await Promise.all([
+    getAdminComplaints(),
+    getAdminReviews(),
+  ]);
+  const query = params.q?.trim().toLowerCase() ?? "";
+  const visibleComplaints = filterComplaints(complaints, query);
+  const visibleReviews = filterReviews(reviews, query);
   const errorMessage = getErrorMessage(params.error);
 
   return (
@@ -111,16 +128,27 @@ export default async function AdminComplaintsPage({
           </Alert>
         ) : null}
 
-        <div className="relative max-w-sm">
+        {params.review_updated ? (
+          <Alert>
+            <AlertTitle>Moderasi review diperbarui</AlertTitle>
+            <AlertDescription>
+              Status tampil review berhasil disimpan.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        <form className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Cari berdasarkan tiket atau subjek..."
+            name="q"
+            defaultValue={params.q ?? ""}
+            placeholder="Cari subjek, pesanan, kreator, atau UMKM"
             className="h-11 bg-card pl-9"
           />
-        </div>
+        </form>
 
         <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
-          {complaints.length > 0 ? (
+          {visibleComplaints.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -132,7 +160,7 @@ export default async function AdminComplaintsPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {complaints.map((complaint) => (
+                {visibleComplaints.map((complaint) => (
                   <TableRow key={complaint.id}>
                     <TableCell>
                       <p className="line-clamp-1 font-semibold text-foreground">
@@ -194,8 +222,141 @@ export default async function AdminComplaintsPage({
             </div>
           )}
         </div>
+
+        <ReviewModerationTable reviews={visibleReviews} />
       </div>
     </PageContainer>
+  );
+}
+
+function filterComplaints(
+  complaints: readonly AdminComplaintRow[],
+  query: string,
+) {
+  if (!query) {
+    return complaints;
+  }
+
+  return complaints.filter((complaint) =>
+    [
+      complaint.subject,
+      complaint.description,
+      complaint.orderNumber,
+      complaint.openedByRole,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(query),
+  );
+}
+
+function filterReviews(reviews: readonly AdminReviewRow[], query: string) {
+  if (!query) {
+    return reviews;
+  }
+
+  return reviews.filter((review) =>
+    [review.comment, review.creatorName, review.orderNumber, review.umkmName]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(query),
+  );
+}
+
+function ReviewModerationTable({ reviews }: { reviews: readonly AdminReviewRow[] }) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
+      <div className="border-b border-border/70 bg-muted/40 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="grid size-9 place-items-center rounded-xl bg-amber-50 text-amber-700">
+            <Star className="size-4" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">
+              Moderasi Review
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Tampilkan atau sembunyikan review publik.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {reviews.length > 0 ? (
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead>Review</TableHead>
+              <TableHead>Kreator</TableHead>
+              <TableHead>Order</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {reviews.map((review) => (
+              <TableRow key={review.id}>
+                <TableCell className="max-w-[360px]">
+                  <div className="flex items-center gap-2">
+                    <Star className="size-4 fill-amber-400 text-amber-500" aria-hidden="true" />
+                    <span className="font-semibold text-foreground">
+                      {review.rating.toFixed(1)}
+                    </span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    {review.comment ?? "Review tanpa catatan tambahan."}
+                  </p>
+                </TableCell>
+                <TableCell>
+                  <p className="max-w-[180px] truncate font-medium text-foreground">
+                    {review.creatorName ?? "Kreator"}
+                  </p>
+                  <p className="mt-1 max-w-[180px] truncate text-xs text-muted-foreground">
+                    {review.umkmName ?? "UMKM"}
+                  </p>
+                </TableCell>
+                <TableCell>
+                  {review.orderNumber ? (
+                    <Link
+                      href={`/admin/orders/${review.order_id}`}
+                      className="font-medium text-brand-navy hover:text-primary"
+                    >
+                      {review.orderNumber}
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">Belum tersedia</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={review.is_visible ? "secondary" : "outline"}>
+                    {review.is_visible ? "Tampil" : "Disembunyikan"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <form action={updateAdminReviewVisibilityAction}>
+                    <input type="hidden" name="reviewId" value={review.id} />
+                    <input
+                      type="hidden"
+                      name="isVisible"
+                      value={review.is_visible ? "false" : "true"}
+                    />
+                    <SubmitButton pendingLabel="Memproses..." size="sm" variant="outline">
+                      {review.is_visible ? "Sembunyikan" : "Tampilkan"}
+                    </SubmitButton>
+                  </form>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <div className="p-10 text-center text-sm text-muted-foreground">
+          Belum ada review yang perlu dimoderasi.
+        </div>
+      )}
+    </section>
   );
 }
 

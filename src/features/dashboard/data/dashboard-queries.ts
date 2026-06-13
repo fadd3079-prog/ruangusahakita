@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  getCreatorStatsFromMap,
+  getCreatorStatsMap,
+} from "@/features/creators/data/creator-stats";
 import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
@@ -734,22 +738,34 @@ export async function getCreatorDashboardOverview() {
         getPortfoliosForCreator(supabase, profile.id, 4),
         getNotificationsForUser(supabase, profile.user_id, 4),
       ]);
+      const statsMap = await getCreatorStatsMap(
+        supabase,
+        [profile.id],
+        [
+          {
+            averageRating: profile.average_rating,
+            completedOrdersCount: profile.completed_orders_count,
+            id: profile.id,
+          },
+        ],
+      );
+      const stats = getCreatorStatsFromMap(statsMap, profile.id);
       const summaries = await enrichOrders(supabase, orders, "umkm");
       const revisionOrders = summaries.filter(
         (order) => order.orderStatus === "revision_requested",
       );
-      const paidOrders = orders.filter((order) => order.payment_status === "paid");
+      const completedOrders = orders.filter(
+        (order) => order.order_status === "completed",
+      );
 
       return {
         metrics: {
           activeOrders: summaries.filter((order) =>
             isActiveOrderStatus(order.orderStatus),
           ).length,
-          averageRating: toNumber(profile.average_rating),
-          completedOrders: summaries.filter(
-            (order) => order.orderStatus === "completed",
-          ).length,
-          estimatedEarnings: paidOrders.reduce(
+          averageRating: stats.averageRating,
+          completedOrders: completedOrders.length,
+          estimatedEarnings: completedOrders.reduce(
             (total, order) =>
               total +
               toNumber(order.subtotal_amount) +

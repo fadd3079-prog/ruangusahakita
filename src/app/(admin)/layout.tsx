@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { getCurrentUnreadNotificationCount } from "@/features/notifications/data/notification-queries";
 import { getCurrentAccountSummary } from "@/lib/auth/account";
 import { requireRole } from "@/lib/auth/guards";
 
@@ -10,7 +11,10 @@ type AdminLayoutProps = {
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   await requireRole("admin");
-  const account = await getCurrentAccountSummary();
+  const [account, notificationCount] = await Promise.all([
+    getCurrentAccountSummary(),
+    getCurrentUnreadNotificationCount(),
+  ]);
 
   return (
     <DashboardShell
@@ -23,6 +27,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             }
           : null
       }
+      notificationCount={notificationCount}
       variant="admin"
     >
       {children}

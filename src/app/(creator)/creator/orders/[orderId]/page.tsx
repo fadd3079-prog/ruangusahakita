@@ -20,6 +20,7 @@ import {
   acceptCreatorOrder,
   startCreatorOrder,
 } from "@/features/orders/actions/creator-order-actions";
+import { OrderCollaborationPanel } from "@/features/orders/components/order-collaboration-panel";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import {
@@ -32,6 +33,7 @@ import {
   type CreatorOrderDetail,
   type UmkmOrderDetailItem,
 } from "@/features/orders/data/order-queries";
+import { getOrderCollaborationData } from "@/features/orders/data/order-collaboration-queries";
 import { getOrderDeliveryData } from "@/features/submissions/data/submission-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
@@ -42,7 +44,9 @@ type OrderPageProps = {
   }>;
   searchParams?: Promise<{
     accepted?: string;
+    complaint_created?: string;
     error?: string;
+    message_sent?: string;
     started?: string;
     submitted?: string;
   }>;
@@ -103,14 +107,17 @@ export default async function CreatorOrderDetailPage({
     searchParams ??
       Promise.resolve({
         accepted: undefined,
+        complaint_created: undefined,
         error: undefined,
+        message_sent: undefined,
         started: undefined,
         submitted: undefined,
       }),
   ]);
-  const [data, delivery] = await Promise.all([
+  const [data, delivery, collaboration] = await Promise.all([
     getCurrentCreatorOrderDetail(orderId),
     getOrderDeliveryData(orderId),
+    getOrderCollaborationData(orderId),
   ]);
   const errorMessage = getErrorMessage(query.error);
 
@@ -131,6 +138,14 @@ export default async function CreatorOrderDetailPage({
           {query.submitted === "1" ? (
             <SuccessMessage message="Hasil konten berhasil dikirim ke UMKM." />
           ) : null}
+          {query.complaint_created === "1" ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+              Komplain sudah dikirim untuk ditinjau.
+            </div>
+          ) : null}
+          {query.message_sent === "1" ? (
+            <SuccessMessage message="Pesan berhasil dikirim." />
+          ) : null}
           {errorMessage ? (
             <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
               {errorMessage}
@@ -146,6 +161,13 @@ export default async function CreatorOrderDetailPage({
               <DeliveryHistoryPanel delivery={delivery} />
               <RevisionHistoryPanel delivery={delivery} />
               <CreatorTimelineCard data={data} />
+              <OrderCollaborationPanel
+                canReview={false}
+                collaboration={collaboration}
+                orderId={data.order.id}
+                returnPath={`/creator/orders/${data.order.id}`}
+                variant="creator"
+              />
             </div>
             <div className="space-y-6">
               <CreatorLifecyclePanel data={data} />

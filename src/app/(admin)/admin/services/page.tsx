@@ -4,8 +4,10 @@ import { BriefcaseBusiness, Search } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { SubmitButton } from "@/components/common/submit-button";
+import { TruncateText } from "@/components/common/truncate-text";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -28,6 +30,10 @@ export const metadata: Metadata = {
 type AdminServicesPageProps = {
   searchParams: Promise<{
     error?: string;
+    featured?: string;
+    q?: string;
+    sort?: string;
+    status?: string;
     updated?: string;
   }>;
 };
@@ -53,6 +59,31 @@ export default async function AdminServicesPage({
   const params = await searchParams;
   const services = await getAdminServices();
   const errorMessage = getErrorMessage(params.error);
+  const filters = getFilters(params);
+  const filteredServices = services
+    .filter((service) => {
+      const searchable = `${service.title} ${service.creatorName ?? ""} ${service.categoryName ?? ""}`.toLowerCase();
+      const matchesQuery = filters.query ? searchable.includes(filters.query) : true;
+      const matchesStatus =
+        filters.status === "all" ? true : service.is_active === (filters.status === "active");
+      const matchesFeatured =
+        filters.featured === "all"
+          ? true
+          : service.is_featured === (filters.featured === "featured");
+
+      return matchesQuery && matchesStatus && matchesFeatured;
+    })
+    .toSorted((left, right) => {
+      if (filters.sort === "price") {
+        return Number(left.base_price) - Number(right.base_price);
+      }
+
+      if (filters.sort === "title") {
+        return left.title.localeCompare(right.title);
+      }
+
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+    });
 
   return (
     <PageContainer>
@@ -82,37 +113,87 @@ export default async function AdminServicesPage({
           </Alert>
         ) : null}
 
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Cari judul layanan..." className="h-11 bg-card pl-9" />
-        </div>
+        <form className="grid gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-[var(--shadow-soft)] lg:grid-cols-[minmax(240px,1fr)_160px_160px_160px_auto] lg:items-end">
+          <label className="grid gap-2">
+            <span className="text-xs font-semibold uppercase text-muted-foreground">
+              Cari
+            </span>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                name="q"
+                defaultValue={filters.query}
+                placeholder="Layanan, kreator, kategori"
+                className="h-11 bg-card pl-9"
+              />
+            </div>
+          </label>
+          <SelectField
+            label="Status"
+            name="status"
+            options={[
+              { label: "Semua", value: "all" },
+              { label: "Aktif", value: "active" },
+              { label: "Tidak aktif", value: "inactive" },
+            ]}
+            value={filters.status}
+          />
+          <SelectField
+            label="Unggulan"
+            name="featured"
+            options={[
+              { label: "Semua", value: "all" },
+              { label: "Unggulan", value: "featured" },
+              { label: "Reguler", value: "regular" },
+            ]}
+            value={filters.featured}
+          />
+          <SelectField
+            label="Urutkan"
+            name="sort"
+            options={[
+              { label: "Terbaru", value: "latest" },
+              { label: "Harga", value: "price" },
+              { label: "Judul", value: "title" },
+            ]}
+            value={filters.sort}
+          />
+          <div className="grid grid-cols-2 gap-2 lg:flex">
+            <Button type="submit" className="h-11">
+              Terapkan
+            </Button>
+            <Button asChild type="button" variant="outline" className="h-11">
+              <a href="?">Reset</a>
+            </Button>
+          </div>
+        </form>
 
         <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
-          {services.length > 0 ? (
-            <Table>
+          {filteredServices.length > 0 ? (
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead>Judul layanan</TableHead>
-                  <TableHead>Kreator & kategori</TableHead>
-                  <TableHead>Harga mulai</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-right">Moderasi</TableHead>
+                  <TableHead className="w-[34%]">Judul layanan</TableHead>
+                  <TableHead className="w-[24%]">Kreator & kategori</TableHead>
+                  <TableHead className="w-[14%]">Harga mulai</TableHead>
+                  <TableHead className="w-[12%] text-center">Status</TableHead>
+                  <TableHead className="w-[16%] text-right">Moderasi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {services.map((service) => (
+                {filteredServices.map((service) => (
                   <TableRow key={service.id}>
-                    <TableCell>
-                      <div className="flex max-w-[320px] items-start gap-3">
+                    <TableCell className="min-w-0">
+                      <div className="flex min-w-0 items-start gap-3">
                         <div className="mt-1 grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
                           <BriefcaseBusiness className="size-4" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <Link
                             href={`/layanan/${service.id}`}
-                            className="line-clamp-2 font-semibold text-foreground transition-colors hover:text-primary"
+                            className="block font-semibold text-foreground transition-colors hover:text-primary"
                           >
-                            {service.title}
+                            <TruncateText text={service.title} />
                           </Link>
                           {service.is_featured ? (
                             <Badge variant="secondary" className="mt-1 h-5 text-[10px]">
@@ -122,13 +203,15 @@ export default async function AdminServicesPage({
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <p className="font-medium text-foreground">
-                        {service.creatorName ?? "Kreator belum tersedia"}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {service.categoryName ?? "Kategori belum dipilih"}
-                      </p>
+                    <TableCell className="min-w-0">
+                      <TruncateText
+                        text={service.creatorName ?? "Kreator belum tersedia"}
+                        className="font-medium text-foreground"
+                      />
+                      <TruncateText
+                        text={service.categoryName ?? "Kategori belum dipilih"}
+                        className="text-sm text-muted-foreground"
+                      />
                     </TableCell>
                     <TableCell>
                       <p className="font-semibold text-brand-navy">
@@ -169,12 +252,68 @@ export default async function AdminServicesPage({
             </Table>
           ) : (
             <div className="p-12 text-center text-sm text-muted-foreground">
-              Belum ada layanan
+              Belum ada layanan yang sesuai
             </div>
           )}
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+function getFilters(params: Awaited<AdminServicesPageProps["searchParams"]>) {
+  const status = isStatusFilter(params.status) ? params.status : "all";
+  const featured = isFeaturedFilter(params.featured) ? params.featured : "all";
+  const sort = isSortFilter(params.sort) ? params.sort : "latest";
+
+  return {
+    featured,
+    query: params.q?.trim().toLowerCase() ?? "",
+    sort,
+    status,
+  };
+}
+
+function isStatusFilter(value?: string): value is "active" | "inactive" | "all" {
+  return value === "active" || value === "inactive" || value === "all";
+}
+
+function isFeaturedFilter(value?: string): value is "featured" | "regular" | "all" {
+  return value === "featured" || value === "regular" || value === "all";
+}
+
+function isSortFilter(value?: string): value is "latest" | "price" | "title" {
+  return value === "latest" || value === "price" || value === "title";
+}
+
+function SelectField<TValue extends string>({
+  label,
+  name,
+  options,
+  value,
+}: {
+  label: string;
+  name: string;
+  options: readonly { label: string; value: TValue }[];
+  value: TValue;
+}) {
+  return (
+    <label className="grid gap-2">
+      <span className="text-xs font-semibold uppercase text-muted-foreground">
+        {label}
+      </span>
+      <select
+        name={name}
+        defaultValue={value}
+        className="h-11 rounded-xl border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-[3px] focus:ring-ring/20"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

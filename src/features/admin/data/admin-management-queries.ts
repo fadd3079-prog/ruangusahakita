@@ -1,4 +1,8 @@
 import { isDemoMode } from "@/lib/config/demo-mode";
+import {
+  getCreatorStatsFromMap,
+  getCreatorStatsMap,
+} from "@/features/creators/data/creator-stats";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -9,7 +13,11 @@ export type AdminProfileRow = Tables["profiles"]["Row"];
 export type AdminUmkmRow = Tables["umkm_profiles"]["Row"] & {
   activeOrdersCount: number;
 };
-export type AdminCreatorRow = Tables["creator_profiles"]["Row"];
+export type AdminCreatorRow = Tables["creator_profiles"]["Row"] & {
+  realAverageRating: number;
+  realCompletedOrdersCount: number;
+  realReviewCount: number;
+};
 export type AdminServiceRow = Tables["service_packages"]["Row"] & {
   categoryName: string | null;
   creatorName: string | null;
@@ -17,6 +25,11 @@ export type AdminServiceRow = Tables["service_packages"]["Row"] & {
 export type AdminComplaintRow = Tables["complaints"]["Row"] & {
   openedByRole: Enums["user_role"] | null;
   orderNumber: string | null;
+};
+export type AdminReviewRow = Tables["reviews"]["Row"] & {
+  creatorName: string | null;
+  orderNumber: string | null;
+  umkmName: string | null;
 };
 export type AdminPaymentRow = Tables["payments"]["Row"] & {
   creatorName: string | null;
@@ -162,7 +175,30 @@ export async function getAdminCreators(): Promise<readonly AdminCreatorRow[]> {
     .order("created_at", { ascending: false })
     .limit(200);
 
-  return error || !data ? [] : data;
+  if (error || !data) {
+    return [];
+  }
+
+  const statsMap = await getCreatorStatsMap(
+    supabase,
+    data.map((creator) => creator.id),
+    data.map((creator) => ({
+      averageRating: creator.average_rating,
+      completedOrdersCount: creator.completed_orders_count,
+      id: creator.id,
+    })),
+  );
+
+  return data.map((creator) => {
+    const stats = getCreatorStatsFromMap(statsMap, creator.id);
+
+    return {
+      ...creator,
+      realAverageRating: stats.averageRating,
+      realCompletedOrdersCount: stats.completedOrdersCount,
+      realReviewCount: stats.reviewCount,
+    };
+  });
 }
 
 export async function getAdminServices(): Promise<readonly AdminServiceRow[]> {
@@ -474,4 +510,56 @@ export async function getAdminReportMetrics() {
     ),
     totalOrders: orders.length,
   };
+}
+
+export async function getAdminReviews(): Promise<readonly AdminReviewRow[]> {
+  const supabase = await getAdminClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data: reviews, error } = await supabase
+    .from("reviews")
+    .select("*")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(40);
+
+  if (error || !reviews) {
+    return [];
+  }
+
+  const orderIds = unique(reviews.map((review) => review.order_id));
+  const creatorIds = unique(reviews.map((review) => review.creator_id));
+  const umkmIds = unique(reviews.map((review) => review.umkm_id));
+
+  const [ordersResult, creatorsResult, umkmResult] = await Promise.all([
+    orderIds.length > 0
+      ? supabase.from("orders").select("id, order_number").in("id", orderIds)
+      : Promise.resolve({ data: [], error: null }),
+    creatorIds.length > 0
+      ? supabase.from("creator_profiles").select("id, display_name").in("id", creatorIds)
+      : Promise.resolve({ data: [], error: null }),
+    umkmIds.length > 0
+      ? supabase.from("umkm_profiles").select("id, business_name").in("id", umkmIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  const orderById = new Map(
+    (ordersResult.data ?? []).map((order) => [order.id, order.order_number]),
+  );
+  const creatorById = new Map(
+    (creatorsResult.data ?? []).map((creator) => [creator.id, creator.display_name]),
+  );
+  const umkmById = new Map(
+    (umkmResult.data ?? []).map((umkm) => [umkm.id, umkm.business_name]),
+  );
+
+  return reviews.map((review) => ({
+    ...review,
+    creatorName: creatorById.get(review.creator_id) ?? null,
+    orderNumber: orderById.get(review.order_id) ?? null,
+    umkmName: umkmById.get(review.umkm_id) ?? null,
+  }));
 }

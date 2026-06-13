@@ -6,6 +6,7 @@ import { SubmitButton } from "@/components/common/submit-button";
 import { TruncateText } from "@/components/common/truncate-text";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -40,6 +41,10 @@ const statusLabels = {
 type AdminUsersPageProps = {
   searchParams: Promise<{
     error?: string;
+    q?: string;
+    role?: string;
+    sort?: string;
+    status?: string;
     updated?: string;
   }>;
 };
@@ -64,6 +69,28 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const params = await searchParams;
   const users = await getAdminUsers();
   const errorMessage = getErrorMessage(params.error);
+  const filters = getFilters(params);
+  const filteredUsers = users
+    .filter((user) => {
+      const searchable = `${user.full_name} ${user.email} ${user.role} ${user.account_status}`.toLowerCase();
+      const matchesQuery = filters.query ? searchable.includes(filters.query) : true;
+      const matchesRole = filters.role === "all" ? true : user.role === filters.role;
+      const matchesStatus =
+        filters.status === "all" ? true : user.account_status === filters.status;
+
+      return matchesQuery && matchesRole && matchesStatus;
+    })
+    .toSorted((left, right) => {
+      if (filters.sort === "name") {
+        return left.full_name.localeCompare(right.full_name);
+      }
+
+      if (filters.sort === "role") {
+        return left.role.localeCompare(right.role);
+      }
+
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+    });
 
   return (
     <PageContainer>
@@ -93,13 +120,66 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           </Alert>
         ) : null}
 
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Cari nama atau email..." className="h-11 bg-card pl-9" />
-        </div>
+        <form className="grid gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-[var(--shadow-soft)] lg:grid-cols-[minmax(240px,1fr)_160px_180px_160px_auto] lg:items-end">
+          <label className="grid gap-2">
+            <span className="text-xs font-semibold uppercase text-muted-foreground">
+              Cari
+            </span>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                name="q"
+                defaultValue={filters.query}
+                placeholder="Nama atau email"
+                className="h-11 bg-card pl-9"
+              />
+            </div>
+          </label>
+          <SelectField
+            label="Peran"
+            name="role"
+            options={[
+              { label: "Semua peran", value: "all" },
+              { label: "Admin", value: "admin" },
+              { label: "Kreator", value: "creator" },
+              { label: "UMKM", value: "umkm" },
+            ]}
+            value={filters.role}
+          />
+          <SelectField
+            label="Status"
+            name="status"
+            options={[
+              { label: "Semua status", value: "all" },
+              { label: "Aktif", value: "active" },
+              { label: "Tidak aktif", value: "inactive" },
+              { label: "Menunggu", value: "pending_verification" },
+              { label: "Dibatasi", value: "suspended" },
+            ]}
+            value={filters.status}
+          />
+          <SelectField
+            label="Urutkan"
+            name="sort"
+            options={[
+              { label: "Terbaru", value: "latest" },
+              { label: "Nama", value: "name" },
+              { label: "Peran", value: "role" },
+            ]}
+            value={filters.sort}
+          />
+          <div className="grid grid-cols-2 gap-2 lg:flex">
+            <Button type="submit" className="h-11">
+              Terapkan
+            </Button>
+            <Button asChild type="button" variant="outline" className="h-11">
+              <a href="?">Reset</a>
+            </Button>
+          </div>
+        </form>
 
         <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
-          {users.length > 0 ? (
+          {filteredUsers.length > 0 ? (
             <Table className="table-fixed">
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -111,7 +191,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="min-w-0">
                       <div className="flex items-center gap-3">
@@ -183,11 +263,75 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
               </TableBody>
             </Table>
           ) : (
-            <EmptyAdminState title="Belum ada pengguna" />
+            <EmptyAdminState title="Belum ada pengguna yang sesuai" />
           )}
         </div>
       </div>
     </PageContainer>
+  );
+}
+
+function getFilters(params: Awaited<AdminUsersPageProps["searchParams"]>) {
+  const role = isRoleFilter(params.role) ? params.role : "all";
+  const status = isStatusFilter(params.status) ? params.status : "all";
+  const sort = isSortFilter(params.sort) ? params.sort : "latest";
+
+  return {
+    query: params.q?.trim().toLowerCase() ?? "",
+    role,
+    sort,
+    status,
+  };
+}
+
+function isRoleFilter(value?: string): value is "admin" | "creator" | "umkm" | "all" {
+  return value === "admin" || value === "creator" || value === "umkm" || value === "all";
+}
+
+function isStatusFilter(
+  value?: string,
+): value is "active" | "inactive" | "pending_verification" | "suspended" | "all" {
+  return (
+    value === "active" ||
+    value === "inactive" ||
+    value === "pending_verification" ||
+    value === "suspended" ||
+    value === "all"
+  );
+}
+
+function isSortFilter(value?: string): value is "latest" | "name" | "role" {
+  return value === "latest" || value === "name" || value === "role";
+}
+
+function SelectField<TValue extends string>({
+  label,
+  name,
+  options,
+  value,
+}: {
+  label: string;
+  name: string;
+  options: readonly { label: string; value: TValue }[];
+  value: TValue;
+}) {
+  return (
+    <label className="grid gap-2">
+      <span className="text-xs font-semibold uppercase text-muted-foreground">
+        {label}
+      </span>
+      <select
+        name={name}
+        defaultValue={value}
+        className="h-11 rounded-xl border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-[3px] focus:ring-ring/20"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

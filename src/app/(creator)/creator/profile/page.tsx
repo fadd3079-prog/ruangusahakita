@@ -163,12 +163,12 @@ export default async function CreatorProfilePage() {
                   <ProfileFact
                     icon={Star}
                     label="Rating & review"
-                    value={`${Number(profile.average_rating ?? 0).toFixed(1)} (${data.reviewCount} review)`}
+                    value={`${data.averageRating.toFixed(1)} (${data.reviewCount} review)`}
                   />
                   <ProfileFact
                     icon={BriefcaseBusiness}
                     label="Pesanan selesai"
-                    value={`${profile.completed_orders_count} pesanan`}
+                    value={`${data.completedOrdersCount} pesanan`}
                   />
                   <ProfileFact
                     icon={Clock}

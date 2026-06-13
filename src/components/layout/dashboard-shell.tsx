@@ -11,6 +11,7 @@ type DashboardShellProps = {
   accountPreview?: DashboardAccountPreview | null;
   children: ReactNode;
   cartCount?: number;
+  notificationCount?: number;
   variant: DashboardNavigationVariant;
 };
 
@@ -24,6 +25,7 @@ export function DashboardShell({
   accountPreview,
   cartCount = 0,
   children,
+  notificationCount = 0,
   variant,
 }: DashboardShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -42,7 +44,12 @@ export function DashboardShell({
         />
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <DashboardTopbar accountPreview={accountPreview} cartCount={cartCount} variant={variant} />
+          <DashboardTopbar
+            accountPreview={accountPreview}
+            cartCount={cartCount}
+            notificationCount={notificationCount}
+            variant={variant}
+          />
           <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain py-5 lg:py-7">
             {children}
           </main>

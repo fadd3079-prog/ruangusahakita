@@ -75,6 +75,10 @@ function normalizePath(pathname: string, searchParams: URLSearchParams) {
 }
 
 function sendAnalyticsEvent(payload: AnalyticsPayload) {
+  if (payload.path.startsWith("/admin")) {
+    return;
+  }
+
   const body = JSON.stringify(payload);
 
   try {
@@ -140,6 +144,10 @@ export function AnalyticsTracker() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    if (pathname.startsWith("/admin")) {
+      return;
+    }
+
     const path = normalizePath(pathname, searchParams);
     const referrer = document.referrer || null;
 
@@ -169,6 +177,7 @@ export function AnalyticsTracker() {
       const trackable = target.closest("[data-analytics-event],a,button");
 
       if (!trackable) return;
+      if (window.location.pathname.startsWith("/admin")) return;
 
       const label = getElementLabel(trackable);
       const href = getAnchorUrl(trackable);

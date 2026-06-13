@@ -82,6 +82,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
+  const payloadReferrer = parsedPayload.referrer ?? request.headers.get("referer");
+
+  if (
+    parsedPayload.path.startsWith("/admin") ||
+    (payloadReferrer?.includes("/admin") ?? false)
+  ) {
+    return NextResponse.json({ ok: true });
+  }
+
   try {
     const supabase = await createClient();
     const {
@@ -99,8 +108,12 @@ export async function POST(request: NextRequest) {
       role = profile?.role ?? "guest";
     }
 
+    if (role === "admin") {
+      return NextResponse.json({ ok: true });
+    }
+
     const userAgent = request.headers.get("user-agent") ?? "";
-    const referrer = parsedPayload.referrer ?? request.headers.get("referer");
+    const referrer = payloadReferrer;
     await supabase.from("analytics_events").insert({
       event_type: parsedPayload.eventType,
       user_id: user?.id ?? null,

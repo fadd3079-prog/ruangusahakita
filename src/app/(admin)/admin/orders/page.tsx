@@ -13,12 +13,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getAdminOrders } from "@/features/admin/data/admin-management-queries";
-import { OrderFilterBar } from "@/features/orders/components/order-filter-bar";
+import {
+  OrderFilterBar,
+  type OrderListFilters,
+} from "@/features/orders/components/order-filter-bar";
 import { OrderPageHero } from "@/features/orders/components/order-page-hero";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
+import type { Database } from "@/lib/supabase/types";
 
 export const metadata: Metadata = {
   title: "Manajemen Pesanan - Admin Ruang Usaha Kita",
@@ -26,8 +30,45 @@ export const metadata: Metadata = {
     "Overview semua pesanan untuk admin, termasuk status pesanan, pembayaran, UMKM, kreator, dan brief campaign.",
 };
 
-export default async function AdminOrdersPage() {
+type OrderStatus = Database["public"]["Enums"]["order_status"];
+type PaymentStatus = Database["public"]["Enums"]["payment_status"];
+
+type AdminOrdersPageProps = {
+  searchParams: Promise<{
+    payment?: string;
+    q?: string;
+    sort?: string;
+    status?: string;
+  }>;
+};
+
+export default async function AdminOrdersPage({
+  searchParams,
+}: AdminOrdersPageProps) {
+  const params = await searchParams;
   const orders = await getAdminOrders();
+  const filters = getFilters(params);
+  const filteredOrders = orders
+    .filter((order) => {
+      const searchable = `${order.order_number} ${order.serviceTitle ?? ""} ${order.tierName ?? ""} ${order.creatorName ?? ""} ${order.umkmName ?? ""}`.toLowerCase();
+      const matchesQuery = filters.query ? searchable.includes(filters.query) : true;
+      const matchesStatus = filters.status === "all" ? true : order.order_status === filters.status;
+      const matchesPayment =
+        filters.paymentStatus === "all" ? true : order.payment_status === filters.paymentStatus;
+
+      return matchesQuery && matchesStatus && matchesPayment;
+    })
+    .toSorted((left, right) => {
+      if (filters.sort === "deadline") {
+        return new Date(left.deadline ?? left.created_at).getTime() - new Date(right.deadline ?? right.created_at).getTime();
+      }
+
+      if (filters.sort === "total") {
+        return Number(right.total_amount) - Number(left.total_amount);
+      }
+
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+    });
   const totalValue = orders.reduce(
     (total, order) => total + Number(order.total_amount),
     0,
@@ -44,9 +85,9 @@ export default async function AdminOrdersPage() {
           metricLabel="Total nilai pesanan"
           metricValue={totalValue}
         />
-        <OrderFilterBar showPaymentFilter />
+        <OrderFilterBar filters={filters} showPaymentFilter />
         <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-card)]">
-          {orders.length > 0 ? (
+          {filteredOrders.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -60,7 +101,7 @@ export default async function AdminOrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orders.map((order) => (
+                {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>
                       <p className="font-semibold text-foreground">
@@ -106,11 +147,55 @@ export default async function AdminOrdersPage() {
             </Table>
           ) : (
             <div className="p-12 text-center text-sm text-muted-foreground">
-              Belum ada pesanan
+              Belum ada pesanan yang sesuai
             </div>
           )}
         </section>
       </div>
     </PageContainer>
   );
+}
+
+function getFilters(params: Awaited<AdminOrdersPageProps["searchParams"]>): OrderListFilters {
+  const status = isOrderStatusFilter(params.status) ? params.status : "all";
+  const paymentStatus = isPaymentStatusFilter(params.payment) ? params.payment : "all";
+  const sort = isSortFilter(params.sort) ? params.sort : "latest";
+
+  return {
+    paymentStatus,
+    query: params.q?.trim().toLowerCase() ?? "",
+    sort,
+    status,
+  };
+}
+
+function isOrderStatusFilter(value?: string): value is OrderStatus | "all" {
+  return (
+    value === "all" ||
+    value === "awaiting_payment" ||
+    value === "paid" ||
+    value === "waiting_creator_confirmation" ||
+    value === "brief_accepted" ||
+    value === "in_progress" ||
+    value === "submitted" ||
+    value === "revision_requested" ||
+    value === "revised" ||
+    value === "completed" ||
+    value === "cancelled" ||
+    value === "refunded"
+  );
+}
+
+function isPaymentStatusFilter(value?: string): value is PaymentStatus | "all" {
+  return (
+    value === "all" ||
+    value === "pending" ||
+    value === "paid" ||
+    value === "failed" ||
+    value === "expired"
+  );
+}
+
+function isSortFilter(value?: string): value is OrderListFilters["sort"] {
+  return value === "latest" || value === "deadline" || value === "total";
 }

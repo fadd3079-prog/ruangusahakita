@@ -12,6 +12,10 @@ import type {
   PublicAvailabilityStatus,
   PublicServiceTierName
 } from "@/features/catalog/data/catalog-types";
+import {
+  getCreatorStatsFromMap,
+  getCreatorStatsMap,
+} from "@/features/creators/data/creator-stats";
 import { createPortfolioThumbnailSignedUrl } from "@/lib/storage/urls";
 
 export async function getPublicCategories(): Promise<readonly PublicServiceCategory[]> {
@@ -62,6 +66,19 @@ export async function getPublicCreatorById(id: string): Promise<PublicCreatorPro
       return null;
     }
 
+    const statsMap = await getCreatorStatsMap(
+      supabase,
+      [data.id],
+      [
+        {
+          averageRating: data.average_rating,
+          completedOrdersCount: data.completed_orders_count,
+          id: data.id,
+        },
+      ],
+    );
+    const stats = getCreatorStatsFromMap(statsMap, data.id);
+
     return {
       id: data.id,
       userId: data.user_id,
@@ -79,8 +96,8 @@ export async function getPublicCreatorById(id: string): Promise<PublicCreatorPro
       portfolioUrl: data.portfolio_url ?? "",
       availabilityStatus: data.availability_status as PublicAvailabilityStatus,
       startingPrice: Number(data.starting_price),
-      averageRating: Number(data.average_rating),
-      completedOrdersCount: data.completed_orders_count,
+      averageRating: stats.averageRating,
+      completedOrdersCount: stats.completedOrdersCount,
       responseTimeHours: data.response_time_hours ?? 0,
       isVerified: data.is_verified,
       isFeatured: data.is_featured,
@@ -101,9 +118,10 @@ export async function getPublicCreatorDetail(id: string) {
     const creator = await getPublicCreatorById(id);
     if (!creator) return null;
 
-    const [servicesRes, portfoliosRes, categories] = await Promise.all([
+    const [servicesRes, portfoliosRes, reviewsRes, categories] = await Promise.all([
       supabase.from("service_packages").select("*").eq("creator_id", id).eq("is_active", true).is("deleted_at", null),
       supabase.from("portfolios").select("*").eq("creator_id", id).is("deleted_at", null),
+      supabase.from("reviews").select("*").eq("creator_id", id).eq("is_visible", true).is("deleted_at", null).order("created_at", { ascending: false }).limit(12),
       getPublicCategories(),
     ]);
     const serviceIds = (servicesRes.data ?? []).map((service) => service.id);
@@ -178,7 +196,7 @@ export async function getPublicCreatorDetail(id: string) {
       services,
       portfolios,
       categories,
-      reviews: [] as PublicReview[],
+      reviews: (reviewsRes.data ?? []).map(mapPublicReview),
       umkmProfiles: [] as PublicUmkmProfile[],
     };
   } catch {
@@ -206,13 +224,14 @@ export async function getPublicServiceDetail(id: string) {
       return null;
     }
 
-    const [creator, categories, tiersRes, addonsRes, portfoliosRes, mediaRes] = await Promise.all([
+    const [creator, categories, tiersRes, addonsRes, portfoliosRes, mediaRes, reviewsRes] = await Promise.all([
       getPublicCreatorById(service.creator_id),
       getPublicCategories(),
       supabase.from("service_package_tiers").select("*").eq("service_package_id", id).eq("is_active", true).order("sort_order", { ascending: true }),
       supabase.from("service_addons").select("*").eq("service_package_id", id).eq("is_active", true),
       supabase.from("portfolios").select("*").eq("creator_id", service.creator_id).is("deleted_at", null),
       supabase.from("service_media").select("*").eq("service_package_id", id).is("deleted_at", null).order("sort_order", { ascending: true }),
+      supabase.from("reviews").select("*").eq("creator_id", service.creator_id).eq("is_visible", true).is("deleted_at", null).order("created_at", { ascending: false }).limit(8),
     ]);
 
     if (!creator) {
@@ -291,12 +310,40 @@ export async function getPublicServiceDetail(id: string) {
       tiers,
       addons,
       portfolios,
-      reviews: [] as PublicReview[],
+      reviews: (reviewsRes.data ?? []).map(mapPublicReview),
       umkmProfiles: [] as PublicUmkmProfile[],
     };
   } catch {
     return null;
   }
+}
+
+function mapPublicReview(review: {
+  comment: string | null;
+  communication_rating: number | null;
+  created_at: string;
+  creator_id: string;
+  id: string;
+  is_visible: boolean;
+  order_id: string;
+  quality_rating: number | null;
+  rating: number;
+  timeliness_rating: number | null;
+  umkm_id: string;
+}): PublicReview {
+  return {
+    comment: review.comment ?? "Review tanpa catatan tambahan.",
+    communicationRating: review.communication_rating ?? review.rating,
+    createdAt: review.created_at,
+    creatorId: review.creator_id,
+    id: review.id,
+    isVisible: review.is_visible,
+    orderId: review.order_id,
+    qualityRating: review.quality_rating ?? review.rating,
+    rating: review.rating,
+    timelinessRating: review.timeliness_rating ?? review.rating,
+    umkmId: review.umkm_id,
+  };
 }
 
 export async function getPublicFeaturedCreators(): Promise<readonly PublicCreatorProfile[]> {
@@ -318,29 +365,43 @@ export async function getPublicFeaturedCreators(): Promise<readonly PublicCreato
       return [];
     }
 
-    return data.map((item) => ({
-      id: item.id,
-      userId: item.user_id,
-      displayName: item.display_name,
-      bio: item.bio ?? "",
-      city: item.city ?? "",
-      province: item.province ?? "",
-      niche: item.niche ?? "",
-      skills: item.skills ?? [],
-      avatarUrl: item.avatar_url ?? "",
-      bannerUrl: item.banner_url ?? "",
-      instagramUrl: item.instagram_url ?? "",
-      tiktokUrl: item.tiktok_url ?? "",
-      youtubeUrl: item.youtube_url ?? "",
-      portfolioUrl: item.portfolio_url ?? "",
-      availabilityStatus: item.availability_status as PublicAvailabilityStatus,
-      startingPrice: Number(item.starting_price),
-      averageRating: Number(item.average_rating),
-      completedOrdersCount: item.completed_orders_count,
-      responseTimeHours: item.response_time_hours ?? 0,
-      isVerified: item.is_verified,
-      isFeatured: item.is_featured,
-    }));
+    const statsMap = await getCreatorStatsMap(
+      supabase,
+      data.map((item) => item.id),
+      data.map((item) => ({
+        averageRating: item.average_rating,
+        completedOrdersCount: item.completed_orders_count,
+        id: item.id,
+      })),
+    );
+
+    return data.map((item) => {
+      const stats = getCreatorStatsFromMap(statsMap, item.id);
+
+      return {
+        id: item.id,
+        userId: item.user_id,
+        displayName: item.display_name,
+        bio: item.bio ?? "",
+        city: item.city ?? "",
+        province: item.province ?? "",
+        niche: item.niche ?? "",
+        skills: item.skills ?? [],
+        avatarUrl: item.avatar_url ?? "",
+        bannerUrl: item.banner_url ?? "",
+        instagramUrl: item.instagram_url ?? "",
+        tiktokUrl: item.tiktok_url ?? "",
+        youtubeUrl: item.youtube_url ?? "",
+        portfolioUrl: item.portfolio_url ?? "",
+        availabilityStatus: item.availability_status as PublicAvailabilityStatus,
+        startingPrice: Number(item.starting_price),
+        averageRating: stats.averageRating,
+        completedOrdersCount: stats.completedOrdersCount,
+        responseTimeHours: item.response_time_hours ?? 0,
+        isVerified: item.is_verified,
+        isFeatured: item.is_featured,
+      };
+    });
   } catch {
     return [];
   }
@@ -376,29 +437,42 @@ export async function getPublicCatalogData() {
       };
     }
 
-    const publicCreators: PublicCreatorProfile[] = creatorsRes.data.map((item) => ({
-      id: item.id,
-      userId: item.user_id,
-      displayName: item.display_name,
-      bio: item.bio ?? "",
-      city: item.city ?? "",
-      province: item.province ?? "",
-      niche: item.niche ?? "",
-      skills: item.skills ?? [],
-      avatarUrl: item.avatar_url ?? "",
-      bannerUrl: item.banner_url ?? "",
-      instagramUrl: item.instagram_url ?? "",
-      tiktokUrl: item.tiktok_url ?? "",
-      youtubeUrl: item.youtube_url ?? "",
-      portfolioUrl: item.portfolio_url ?? "",
-      availabilityStatus: item.availability_status as PublicAvailabilityStatus,
-      startingPrice: Number(item.starting_price),
-      averageRating: Number(item.average_rating),
-      completedOrdersCount: item.completed_orders_count,
-      responseTimeHours: item.response_time_hours ?? 0,
-      isVerified: item.is_verified,
-      isFeatured: item.is_featured,
-    }));
+    const statsMap = await getCreatorStatsMap(
+      supabase,
+      creatorsRes.data.map((item) => item.id),
+      creatorsRes.data.map((item) => ({
+        averageRating: item.average_rating,
+        completedOrdersCount: item.completed_orders_count,
+        id: item.id,
+      })),
+    );
+    const publicCreators: PublicCreatorProfile[] = creatorsRes.data.map((item) => {
+      const stats = getCreatorStatsFromMap(statsMap, item.id);
+
+      return {
+        id: item.id,
+        userId: item.user_id,
+        displayName: item.display_name,
+        bio: item.bio ?? "",
+        city: item.city ?? "",
+        province: item.province ?? "",
+        niche: item.niche ?? "",
+        skills: item.skills ?? [],
+        avatarUrl: item.avatar_url ?? "",
+        bannerUrl: item.banner_url ?? "",
+        instagramUrl: item.instagram_url ?? "",
+        tiktokUrl: item.tiktok_url ?? "",
+        youtubeUrl: item.youtube_url ?? "",
+        portfolioUrl: item.portfolio_url ?? "",
+        availabilityStatus: item.availability_status as PublicAvailabilityStatus,
+        startingPrice: Number(item.starting_price),
+        averageRating: stats.averageRating,
+        completedOrdersCount: stats.completedOrdersCount,
+        responseTimeHours: item.response_time_hours ?? 0,
+        isVerified: item.is_verified,
+        isFeatured: item.is_featured,
+      };
+    });
     const publicCreatorIds = new Set(publicCreators.map((creator) => creator.id));
     const serviceIds = (servicesRes.data ?? []).map((item) => item.id);
     const [tiersRes, mediaRes] = await Promise.all([

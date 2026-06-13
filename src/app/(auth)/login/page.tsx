@@ -23,6 +23,10 @@ function getNotice(params: Record<string, string | string[] | undefined>) {
     return "Anda sudah keluar dari akun.";
   }
 
+  if (getSingleParam(params.password_reset) === "1") {
+    return "Password berhasil diperbarui. Silakan masuk kembali.";
+  }
+
   return undefined;
 }
 

@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, CalendarClock, CheckCircle2, FileText, ReceiptTe
 import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { OrderCollaborationPanel } from "@/features/orders/components/order-collaboration-panel";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import {
@@ -19,6 +20,7 @@ import {
   type UmkmOrderDetail,
   type UmkmOrderDetailItem,
 } from "@/features/orders/data/order-queries";
+import { getOrderCollaborationData } from "@/features/orders/data/order-collaboration-queries";
 import { getOrderDeliveryData } from "@/features/submissions/data/submission-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
@@ -35,7 +37,10 @@ type OrderPageProps = {
     completed?: string;
     created?: string;
     error?: string;
+    complaint_created?: string;
+    message_sent?: string;
     paid?: string;
+    reviewed?: string;
     revision_requested?: string;
   }>;
 };
@@ -69,15 +74,19 @@ export default async function UmkmOrderDetailPage({
       Promise.resolve({
         already_paid: undefined,
         completed: undefined,
+        complaint_created: undefined,
         created: undefined,
         error: undefined,
+        message_sent: undefined,
         paid: undefined,
+        reviewed: undefined,
         revision_requested: undefined,
       }),
   ]);
-  const [data, delivery] = await Promise.all([
+  const [data, delivery, collaboration] = await Promise.all([
     getCurrentUmkmOrderDetail(orderId),
     getOrderDeliveryData(orderId),
+    getOrderCollaborationData(orderId),
   ]);
 
   if (!data) {
@@ -111,6 +120,13 @@ export default async function UmkmOrderDetailPage({
               {showResults ? <DeliveryHistoryPanel delivery={delivery} /> : null}
               {showRevisions ? <RevisionHistoryPanel delivery={delivery} /> : null}
               <StatusTimeline data={data} />
+              <OrderCollaborationPanel
+                canReview={data.order.order_status === "completed"}
+                collaboration={collaboration}
+                orderId={data.order.id}
+                returnPath={`/umkm/orders/${data.order.id}`}
+                variant="umkm"
+              />
             </div>
 
             <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
@@ -156,6 +172,22 @@ function PageNotice({
         Permintaan revisi sudah dikirim ke kreator.
       </div>
     );
+  }
+
+  if (query.reviewed === "1") {
+    return <SuccessNotice message="Review berhasil dikirim." />;
+  }
+
+  if (query.complaint_created === "1") {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+        Komplain sudah dikirim untuk ditinjau.
+      </div>
+    );
+  }
+
+  if (query.message_sent === "1") {
+    return <SuccessNotice message="Pesan berhasil dikirim." />;
   }
 
   if (query.paid === "1" || query.already_paid === "1") {

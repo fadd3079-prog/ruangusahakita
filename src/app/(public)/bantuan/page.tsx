@@ -2,185 +2,208 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   AlertTriangle,
-  FileQuestion,
+  BriefcaseBusiness,
+  CreditCard,
   FileText,
   HelpCircle,
   LifeBuoy,
+  Mail,
   MessageCircle,
-  Search,
-  ShieldCheck,
+  RotateCcw,
+  Store,
   UserCircle,
 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 export const metadata: Metadata = {
   title: "Pusat Bantuan — Ruang Usaha Kita",
-  description: "Temukan jawaban untuk pertanyaan umum seputar marketplace jasa digital.",
+  description: "FAQ dan kontak admin Ruang Usaha Kita untuk UMKM dan kreator.",
 };
 
-const faqs = [
+const faqSections = [
   {
-    category: "Akun & Pendaftaran",
+    category: "Akun",
     icon: UserCircle,
     items: [
       {
-        q: "Bagaimana cara mendaftar sebagai Kreator?",
-        a: "Klik tombol Daftar di pojok kanan atas, pilih peran 'Kreator', lalu lengkapi profil, keahlian, dan unggah portofolio Anda. Setelah disetujui admin, Anda bisa mulai membuat paket layanan."
+        answer: "UMKM dan kreator dapat membuat akun dari halaman daftar. Admin dibuat manual dari database.",
+        question: "Siapa yang bisa mendaftar?",
       },
       {
-        q: "Apakah ada biaya pendaftaran?",
-        a: "Pendaftaran untuk UMKM maupun Kreator 100% gratis. Ruang Usaha Kita hanya membebankan biaya layanan flat untuk UMKM per transaksi dan komisi persentase dari kreator setelah order selesai."
-      }
-    ]
+        answer: "Gunakan halaman lupa password. Link reset akan dikirim lewat email akun.",
+        question: "Bagaimana jika lupa password?",
+      },
+    ],
   },
   {
-    category: "Pesanan & Brief",
+    category: "UMKM",
+    icon: Store,
+    items: [
+      {
+        answer: "Cari kreator, pilih paket jasa, isi brief campaign, lalu lanjutkan pembayaran.",
+        question: "Bagaimana UMKM mulai memesan?",
+      },
+      {
+        answer: "Brief berisi tujuan campaign, target audiens, platform konten, gaya, referensi, dan catatan tambahan.",
+        question: "Apa yang perlu disiapkan?",
+      },
+    ],
+  },
+  {
+    category: "Kreator",
+    icon: BriefcaseBusiness,
+    items: [
+      {
+        answer: "Lengkapi profil, buat paket layanan, atur tier harga, dan tampilkan portofolio.",
+        question: "Bagaimana kreator mulai menerima order?",
+      },
+      {
+        answer: "Kreator memproses order setelah pembayaran UMKM berhasil dan brief diterima.",
+        question: "Kapan kreator mulai bekerja?",
+      },
+    ],
+  },
+  {
+    category: "Order",
     icon: FileText,
     items: [
       {
-        q: "Apa itu Brief Campaign?",
-        a: "Brief adalah formulir yang harus diisi UMKM sebelum memesan jasa. Isinya mencakup tujuan campaign, target audiens, dan referensi desain agar kreator memahami ekspektasi Anda dengan jelas."
+        answer: "Status pesanan menunjukkan proses jasa digital. Status pembayaran tetap terpisah.",
+        question: "Apa bedanya status pesanan dan pembayaran?",
       },
       {
-        q: "Bolehkah saya meminta revisi?",
-        a: "Tentu. Setiap paket layanan mencantumkan batas maksimal revisi. Anda dapat menggunakan fitur 'Minta Revisi' di halaman detail order jika hasil konten belum sesuai brief."
-      }
-    ]
+        answer: "UMKM dan kreator dapat berkomunikasi di chat order untuk konteks brief dan hasil konten.",
+        question: "Di mana komunikasi order dilakukan?",
+      },
+    ],
   },
   {
-    category: "Pembayaran & Keamanan",
-    icon: ShieldCheck,
+    category: "Pembayaran",
+    icon: CreditCard,
     items: [
       {
-        q: "Bagaimana sistem pembayaran bekerja?",
-        a: "UMKM mentransfer dana ke rekening penampung (Escrow) Ruang Usaha Kita. Dana tersebut baru akan diteruskan ke Kreator setelah UMKM menyetujui hasil akhir konten."
+        answer: "MVP memakai sandbox payment. Integrasi gateway produksi dapat disiapkan setelah alur utama stabil.",
+        question: "Apakah pembayaran sudah gateway produksi?",
       },
       {
-        q: "Apakah data transaksi saya aman?",
-        a: "Ya. Saat ini platform menggunakan alur pembayaran sandbox untuk tujuan MVP. Di tahap produksi, integrasi payment gateway resmi seperti Midtrans dapat disiapkan."
-      }
-    ]
+        answer: "Invoice dan receipt menampilkan layanan, add-on, biaya admin, total, dan status pembayaran.",
+        question: "Apa isi invoice?",
+      },
+    ],
   },
   {
-    category: "Komplain & Penyelesaian",
+    category: "Revisi",
+    icon: RotateCcw,
+    items: [
+      {
+        answer: "UMKM dapat meminta revisi saat hasil konten dikirim dan masih ada kuota revisi paket.",
+        question: "Kapan revisi bisa diajukan?",
+      },
+      {
+        answer: "Kreator mengirim versi revisi, lalu UMKM meninjau kembali sebelum menyelesaikan pesanan.",
+        question: "Bagaimana alur revisi?",
+      },
+    ],
+  },
+  {
+    category: "Komplain",
     icon: AlertTriangle,
     items: [
       {
-        q: "Bagaimana jika kreator tidak merespons?",
-        a: "Jika kreator melewati batas waktu pengerjaan (deadline) tanpa kabar, Anda dapat membuka tiket komplain. Admin kami akan meninjau dan jika terbukti melanggar, pesanan dapat dibatalkan dan dana dikembalikan."
+        answer: "Buka komplain dari detail order. Admin akan meninjau konteks order, chat, hasil, dan revisi.",
+        question: "Bagaimana mengajukan komplain?",
       },
       {
-        q: "Hasil akhir sama sekali tidak sesuai brief, apa solusinya?",
-        a: "Gunakan hak revisi terlebih dahulu. Jika kuota revisi habis dan hasil tetap menyimpang jauh dari brief awal, Anda bisa membuka komplain untuk dimediasi oleh tim Admin."
-      }
-    ]
-  }
+        answer: "Admin dapat memberi keputusan dan menutup komplain sesuai data order yang tersedia.",
+        question: "Siapa yang menyelesaikan komplain?",
+      },
+    ],
+  },
 ];
 
 export default function BantuanPage() {
   return (
-    <main className="min-h-screen bg-background pb-20">
-      <section className="bg-brand-navy pt-20 pb-24 text-center">
+    <main className="bg-background pb-16">
+      <section className="bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] py-16 text-white">
         <PageContainer>
-          <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-white/10 text-white mb-6 backdrop-blur-sm">
-            <LifeBuoy className="size-8" />
-          </div>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white mb-6">
-            Pusat Bantuan
-          </h1>
-          <p className="text-lg text-white/80 max-w-2xl mx-auto mb-10">
-            Punya pertanyaan seputar Ruang Usaha Kita? Cari topik bantuan di bawah ini.
-          </p>
-          
-          <div className="max-w-2xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
-            <Input 
-              placeholder="Ketik pertanyaan Anda... (misal: cara pembayaran)" 
-              className="pl-12 h-14 rounded-full text-base bg-white border-0 shadow-lg text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-4 focus-visible:ring-brand-teal/50"
-            />
+          <div className="max-w-3xl">
+            <div className="grid size-12 place-items-center rounded-2xl bg-white/10 text-white">
+              <LifeBuoy className="size-6" aria-hidden="true" />
+            </div>
+            <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">
+              Pusat Bantuan
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-white/76">
+              FAQ singkat untuk akun, order, pembayaran, revisi, komplain, UMKM, dan kreator.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button asChild className="bg-white text-brand-navy hover:bg-white/90">
+                <Link href="mailto:support@ruang.usaha">
+                  <Mail className="size-4" aria-hidden="true" />
+                  Email Admin
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                <Link href="/cara-kerja">
+                  <MessageCircle className="size-4" aria-hidden="true" />
+                  Lihat Cara Kerja
+                </Link>
+              </Button>
+            </div>
           </div>
         </PageContainer>
       </section>
 
-      <section className="relative -mt-10">
-        <PageContainer>
-          <div className="grid md:grid-cols-3 gap-6 mb-20 max-w-5xl mx-auto">
-            <Link href="/cara-kerja" className="rounded-2xl bg-white p-6 shadow-md border border-border/50 hover:border-primary/30 transition-all flex items-center gap-4 group">
-               <div className="bg-primary/10 p-3 rounded-xl text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                 <FileQuestion className="size-6" />
-               </div>
-               <div>
-                 <h3 className="font-semibold text-brand-navy">Cara Kerja Platform</h3>
-                 <p className="text-sm text-muted-foreground mt-1">Pelajari alur transaksi</p>
-               </div>
-            </Link>
-            
-            <Link href="/katalog" className="rounded-2xl bg-white p-6 shadow-md border border-border/50 hover:border-primary/30 transition-all flex items-center gap-4 group">
-               <div className="bg-primary/10 p-3 rounded-xl text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                 <Search className="size-6" />
-               </div>
-               <div>
-                 <h3 className="font-semibold text-brand-navy">Cari Kreator</h3>
-                 <p className="text-sm text-muted-foreground mt-1">Jelajahi layanan digital</p>
-               </div>
-            </Link>
-
-            <div className="rounded-2xl bg-white p-6 shadow-md border border-border/50 flex items-center gap-4 cursor-not-allowed opacity-80">
-               <div className="bg-muted p-3 rounded-xl text-muted-foreground">
-                 <MessageCircle className="size-6" />
-               </div>
-               <div>
-                 <h3 className="font-semibold text-brand-navy">Live Chat</h3>
-                 <p className="text-sm text-muted-foreground mt-1">Segera hadir</p>
-               </div>
-            </div>
-          </div>
-
-          <div className="max-w-4xl mx-auto space-y-16">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-brand-navy tracking-tight">Pertanyaan Populer (FAQ)</h2>
-            </div>
-
-            {faqs.map((section, idx) => (
-              <div key={idx} className="space-y-6">
-                <div className="flex items-center gap-3 border-b border-border/70 pb-3">
-                  <section.icon className="size-6 text-primary" />
-                  <h3 className="text-2xl font-semibold text-foreground">{section.category}</h3>
+      <PageContainer>
+        <section className="mt-10 grid gap-5 lg:grid-cols-2">
+          {faqSections.map((section) => (
+            <article
+              key={section.category}
+              className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+                  <section.icon className="size-5" aria-hidden="true" />
                 </div>
-                
-                <div className="grid gap-6 sm:grid-cols-2">
-                  {section.items.map((item, itemIdx) => (
-                    <div key={itemIdx} className="rounded-2xl border border-border/70 bg-surface-soft p-6">
-                      <div className="flex gap-3 mb-3">
-                        <HelpCircle className="size-5 text-primary shrink-0 mt-0.5" />
-                        <h4 className="font-semibold text-brand-navy leading-snug">{item.q}</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed pl-8">
-                        {item.a}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                  {section.category}
+                </h2>
               </div>
-            ))}
-          </div>
+              <div className="mt-5 grid gap-4">
+                {section.items.map((item) => (
+                  <div key={item.question} className="rounded-xl border border-border/60 bg-background p-4">
+                    <div className="flex gap-3">
+                      <HelpCircle className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                      <div className="min-w-0">
+                        <h3 className="line-clamp-2 text-sm font-semibold text-foreground">
+                          {item.question}
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          {item.answer}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </section>
 
-          <div className="mt-24 max-w-3xl mx-auto rounded-3xl bg-[linear-gradient(135deg,rgba(22,113,99,0.1),rgba(12,41,73,0.05))] border border-primary/20 p-8 sm:p-12 text-center">
-             <h2 className="text-2xl font-bold text-brand-navy mb-4">Masih Butuh Bantuan?</h2>
-             <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-               Tim support Ruang Usaha Kita siap membantu kelancaran promosi digital Anda. Jangan ragu untuk menghubungi kami.
-             </p>
-             <Button asChild size="lg" className="h-12 px-8">
-               <Link href="#">
-                 Hubungi Support (Placeholder)
-               </Link>
-             </Button>
-          </div>
-        </PageContainer>
-      </section>
+        <section className="mt-10 rounded-3xl border border-primary/20 bg-primary/10 p-6 text-center sm:p-8">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+            Butuh bantuan langsung?
+          </h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+            Hubungi admin dengan nomor order, email akun, dan ringkasan kendala agar pengecekan lebih cepat.
+          </p>
+          <Button asChild className="mt-5">
+            <Link href="mailto:support@ruang.usaha">Hubungi Admin</Link>
+          </Button>
+        </section>
+      </PageContainer>
     </main>
   );
 }

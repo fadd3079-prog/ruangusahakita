@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, LogOut, Menu, ShoppingCart } from "lucide-react";
+import { Bell, Home, LogOut, Menu, ShoppingCart } from "lucide-react";
 
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { SubmitButton } from "@/components/common/submit-button";
@@ -23,10 +23,16 @@ import type { DashboardAccountPreview } from "@/components/layout/dashboard-shel
 type DashboardTopbarProps = {
   accountPreview?: DashboardAccountPreview | null;
   cartCount?: number;
+  notificationCount?: number;
   variant: DashboardNavigationVariant;
 };
 
-export function DashboardTopbar({ accountPreview, cartCount = 0, variant }: DashboardTopbarProps) {
+export function DashboardTopbar({
+  accountPreview,
+  cartCount = 0,
+  notificationCount = 0,
+  variant,
+}: DashboardTopbarProps) {
   const roleLabel = dashboardRoleLabels[variant];
   const displayName = accountPreview?.displayName ?? roleLabel;
   const initials = accountPreview?.initials ?? roleLabel.slice(0, 1);
@@ -85,6 +91,16 @@ export function DashboardTopbar({ accountPreview, cartCount = 0, variant }: Dash
               </Link>
             </Button>
           ) : null}
+          <Button asChild variant="outline" size="icon" className="rounded-full">
+            <Link
+              href={variant === "admin" ? "/admin/dashboard" : variant === "creator" ? "/creator/dashboard" : "/umkm/dashboard"}
+              aria-label="Lihat notifikasi"
+              className="relative"
+            >
+              <Bell aria-hidden="true" />
+              {notificationCount > 0 ? <CartCountBadge count={notificationCount} /> : null}
+            </Link>
+          </Button>
           <Badge variant="secondary" className="rounded-full">Live</Badge>
           <div className="hidden items-center gap-2 rounded-full border bg-card px-2 py-1 sm:flex">
             <div

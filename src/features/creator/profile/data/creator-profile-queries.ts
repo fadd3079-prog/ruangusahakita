@@ -1,4 +1,8 @@
 import { isDemoMode } from "@/lib/config/demo-mode";
+import {
+  getCreatorStatsFromMap,
+  getCreatorStatsMap,
+} from "@/features/creators/data/creator-stats";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -13,6 +17,8 @@ export type CreatorProfileRow = Tables["creator_profiles"]["Row"];
 export type CreatorProfilePageData = {
   account: CreatorAccountProfile | null;
   activeServicesCount: number;
+  averageRating: number;
+  completedOrdersCount: number;
   portfolioCount: number;
   profile: CreatorProfileRow | null;
   reviewCount: number;
@@ -21,6 +27,8 @@ export type CreatorProfilePageData = {
 const emptyCreatorProfilePageData: CreatorProfilePageData = {
   account: null,
   activeServicesCount: 0,
+  averageRating: 0,
+  completedOrdersCount: 0,
   portfolioCount: 0,
   profile: null,
   reviewCount: 0,
@@ -86,24 +94,6 @@ async function getCurrentCreatorContext() {
   };
 }
 
-async function countRows(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  table: "service_packages" | "portfolios" | "reviews",
-  column: string,
-  value: string,
-) {
-  const { count, error } = await supabase
-    .from(table)
-    .select("id", { count: "exact", head: true })
-    .eq(column, value);
-
-  if (error || typeof count !== "number") {
-    return 0;
-  }
-
-  return count;
-}
-
 export async function getCurrentCreatorProfilePageData(): Promise<CreatorProfilePageData> {
   try {
     const context = await getCurrentCreatorContext();
@@ -119,7 +109,7 @@ export async function getCurrentCreatorProfilePageData(): Promise<CreatorProfile
       };
     }
 
-    const [activeServicesCount, portfolioCount, reviewCount] = await Promise.all([
+    const [activeServicesCount, portfolioCount, statsMap] = await Promise.all([
       context.supabase
         .from("service_packages")
         .select("id", { count: "exact", head: true })
@@ -131,8 +121,19 @@ export async function getCurrentCreatorProfilePageData(): Promise<CreatorProfile
         .select("id", { count: "exact", head: true })
         .eq("creator_id", context.profile.id)
         .is("deleted_at", null),
-      countRows(context.supabase, "reviews", "creator_id", context.profile.id),
+      getCreatorStatsMap(
+        context.supabase,
+        [context.profile.id],
+        [
+          {
+            averageRating: context.profile.average_rating,
+            completedOrdersCount: context.profile.completed_orders_count,
+            id: context.profile.id,
+          },
+        ],
+      ),
     ]);
+    const stats = getCreatorStatsFromMap(statsMap, context.profile.id);
 
     return {
       account: context.account,
@@ -140,12 +141,14 @@ export async function getCurrentCreatorProfilePageData(): Promise<CreatorProfile
         activeServicesCount.error || typeof activeServicesCount.count !== "number"
           ? 0
           : activeServicesCount.count,
+      averageRating: stats.averageRating,
+      completedOrdersCount: stats.completedOrdersCount,
       portfolioCount:
         portfolioCount.error || typeof portfolioCount.count !== "number"
           ? 0
           : portfolioCount.count,
       profile: context.profile,
-      reviewCount,
+      reviewCount: stats.reviewCount,
     };
   } catch {
     return emptyCreatorProfilePageData;
