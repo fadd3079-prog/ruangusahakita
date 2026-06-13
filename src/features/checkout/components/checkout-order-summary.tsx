@@ -1,11 +1,5 @@
-import {
-  Clock3,
-  Layers3,
-  PenLine,
-  UserRound,
-  WalletCards,
-  type LucideIcon,
-} from "lucide-react";
+import { Clock3, PenLine, UserRound } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import type { CartDisplayItem } from "@/features/cart/components/cart-service-summary";
@@ -29,109 +23,109 @@ export function CheckoutOrderSummary({
   totalPayment,
 }: CheckoutOrderSummaryProps) {
   return (
-    <aside
-      aria-labelledby="checkout-order-summary-title"
-      className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-card)]"
-    >
-      <div className="bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white">
-        <p className="text-sm font-semibold text-white/75">
-          Ringkasan layanan
-        </p>
-        <h2
-          id="checkout-order-summary-title"
-          className="mt-2 text-xl font-semibold tracking-tight text-white"
-        >
+    <aside className="rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
+      <div className="border-b border-border/70 px-5 py-4">
+        <p className="text-sm font-semibold text-primary">Ringkasan</p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
           {businessName}
         </h2>
-        <p className="mt-3 text-sm leading-6 text-white/70">
-          Pastikan pilihan layanan sudah sesuai sebelum brief campaign
-          dilanjutkan ke pembayaran.
-        </p>
       </div>
 
-      <div className="p-5">
-        <article className="rounded-2xl border border-border/70 bg-background p-4">
+      <div className="space-y-5 p-5">
+        <section>
           <div className="flex flex-wrap gap-2">
-            <Badge className="rounded-lg">{item.tierName}</Badge>
+            <Badge className="rounded-lg bg-primary text-primary-foreground hover:bg-primary">
+              {item.tierName}
+            </Badge>
             <Badge variant="secondary" className="rounded-lg">
               {item.categoryName}
             </Badge>
           </div>
-          <h3 className="mt-3 break-words text-lg font-semibold tracking-tight text-foreground">
+          <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight text-foreground">
             {item.serviceTitle}
           </h3>
-          <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-            <UserRound className="size-4 text-primary" aria-hidden="true" />
-            Kreator: {item.creatorName}
+          <p className="mt-2 flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+            <UserRound className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            <span className="truncate">{item.creatorName}</span>
           </p>
+        </section>
 
-          <div className="mt-4 grid gap-2">
-            <MiniMetric
-              icon={Layers3}
-              label="Kategori"
-              value={item.categoryName}
-            />
-            <MiniMetric
-              icon={Clock3}
-              label="Estimasi"
-              value={`${item.estimatedDays} hari`}
-            />
-            <MiniMetric
-              icon={PenLine}
-              label="Revisi"
-              value={`${item.revisionCount} kali revisi`}
-            />
-          </div>
-        </article>
+        <section className="grid gap-2">
+          <FactRow
+            icon={<Clock3 className="size-4 text-blue-700" aria-hidden="true" />}
+            label="Estimasi"
+            value={`${item.estimatedDays} hari`}
+          />
+          <FactRow
+            icon={<PenLine className="size-4 text-amber-700" aria-hidden="true" />}
+            label="Revisi"
+            value={`${item.revisionCount} kali`}
+          />
+        </section>
 
-        <dl className="mt-5 space-y-3 text-sm">
+        {item.deliverables.length > 0 ? (
+          <section>
+            <p className="text-sm font-semibold text-foreground">Output</p>
+            <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+              {item.deliverables.slice(0, 4).map((deliverable) => (
+                <li key={deliverable} className="line-clamp-1">
+                  {deliverable}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {item.addons.length > 0 ? (
+          <section>
+            <p className="text-sm font-semibold text-foreground">Add-on</p>
+            <div className="mt-2 space-y-2">
+              {item.addons.map((addon) => (
+                <SummaryRow key={addon.id} label={addon.name} value={addon.price} />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <section className="space-y-3 border-t border-border/70 pt-4">
           <SummaryRow label="Subtotal layanan" value={serviceSubtotal} />
           <SummaryRow label="Add-on" value={addonTotal} />
           <SummaryRow label="Biaya admin" value={adminFee} />
-        </dl>
-
-        <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-          <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <WalletCards className="size-4 text-primary" aria-hidden="true" />
-            Total pembayaran
-          </p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-            {formatCurrency(totalPayment)}
-          </p>
-        </div>
+          <div className="flex items-end justify-between gap-4 rounded-xl bg-slate-950 px-4 py-3 text-white">
+            <span className="text-sm font-medium text-white/70">Total pembayaran</span>
+            <strong className="text-xl tracking-tight">{formatCurrency(totalPayment)}</strong>
+          </div>
+        </section>
       </div>
     </aside>
   );
 }
 
-type MiniMetricProps = {
-  icon: LucideIcon;
+function FactRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
   label: string;
   value: string;
-};
-
-function MiniMetric({ icon: Icon, label, value }: MiniMetricProps) {
+}) {
   return (
-    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-muted/35 px-3 py-2 text-sm">
-      <span className="inline-flex min-w-0 items-center gap-2 text-muted-foreground">
-        <Icon className="size-4 text-primary" aria-hidden="true" />
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background px-3 py-2 text-sm">
+      <span className="flex items-center gap-2 text-muted-foreground">
+        {icon}
         {label}
       </span>
-      <span className="min-w-0 text-right font-semibold text-foreground">{value}</span>
+      <span className="font-semibold text-foreground">{value}</span>
     </div>
   );
 }
 
-type SummaryRowProps = {
-  label: string;
-  value: number;
-};
-
-function SummaryRow({ label, value }: SummaryRowProps) {
+function SummaryRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-semibold text-foreground">{formatCurrency(value)}</dd>
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <span className="min-w-0 truncate text-muted-foreground">{label}</span>
+      <span className="shrink-0 font-semibold text-foreground">{formatCurrency(value)}</span>
     </div>
   );
 }

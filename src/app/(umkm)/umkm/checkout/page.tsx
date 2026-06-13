@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, ShieldCheck, ShoppingCart, Sparkles } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, CheckCircle2, ShieldCheck } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { SubmitButton } from "@/components/common/submit-button";
 import { Button } from "@/components/ui/button";
 import { CampaignBriefForm } from "@/features/briefs/components/campaign-brief-form";
-import { CheckoutGuidanceCard } from "@/features/checkout/components/checkout-guidance-card";
 import { CheckoutOrderSummary } from "@/features/checkout/components/checkout-order-summary";
 import { CheckoutStepper } from "@/features/checkout/components/checkout-stepper";
 import { getCurrentCheckoutData } from "@/features/cart/data/cart-queries";
@@ -81,35 +80,23 @@ export default async function UmkmCheckoutPage({
   return (
     <main>
       <PageContainer>
-        <div className="space-y-6">
-          <section className="overflow-hidden rounded-[20px] border border-border/70 bg-card shadow-[var(--shadow-card)]">
-            <div className="grid gap-5 bg-[linear-gradient(135deg,var(--surface-elevated),var(--surface-soft))] p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="mx-auto max-w-[1180px] space-y-5 pb-6">
+          <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0">
-                <p className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-                  <Sparkles className="size-4" aria-hidden="true" />
-                  {checkoutSelection.source === "direct"
-                    ? "Pesanan langsung"
-                    : "Checkout keranjang"}
+                <p className="text-sm font-semibold text-primary">
+                  {checkoutSelection.source === "direct" ? "Pesan sekarang" : "Checkout"}
                 </p>
-                <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                  Lengkapi brief campaign
+                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                  Isi brief campaign
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                  Tinjau layanan, isi arahan, lalu buat pesanan.
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Simpan brief, lalu buat pesanan untuk masuk ke pembayaran.
                 </p>
               </div>
-              <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-background/80 px-4 py-3">
-                <ShoppingCart className="size-5 shrink-0 text-primary" aria-hidden="true" />
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                    Sumber checkout
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">
-                    {checkoutSelection.source === "direct"
-                      ? "Pesan Sekarang"
-                      : "Keranjang"}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
+                <CheckCircle2 className="size-4" aria-hidden="true" />
+                Total dihitung server
               </div>
             </div>
           </section>
@@ -122,9 +109,24 @@ export default async function UmkmCheckoutPage({
 
           <CheckoutStepper />
 
-          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(340px,380px)] 2xl:grid-cols-[minmax(0,1fr)_400px]">
+          <details className="rounded-2xl border border-border/70 bg-card p-4 shadow-[var(--shadow-soft)] lg:hidden">
+            <summary className="cursor-pointer text-sm font-semibold text-foreground">
+              Lihat ringkasan layanan dan biaya
+            </summary>
+            <div className="mt-4">
+              <CheckoutOrderSummary
+                item={selectedItem}
+                businessName={checkoutData.umkm?.businessName ?? "UMKM"}
+                serviceSubtotal={checkoutData.cart.serviceSubtotal}
+                addonTotal={checkoutData.cart.addonTotal}
+                adminFee={checkoutData.cart.adminFee}
+                totalPayment={checkoutData.cart.totalPayment}
+              />
+            </div>
+          </details>
+
+          <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
             <div className="min-w-0 space-y-6">
-              <CheckoutGuidanceCard />
               <CampaignBriefForm
                 brief={checkoutData.brief}
                 checkoutSelection={resolvedCheckoutSelection}
@@ -132,7 +134,7 @@ export default async function UmkmCheckoutPage({
                 umkm={checkoutData.umkm}
               />
             </div>
-            <div className="min-w-0 space-y-4 xl:sticky xl:top-6 xl:self-start">
+            <div className="hidden min-w-0 space-y-4 lg:block lg:sticky lg:top-6 lg:self-start">
               <CheckoutOrderSummary
                 item={selectedItem}
                 businessName={checkoutData.umkm?.businessName ?? "UMKM"}
@@ -146,6 +148,13 @@ export default async function UmkmCheckoutPage({
                 hasBrief={Boolean(checkoutData.brief)}
               />
             </div>
+          </div>
+
+          <div className="lg:hidden">
+            <CreateOrderPanel
+              checkoutSelection={resolvedCheckoutSelection}
+              hasBrief={Boolean(checkoutData.brief)}
+            />
           </div>
         </div>
       </PageContainer>
@@ -161,17 +170,17 @@ function CreateOrderPanel({
   hasBrief: boolean;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-primary/20 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white shadow-[var(--shadow-card)]">
+    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
       <div className="flex items-start gap-3">
-        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-white">
+        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-700">
           <ShieldCheck className="size-5" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">
-            Buat pesanan dari brief ini
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+            Buat pesanan
           </h2>
-          <p className="mt-2 text-sm leading-6 text-white/72">
-            Total dihitung ulang sebelum pesanan dan invoice dibuat.
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Pesanan dan invoice dibuat setelah brief tersimpan.
           </p>
         </div>
       </div>
@@ -192,7 +201,7 @@ function CreateOrderPanel({
         <SubmitButton
           pendingLabel="Melanjutkan..."
           disabled={!hasBrief}
-          className="w-full bg-white text-primary hover:bg-white/90"
+          className="h-11 w-full bg-blue-600 text-white hover:bg-blue-700"
           icon={<ArrowRight className="size-4" aria-hidden="true" />}
         >
           Buat Pesanan
@@ -200,7 +209,7 @@ function CreateOrderPanel({
       </form>
 
       {!hasBrief ? (
-        <p className="mt-3 text-xs leading-5 text-white/64">
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">
           Simpan brief campaign terlebih dahulu sebelum membuat pesanan.
         </p>
       ) : null}

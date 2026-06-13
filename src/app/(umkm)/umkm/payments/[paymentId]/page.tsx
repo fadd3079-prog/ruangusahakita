@@ -75,7 +75,7 @@ export default async function UmkmPaymentDetailPage({
   return (
     <main>
       <PageContainer>
-        <div className="space-y-8">
+        <div className="mx-auto max-w-[1040px] space-y-5 pb-6">
           {errorMessage ? (
             <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
               {errorMessage}
@@ -83,9 +83,8 @@ export default async function UmkmPaymentDetailPage({
           ) : null}
 
           <PaymentFlowSteps detail={detail} />
-          <PaymentDetailSummary detail={detail} />
-
-          <div className="mx-auto max-w-xl">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <PaymentDetailSummary detail={detail} />
             <InvoiceSummary detail={detail} />
           </div>
         </div>
@@ -98,7 +97,7 @@ function PaymentEmptyState({ errorMessage }: { errorMessage: string | null }) {
   return (
     <main>
       <PageContainer>
-        <div className="space-y-4">
+        <div className="mx-auto max-w-2xl space-y-4 pb-6">
           {errorMessage ? (
             <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
               {errorMessage}

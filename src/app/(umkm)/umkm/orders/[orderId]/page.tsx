@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, CalendarClock, FileText, ReceiptText, WalletCards } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarClock, CheckCircle2, FileText, ReceiptText, WalletCards } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import {
@@ -16,21 +15,27 @@ import {
 } from "@/features/submissions/components/delivery-panels";
 import {
   getCurrentUmkmOrderDetail,
+  type UmkmOrderBrief,
   type UmkmOrderDetail,
   type UmkmOrderDetailItem,
 } from "@/features/orders/data/order-queries";
 import { getOrderDeliveryData } from "@/features/submissions/data/submission-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
+import type { Database } from "@/lib/supabase/types";
+
+type OrderStatus = Database["public"]["Enums"]["order_status"];
 
 type OrderPageProps = {
   params: Promise<{
     orderId: string;
   }>;
   searchParams?: Promise<{
+    already_paid?: string;
     completed?: string;
     created?: string;
     error?: string;
+    paid?: string;
     revision_requested?: string;
   }>;
 };
@@ -58,10 +63,18 @@ export default async function UmkmOrderDetailPage({
   params,
   searchParams,
 }: OrderPageProps) {
-  const { orderId } = await params;
-  const query = searchParams
-    ? await searchParams
-    : { completed: undefined, created: undefined, error: undefined, revision_requested: undefined };
+  const [{ orderId }, query] = await Promise.all([
+    params,
+    searchParams ??
+      Promise.resolve({
+        already_paid: undefined,
+        completed: undefined,
+        created: undefined,
+        error: undefined,
+        paid: undefined,
+        revision_requested: undefined,
+      }),
+  ]);
   const [data, delivery] = await Promise.all([
     getCurrentUmkmOrderDetail(orderId),
     getOrderDeliveryData(orderId),
@@ -70,61 +83,412 @@ export default async function UmkmOrderDetailPage({
   if (!data) {
     notFound();
   }
+
   const errorMessage = getDeliveryErrorMessage(query.error);
   const canReview =
     Boolean(delivery.latestSubmission) &&
     (data.order.order_status === "submitted" || data.order.order_status === "revised");
+  const showResults =
+    delivery.submissions.length > 0 ||
+    ["submitted", "revision_requested", "revised", "completed"].includes(
+      data.order.order_status,
+    );
+  const showRevisions =
+    delivery.revisions.length > 0 || data.order.order_status === "revision_requested";
 
   return (
     <main>
       <PageContainer>
-        <div className="space-y-8">
-          {query.created === "1" ? (
-            <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm font-medium text-primary">
-              Pesanan berhasil dibuat. Pembayaran masih berstatus pending sandbox
-              dan belum terhubung ke payment gateway.
-            </div>
-          ) : null}
-          {query.revision_requested === "1" ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
-              Permintaan revisi sudah dikirim ke kreator.
-            </div>
-          ) : null}
-          {query.completed === "1" ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
-              Hasil konten diterima dan pesanan selesai.
-            </div>
-          ) : null}
-          {errorMessage ? (
-            <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
-              {errorMessage}
-            </div>
-          ) : null}
+        <div className="mx-auto max-w-[1180px] space-y-5 pb-6">
+          <PageNotice query={query} errorMessage={errorMessage} />
+          <OrderHeader data={data} />
+          <OrderProgress status={data.order.order_status} />
 
-          <OrderDetailHero data={data} />
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="space-y-5">
+              <ServiceSnapshot items={data.items} />
+              <BriefSummary brief={data.brief} />
+              {showResults ? <DeliveryHistoryPanel delivery={delivery} /> : null}
+              {showRevisions ? <RevisionHistoryPanel delivery={delivery} /> : null}
+              <StatusTimeline data={data} />
+            </div>
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-6">
-              <OrderItemsCard items={data.items} />
-              <BriefPreviewCard data={data} />
-              <DeliveryHistoryPanel delivery={delivery} />
-              <RevisionHistoryPanel delivery={delivery} />
-              <StatusTimelineCard data={data} />
-            </div>
-            <div className="space-y-6">
-              <PaymentSummaryCard data={data} />
-              <UmkmDeliveryReviewPanel
-                canReview={canReview}
-                delivery={delivery}
-                orderId={data.order.id}
-              />
-              <NextStepCard />
-            </div>
+            <aside className="space-y-5 xl:sticky xl:top-6 xl:self-start">
+              <PaymentPanel data={data} />
+              {canReview ? (
+                <UmkmDeliveryReviewPanel
+                  canReview={canReview}
+                  delivery={delivery}
+                  orderId={data.order.id}
+                />
+              ) : null}
+              <OrderCostPanel data={data} />
+            </aside>
           </div>
         </div>
       </PageContainer>
     </main>
   );
+}
+
+function PageNotice({
+  errorMessage,
+  query,
+}: {
+  errorMessage: string | null;
+  query: Awaited<NonNullable<OrderPageProps["searchParams"]>>;
+}) {
+  if (errorMessage) {
+    return (
+      <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
+        {errorMessage}
+      </div>
+    );
+  }
+
+  if (query.completed === "1") {
+    return <SuccessNotice message="Hasil konten diterima dan pesanan selesai." />;
+  }
+
+  if (query.revision_requested === "1") {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+        Permintaan revisi sudah dikirim ke kreator.
+      </div>
+    );
+  }
+
+  if (query.paid === "1" || query.already_paid === "1") {
+    return <SuccessNotice message="Pembayaran berhasil diproses." />;
+  }
+
+  if (query.created === "1") {
+    return (
+      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm font-medium text-blue-900">
+        Pesanan berhasil dibuat. Lanjutkan pembayaran agar kreator dapat memproses brief.
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function SuccessNotice({ message }: { message: string }) {
+  return (
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+      {message}
+    </div>
+  );
+}
+
+function OrderHeader({ data }: { data: UmkmOrderDetail }) {
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+      <Button asChild variant="ghost" className="-ml-2 mb-4">
+        <Link href="/umkm/orders">
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Kembali
+        </Link>
+      </Button>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+            <ReceiptText className="size-4" aria-hidden="true" />
+            {data.order.order_number}
+          </p>
+          <h1 className="mt-2 line-clamp-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            {data.items[0]?.serviceTitle ?? "Paket jasa digital"}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Kreator: {data.creatorName}
+            {data.creatorCity ? `, ${data.creatorCity}` : ""}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <OrderStatusBadge status={data.order.order_status} />
+          <PaymentStatusBadge status={data.order.payment_status} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OrderProgress({ status }: { status: OrderStatus }) {
+  const steps = [
+    { key: "payment", label: "Menunggu Pembayaran" },
+    { key: "work", label: "Dikerjakan Kreator" },
+    { key: "review", label: "Review Hasil" },
+    { key: "revision", label: "Revisi" },
+    { key: "done", label: "Selesai" },
+  ] as const;
+  const activeIndex = getProgressIndex(status);
+
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-[var(--shadow-soft)]">
+      <div className="grid gap-3 md:grid-cols-5">
+        {steps.map((step, index) => {
+          const state =
+            index < activeIndex ? "done" : index === activeIndex ? "active" : "idle";
+
+          return (
+            <div key={step.key} className="flex items-center gap-3 md:block">
+              <span
+                className={
+                  state === "done"
+                    ? "grid size-8 place-items-center rounded-full bg-emerald-600 text-white md:mx-auto"
+                    : state === "active"
+                      ? "grid size-8 place-items-center rounded-full bg-blue-600 text-sm font-semibold text-white md:mx-auto"
+                      : "grid size-8 place-items-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600 md:mx-auto"
+                }
+              >
+                {state === "done" ? (
+                  <CheckCircle2 className="size-4" aria-hidden="true" />
+                ) : (
+                  index + 1
+                )}
+              </span>
+              <p
+                className={
+                  state === "active"
+                    ? "text-sm font-semibold text-foreground md:mt-2 md:text-center"
+                    : "text-sm text-muted-foreground md:mt-2 md:text-center"
+                }
+              >
+                {step.label}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ServiceSnapshot({ items }: { items: readonly UmkmOrderDetailItem[] }) {
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">
+        Layanan dipilih
+      </h2>
+      <div className="mt-4 space-y-3">
+        {items.map((item) => (
+          <article key={item.id} className="rounded-xl border border-border/70 bg-background p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap gap-2">
+                  {item.tierName ? <Badge className="rounded-lg">{item.tierName}</Badge> : null}
+                  <Badge variant="secondary" className="rounded-lg">
+                    {item.revisionCount ?? 0} revisi
+                  </Badge>
+                </div>
+                <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight text-foreground">
+                  {item.serviceTitle}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Estimasi {item.estimatedDays ?? 0} hari
+                </p>
+              </div>
+              <p className="shrink-0 text-lg font-semibold tracking-tight text-foreground">
+                {formatCurrency(item.subtotal)}
+              </p>
+            </div>
+            {item.deliverables.length > 0 ? (
+              <ul className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                {item.deliverables.slice(0, 6).map((deliverable) => (
+                  <li key={deliverable} className="line-clamp-1 rounded-lg bg-muted/35 px-3 py-2">
+                    {deliverable}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BriefSummary({ brief }: { brief: UmkmOrderBrief | null }) {
+  if (!brief) {
+    return (
+      <section className="rounded-2xl border border-dashed border-border bg-card p-5 text-sm text-muted-foreground">
+        Brief campaign belum tersedia.
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center gap-3">
+        <div className="grid size-10 place-items-center rounded-xl bg-blue-50 text-blue-700">
+          <FileText className="size-5" aria-hidden="true" />
+        </div>
+        <h2 className="text-xl font-semibold tracking-tight text-foreground">
+          Brief campaign
+        </h2>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <InfoItem label="Nama usaha" value={brief.businessName} />
+        <InfoItem label="Fokus promosi" value={brief.promotedProduct} />
+        <InfoItem label="Tujuan" value={brief.campaignGoal} />
+        <InfoItem label="Audiens" value={brief.targetAudience ?? "Belum diisi"} />
+        <InfoItem
+          label="Platform"
+          value={brief.contentPlatforms.length > 0 ? brief.contentPlatforms.join(", ") : "Belum diisi"}
+        />
+        <InfoItem label="Gaya" value={brief.contentStyle ?? "Belum diisi"} />
+      </div>
+    </section>
+  );
+}
+
+function PaymentPanel({ data }: { data: UmkmOrderDetail }) {
+  const isAwaitingPayment =
+    data.order.order_status === "awaiting_payment" || data.order.payment_status === "pending";
+
+  if (isAwaitingPayment && data.payment) {
+    return (
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-950 shadow-[var(--shadow-soft)]">
+        <div className="flex items-start gap-3">
+          <WalletCards className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">
+              Pembayaran menunggu
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-amber-900">
+              Selesaikan pembayaran agar brief diteruskan ke kreator.
+            </p>
+          </div>
+        </div>
+        <Button asChild className="mt-4 h-11 w-full bg-amber-600 text-white hover:bg-amber-700">
+          <Link href={`/umkm/payments/${data.payment.id}`}>
+            Bayar Sekarang
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </Button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+      <h2 className="text-lg font-semibold tracking-tight text-foreground">
+        Pembayaran
+      </h2>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <PaymentStatusBadge status={data.order.payment_status} />
+        {data.invoice?.invoice_number ? (
+          <Badge variant="secondary" className="rounded-lg">
+            {data.invoice.invoice_number}
+          </Badge>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+function OrderCostPanel({ data }: { data: UmkmOrderDetail }) {
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+      <h2 className="text-lg font-semibold tracking-tight text-foreground">
+        Ringkasan biaya
+      </h2>
+      <div className="mt-4 space-y-3 text-sm">
+        <MoneyRow label="Subtotal layanan" value={Number(data.order.subtotal_amount)} />
+        <MoneyRow label="Add-on" value={Number(data.order.addon_amount)} />
+        <MoneyRow label="Biaya admin" value={Number(data.order.admin_fee)} />
+        <div className="flex items-end justify-between gap-4 rounded-xl bg-slate-950 px-4 py-3 text-white">
+          <span className="text-sm text-white/70">Total</span>
+          <strong className="text-xl tracking-tight">
+            {formatCurrency(Number(data.order.total_amount))}
+          </strong>
+        </div>
+      </div>
+      <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+        <CalendarClock className="size-4" aria-hidden="true" />
+        Deadline {data.order.deadline ? formatDate(data.order.deadline) : "belum tersedia"}
+      </p>
+    </section>
+  );
+}
+
+function StatusTimeline({ data }: { data: UmkmOrderDetail }) {
+  return (
+    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">
+        Timeline
+      </h2>
+      {data.history.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {data.history.map((history) => (
+            <div key={history.id} className="flex gap-3">
+              <div className="mt-2 size-2 rounded-full bg-primary" />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <OrderStatusBadge status={history.new_status} />
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(history.created_at)}
+                  </span>
+                </div>
+                {history.note ? (
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    {history.note}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 rounded-xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
+          Timeline belum tersedia.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-muted/35 px-3 py-2">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 line-clamp-2 text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function MoneyRow({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold text-foreground">{formatCurrency(value)}</span>
+    </div>
+  );
+}
+
+function getProgressIndex(status: OrderStatus) {
+  if (status === "completed") {
+    return 4;
+  }
+
+  if (status === "revision_requested" || status === "revised") {
+    return 3;
+  }
+
+  if (status === "submitted") {
+    return 2;
+  }
+
+  if (
+    status === "waiting_creator_confirmation" ||
+    status === "brief_accepted" ||
+    status === "in_progress"
+  ) {
+    return 1;
+  }
+
+  return 0;
 }
 
 function getDeliveryErrorMessage(error?: string) {
@@ -142,338 +506,4 @@ function getDeliveryErrorMessage(error?: string) {
   };
 
   return messages[error] ?? "Aksi hasil konten belum berhasil diproses.";
-}
-
-function OrderDetailHero({ data }: { data: UmkmOrderDetail }) {
-  return (
-    <section className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
-      <div className="p-6 sm:p-8">
-        <Button
-          asChild
-          variant="ghost"
-          className="mb-6 text-white/80 hover:bg-white/10 hover:text-white"
-        >
-          <Link href="/umkm/orders">
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Kembali
-          </Link>
-        </Button>
-
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
-              <ReceiptText className="size-4" aria-hidden="true" />
-              {data.order.order_number}
-            </p>
-            <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              {data.items[0]?.serviceTitle ?? "Paket jasa digital"}
-            </h1>
-            <p className="mt-5 max-w-3xl text-sm leading-6 text-white/72 sm:text-base">
-              Pesanan bersama {data.creatorName}
-              {data.creatorCity ? ` dari ${data.creatorCity}` : ""}. Status
-              pesanan dan pembayaran dipisahkan agar alur produksi konten tetap
-              jelas.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <OrderStatusBadge status={data.order.order_status} />
-              <PaymentStatusBadge status={data.order.payment_status} />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-            <p className="text-sm font-medium text-white/68">Total pembayaran</p>
-            <p className="mt-3 text-4xl font-semibold tracking-tight text-white">
-              {formatCurrency(Number(data.order.total_amount))}
-            </p>
-            <p className="mt-3 flex items-center gap-2 text-sm text-white/68">
-              <CalendarClock className="size-4" aria-hidden="true" />
-              Deadline:{" "}
-              {data.order.deadline
-                ? formatDate(data.order.deadline)
-                : "Belum tersedia"}
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function OrderItemsCard({ items }: { items: readonly UmkmOrderDetailItem[] }) {
-  return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-card)]">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        Snapshot layanan
-      </h2>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Detail ini disimpan saat pesanan dibuat agar harga, tier, output, durasi,
-        dan revisi tetap konsisten.
-      </p>
-
-      <div className="mt-5 space-y-4">
-        {items.map((item) => (
-          <article
-            key={item.id}
-            className="rounded-2xl border border-border/70 bg-background p-4"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div className="flex flex-wrap gap-2">
-                  {item.tierName ? (
-                    <Badge className="rounded-lg">{item.tierName}</Badge>
-                  ) : null}
-                  <Badge variant="secondary" className="rounded-lg">
-                    {item.revisionCount ?? 0} revisi
-                  </Badge>
-                </div>
-                <h3 className="mt-3 text-lg font-semibold tracking-tight text-foreground">
-                  {item.serviceTitle}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Estimasi {item.estimatedDays ?? 0} hari pengerjaan
-                </p>
-              </div>
-              <p className="text-lg font-semibold tracking-tight text-foreground">
-                {formatCurrency(item.subtotal)}
-              </p>
-            </div>
-
-            {item.deliverables.length > 0 ? (
-              <ul className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                {item.deliverables.map((deliverable) => (
-                  <li key={deliverable} className="rounded-xl bg-muted/40 px-3 py-2">
-                    {deliverable}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            {item.addons.length > 0 ? (
-              <div className="mt-4 rounded-xl border border-primary/15 bg-primary/5 p-3">
-                <p className="text-sm font-semibold text-foreground">
-                  Add-on terpilih
-                </p>
-                <div className="mt-2 space-y-2">
-                  {item.addons.map((addon) => (
-                    <div
-                      key={addon.id}
-                      className="flex items-center justify-between gap-4 text-sm"
-                    >
-                      <span className="text-muted-foreground">{addon.addonName}</span>
-                      <span className="font-semibold text-foreground">
-                        {formatCurrency(addon.price)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function BriefPreviewCard({ data }: { data: UmkmOrderDetail }) {
-  if (!data.brief) {
-    return (
-      <section className="rounded-2xl border border-dashed border-border bg-card p-5 shadow-xs">
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">
-          Brief campaign belum tersedia
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Detail brief tidak dapat dibaca dari database untuk pesanan ini.
-        </p>
-      </section>
-    );
-  }
-
-  return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-card)]">
-      <div className="flex items-start gap-3">
-        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-          <FileText className="size-5" aria-hidden="true" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">
-            Brief campaign
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Brief menjadi arahan kerja kreator untuk memahami konteks usaha dan
-            tujuan promosi.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <DetailField label="Nama usaha" value={data.brief.businessName} />
-        <DetailField label="Fokus promosi" value={data.brief.promotedProduct} />
-        <DetailField label="Tujuan campaign" value={data.brief.campaignGoal} />
-        <DetailField
-          label="Target audiens"
-          value={data.brief.targetAudience ?? "Belum diisi"}
-        />
-        <DetailField
-          label="Platform konten"
-          value={
-            data.brief.contentPlatforms.length > 0
-              ? data.brief.contentPlatforms.join(", ")
-              : "Belum diisi"
-          }
-        />
-        <DetailField
-          label="Gaya konten"
-          value={data.brief.contentStyle ?? "Belum diisi"}
-        />
-      </div>
-    </section>
-  );
-}
-
-function PaymentSummaryCard({ data }: { data: UmkmOrderDetail }) {
-  return (
-    <aside className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-card)] xl:sticky xl:top-24">
-      <div className="flex items-start gap-3">
-        <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-          <WalletCards className="size-5" aria-hidden="true" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">
-            Pembayaran dan invoice
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Pembayaran dibuat sebagai pending sandbox. Payment gateway belum
-            diaktifkan pada fase ini.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-        <p className="text-sm font-medium text-muted-foreground">
-          Total pembayaran
-        </p>
-        <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-          {formatCurrency(Number(data.order.total_amount))}
-        </p>
-      </div>
-
-      <dl className="mt-5 space-y-3 text-sm">
-        <MoneyRow label="Subtotal layanan" value={Number(data.order.subtotal_amount)} />
-        <MoneyRow label="Add-on" value={Number(data.order.addon_amount)} />
-        <MoneyRow label="Biaya admin" value={Number(data.order.admin_fee)} />
-        <MoneyRow label="Diskon" value={Number(data.order.discount_amount)} />
-      </dl>
-
-      <Separator className="my-5" />
-
-      <div className="space-y-3 text-sm">
-        <DetailField
-          label="Nomor pembayaran"
-          value={data.payment?.payment_number ?? "Belum tersedia"}
-        />
-        <DetailField
-          label="Metode pembayaran"
-          value={data.payment?.payment_method ?? "manual"}
-        />
-        <DetailField
-          label="Provider"
-          value={formatPaymentProvider(data.payment?.provider)}
-        />
-        <DetailField
-          label="Nomor invoice"
-          value={data.invoice?.invoice_number ?? "Belum tersedia"}
-        />
-      </div>
-
-      {data.payment ? (
-        <Button asChild className="mt-5 w-full">
-          <Link href={`/umkm/payments/${data.payment.id}`}>
-            Lihat Pembayaran
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        </Button>
-      ) : null}
-    </aside>
-  );
-}
-
-function StatusTimelineCard({ data }: { data: UmkmOrderDetail }) {
-  return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-card)]">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        Timeline status pesanan
-      </h2>
-      <div className="mt-5 space-y-4">
-        {data.history.length > 0 ? (
-          data.history.map((history) => (
-            <div key={history.id} className="flex gap-3">
-              <div className="mt-1 size-2 rounded-full bg-primary" />
-              <div className="min-w-0 flex-1 rounded-2xl border border-border/70 bg-background p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <OrderStatusBadge status={history.new_status} />
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(history.created_at)}
-                  </span>
-                </div>
-                {history.note ? (
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {history.note}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="rounded-2xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
-            Timeline status pesanan belum tersedia.
-          </p>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function NextStepCard() {
-  return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-card)]">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        Tahap berikutnya
-      </h2>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Setelah order dibuat, lanjutkan pembayaran sandbox dari halaman
-        pembayaran. Kreator mulai mengerjakan konten setelah pembayaran
-        tervalidasi oleh server.
-      </p>
-      <Button asChild variant="outline" className="mt-5 w-full">
-        <Link href="/umkm/orders">Kembali ke daftar pesanan</Link>
-      </Button>
-    </section>
-  );
-}
-
-function DetailField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-muted/35 px-3 py-2">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function MoneyRow({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-semibold text-foreground">{formatCurrency(value)}</dd>
-    </div>
-  );
-}
-
-function formatPaymentProvider(value: string | null | undefined) {
-  if (!value) {
-    return "sandbox";
-  }
-
-  return value === ["dum", "my"].join("") ? "sandbox" : value;
 }
