@@ -10,7 +10,6 @@ const successMessages: Record<string, string> = {
   addon_created: "Add-on berhasil ditambahkan.",
   addon_deleted: "Add-on berhasil dihapus.",
   addon_updated: "Add-on berhasil diperbarui.",
-  already_paid: "Pembayaran sudah diproses sebelumnya.",
   cleared: "Keranjang berhasil dikosongkan.",
   created: "Data berhasil dibuat.",
   deleted: "Data berhasil dihapus.",
@@ -19,11 +18,22 @@ const successMessages: Record<string, string> = {
   removed: "Data berhasil dihapus.",
   saved: "Perubahan berhasil disimpan.",
   started: "Pengerjaan berhasil dimulai.",
+  submitted: "Hasil konten berhasil dikirim.",
   tier_created: "Paket harga berhasil ditambahkan.",
   tier_toggled: "Status paket harga berhasil diperbarui.",
   tier_updated: "Paket harga berhasil diperbarui.",
   toggled: "Status berhasil diperbarui.",
   updated: "Perubahan berhasil disimpan.",
+  completed: "Pesanan berhasil diselesaikan.",
+  revision_requested: "Permintaan revisi berhasil dikirim.",
+};
+
+const infoMessages: Record<string, string> = {
+  already_paid: "Pembayaran sudah diproses sebelumnya.",
+};
+
+const warningMessages: Record<string, string> = {
+  cart_empty: "Keranjang layanan masih kosong.",
 };
 
 const successByPath: readonly [string, Partial<Record<string, string>>][] = [
@@ -91,9 +101,19 @@ const errorMessages: Record<string, string> = {
   addon_update: "Add-on belum bisa diperbarui.",
   brief_required: "Brief campaign perlu dilengkapi.",
   cart_empty: "Keranjang layanan masih kosong.",
+  delivery_update: "Hasil konten belum bisa diproses.",
+  file_extension: "Format file belum didukung.",
+  file_size: "Ukuran file terlalu besar.",
+  file_type: "Tipe file belum didukung.",
   order_create: "Pesanan belum bisa dibuat.",
+  order_not_approvable: "Hasil belum bisa diterima pada status ini.",
+  order_not_revisable: "Revisi belum bisa diminta pada status ini.",
+  order_not_submittable: "Hasil belum bisa dikirim pada status ini.",
   payment_not_payable: "Pembayaran sudah diproses atau tidak dapat dilanjutkan.",
   payment_update: "Pembayaran belum bisa diproses.",
+  revision_limit_reached: "Batas revisi paket sudah terpakai.",
+  revision_note_required: "Catatan revisi wajib diisi.",
+  submission_empty: "Tambahkan file, link, atau catatan hasil.",
   save: "Gagal menyimpan. Coba beberapa saat lagi.",
   unauthorized: "Akses akun tidak sesuai.",
 };
@@ -128,9 +148,28 @@ export function ActionFeedback() {
       }
     }
 
+    for (const key of Object.keys(infoMessages)) {
+      if (searchParams.get(key)) {
+        toast.info(infoMessages[key]);
+        return;
+      }
+    }
+
+    for (const key of Object.keys(warningMessages)) {
+      if (searchParams.get(key)) {
+        toast.warning(warningMessages[key]);
+        return;
+      }
+    }
+
     const error = searchParams.get("error");
 
     if (error) {
+      if (warningMessages[error]) {
+        toast.warning(warningMessages[error]);
+        return;
+      }
+
       toast.error(errorMessages[error] ?? "Proses belum berhasil. Coba beberapa saat lagi.");
     }
   }, [pathname, query, searchParams]);

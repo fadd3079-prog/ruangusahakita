@@ -31,6 +31,7 @@ import {
 } from "@/lib/auth/account";
 import { logoutAction } from "@/lib/auth/actions";
 import { authNavigation, publicNavigation } from "@/lib/constants/navigation";
+import { getCurrentCartItemCount } from "@/features/cart/data/cart-queries";
 
 const roleLabels = {
   umkm: "UMKM",
@@ -45,6 +46,7 @@ type SiteHeaderProps = {
 export async function SiteHeader({ account: accountProp }: SiteHeaderProps = {}) {
   const account =
     accountProp === undefined ? await getCurrentAccountSummary() : accountProp;
+  const cartCount = !account || account.role === "umkm" ? await getCurrentCartItemCount() : 0;
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/88 backdrop-blur-xl supports-[backdrop-filter]:bg-background/78">
@@ -69,8 +71,9 @@ export async function SiteHeader({ account: accountProp }: SiteHeaderProps = {})
         <div className="hidden items-center gap-2 md:flex">
           {!account || account.role === "umkm" ? (
             <Button asChild variant="outline" size="icon" className="rounded-full" title="Keranjang">
-              <Link href="/umkm/cart" aria-label="Buka keranjang">
+              <Link href="/umkm/cart" aria-label="Buka keranjang" className="relative">
                 <ShoppingCart aria-hidden="true" />
+                {cartCount > 0 ? <CartCountBadge count={cartCount} /> : null}
               </Link>
             </Button>
           ) : null}
@@ -189,9 +192,14 @@ export async function SiteHeader({ account: accountProp }: SiteHeaderProps = {})
                   <SheetClose key={item.href} asChild>
                     <Link
                       href={item.href}
-                      className="rounded-xl px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="flex items-center justify-between gap-3 rounded-xl px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     >
-                      {item.title}
+                      <span>{item.title}</span>
+                      {item.href === "/umkm/cart" && cartCount > 0 ? (
+                        <span className="grid min-w-5 place-items-center rounded-full bg-amber-500 px-1.5 text-[0.68rem] font-bold leading-5 text-white">
+                          {cartCount > 99 ? "99+" : cartCount}
+                        </span>
+                      ) : null}
                     </Link>
                   </SheetClose>
                 ))}
@@ -247,5 +255,13 @@ export async function SiteHeader({ account: accountProp }: SiteHeaderProps = {})
         </div>
       </PageContainer>
     </header>
+  );
+}
+
+function CartCountBadge({ count }: { count: number }) {
+  return (
+    <span className="absolute -right-2 -top-2 grid min-w-5 place-items-center rounded-full bg-amber-500 px-1.5 text-[0.68rem] font-bold leading-5 text-white shadow-sm ring-2 ring-background">
+      {count > 99 ? "99+" : count}
+    </span>
   );
 }

@@ -233,6 +233,7 @@ function PortfolioEditor({
             <input type="hidden" name="portfolioId" value={item.id} />
             <SubmitButton
               pendingLabel="Menghapus..."
+              confirmMessage="Hapus portofolio dari daftar aktif?"
               variant="outline"
               className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
               icon={<Trash2 className="size-4" />}

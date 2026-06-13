@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, FileText, Info, ReceiptText, UserRound } from "lucide-react";
+import { ArrowRight, CheckCircle2, FileText, Info, ReceiptText, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { SubmitButton } from "@/components/common/submit-button";
-import { markSandboxPaymentAsPaid } from "@/features/payments/actions/payment-actions";
+import { PaymentGatewayModal } from "@/features/payments/components/payment-gateway-modal";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import type { CurrentUmkmPaymentDetail } from "@/features/payments/data/payment-queries";
@@ -63,6 +62,62 @@ export function PaymentDetailSummary({ detail }: PaymentDetailSummaryProps) {
   );
 }
 
+export function PaymentFlowSteps({ detail }: PaymentDetailSummaryProps) {
+  const paymentDone = detail.payment.payment_status === "paid";
+  const steps = [
+    { label: "Brief", state: "done" },
+    { label: "Pembayaran", state: paymentDone ? "done" : "active" },
+    { label: "Selesai", state: paymentDone ? "done" : "waiting" },
+  ] as const;
+
+  return (
+    <section className="rounded-3xl border border-border/70 bg-card p-4 shadow-[var(--shadow-soft)]">
+      <div className="grid gap-3 sm:grid-cols-3">
+        {steps.map((step, index) => (
+          <div
+            key={step.label}
+            className={
+              step.state === "done"
+                ? "rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900"
+                : step.state === "active"
+                  ? "rounded-2xl border border-blue-200 bg-blue-50 p-4 text-blue-900"
+                  : "rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900"
+            }
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={
+                  step.state === "done"
+                    ? "grid size-8 place-items-center rounded-full bg-emerald-600 text-white"
+                    : step.state === "active"
+                      ? "grid size-8 place-items-center rounded-full bg-blue-600 text-white"
+                      : "grid size-8 place-items-center rounded-full bg-amber-500 text-white"
+                }
+              >
+                {step.state === "done" ? (
+                  <CheckCircle2 className="size-4" aria-hidden="true" />
+                ) : (
+                  index + 1
+                )}
+              </span>
+              <div>
+                <p className="text-sm font-semibold">{step.label}</p>
+                <p className="mt-0.5 text-xs opacity-75">
+                  {step.state === "done"
+                    ? "Selesai"
+                    : step.state === "active"
+                      ? "Sedang berjalan"
+                      : "Menunggu"}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
   const canPay =
     detail.payment.payment_status === "pending" &&
@@ -116,9 +171,9 @@ export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
           </p>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+        <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
           <p className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
-            <Info className="mt-1 size-4 shrink-0 text-primary" aria-hidden="true" />
+            <Info className="mt-1 size-4 shrink-0 text-blue-700" aria-hidden="true" />
             Pembayaran pada halaman ini masih memakai alur sandbox. Status paid
             hanya dibuat lewat Server Action, bukan perubahan langsung dari
             client.
@@ -126,16 +181,14 @@ export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
         </div>
 
         <div className="mt-5 grid gap-2">
-          <form action={markSandboxPaymentAsPaid}>
-            <input type="hidden" name="paymentId" value={detail.payment.id} />
-            <SubmitButton
-              pendingLabel="Memproses pembayaran..."
-              disabled={!canPay}
-              className="h-11 w-full"
-            >
-              Tandai Pembayaran Berhasil
-            </SubmitButton>
-          </form>
+          <PaymentGatewayModal
+            amount={Number(detail.order.total_amount)}
+            canPay={canPay}
+            orderId={detail.order.id}
+            paymentId={detail.payment.id}
+            paymentNumber={detail.payment.payment_number}
+            serviceTitle={serviceTitle}
+          />
           <Button asChild variant="outline" className="h-11 w-full">
             <Link href={`/umkm/orders/${detail.order.id}`}>
               Lihat Pesanan

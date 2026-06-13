@@ -21,12 +21,12 @@ export const orderStatusLabels = {
 
 const orderStatusClasses = {
   awaiting_payment: "border-sky-200 bg-sky-50 text-sky-700",
-  brief_accepted: "border-primary/20 bg-primary/10 text-primary",
+  brief_accepted: "border-emerald-200 bg-emerald-50 text-emerald-800",
   cancelled: "border-slate-200 bg-slate-50 text-slate-700",
   completed: "border-emerald-200 bg-emerald-50 text-emerald-700",
   draft: "border-slate-200 bg-slate-50 text-slate-700",
-  in_progress: "border-primary/20 bg-primary/10 text-primary",
-  paid: "border-primary/20 bg-primary/10 text-primary",
+  in_progress: "border-blue-200 bg-blue-50 text-blue-800",
+  paid: "border-emerald-200 bg-emerald-50 text-emerald-800",
   refunded: "border-slate-200 bg-slate-50 text-slate-700",
   revised: "border-violet-200 bg-violet-50 text-violet-700",
   revision_requested: "border-amber-200 bg-amber-50 text-amber-800",

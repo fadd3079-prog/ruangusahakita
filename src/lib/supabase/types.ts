@@ -1328,6 +1328,125 @@ export interface Database {
           }
         ]
       }
+      submissions: {
+        Row: {
+          id: string
+          order_id: string
+          creator_id: string
+          title: string
+          description: string | null
+          file_urls: string[] | null
+          external_links: string[] | null
+          caption_text: string | null
+          submission_type: string | null
+          version_number: number
+          submitted_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          creator_id: string
+          title: string
+          description?: string | null
+          file_urls?: string[] | null
+          external_links?: string[] | null
+          caption_text?: string | null
+          submission_type?: string | null
+          version_number?: number
+          submitted_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          creator_id?: string
+          title?: string
+          description?: string | null
+          file_urls?: string[] | null
+          external_links?: string[] | null
+          caption_text?: string | null
+          submission_type?: string | null
+          version_number?: number
+          submitted_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_creator_id_fkey"
+            columns: ["creator_id"]
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      revisions: {
+        Row: {
+          id: string
+          order_id: string
+          submission_id: string | null
+          requested_by: string
+          revision_status: Database['public']['Enums']['revision_status']
+          revision_note: string
+          reference_urls: string[] | null
+          response_note: string | null
+          resolved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          submission_id?: string | null
+          requested_by: string
+          revision_status?: Database['public']['Enums']['revision_status']
+          revision_note: string
+          reference_urls?: string[] | null
+          response_note?: string | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          submission_id?: string | null
+          requested_by?: string
+          revision_status?: Database['public']['Enums']['revision_status']
+          revision_note?: string
+          reference_urls?: string[] | null
+          response_note?: string | null
+          resolved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revisions_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revisions_submission_id_fkey"
+            columns: ["submission_id"]
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revisions_requested_by_fkey"
+            columns: ["requested_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       reviews: {
         Row: {
           id: string
@@ -1541,6 +1660,12 @@ export interface Database {
         }
         Returns: string
       }
+      approve_order_delivery: {
+        Args: {
+          target_order_id: string
+        }
+        Returns: string
+      }
       create_order_from_current_cart: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1559,8 +1684,27 @@ export interface Database {
         }
         Returns: string
       }
+      request_order_revision: {
+        Args: {
+          reference_urls: string[]
+          revision_note: string
+          target_order_id: string
+        }
+        Returns: string
+      }
       start_creator_order: {
         Args: {
+          target_order_id: string
+        }
+        Returns: string
+      }
+      submit_creator_delivery: {
+        Args: {
+          caption_text: string
+          external_links: string[]
+          file_asset_ids: string[]
+          submission_description: string
+          submission_title: string
           target_order_id: string
         }
         Returns: string

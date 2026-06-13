@@ -216,6 +216,48 @@ export async function getCurrentCart(): Promise<CurrentCart> {
   }
 }
 
+export async function getCurrentCartItemCount() {
+  noStore();
+  if (isDemoMode()) {
+    return 0;
+  }
+
+  try {
+    const umkm = await getCurrentUmkmProfile();
+
+    if (!umkm) {
+      return 0;
+    }
+
+    const supabase = await createClient();
+    const { data: cart, error: cartError } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("umkm_id", umkm.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (cartError || !cart) {
+      return 0;
+    }
+
+    const { count, error } = await supabase
+      .from("cart_items")
+      .select("id", { count: "exact", head: true })
+      .eq("cart_id", cart.id);
+
+    if (error) {
+      return 0;
+    }
+
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export async function getCurrentCheckoutData(
   selection: CheckoutSelection = { source: "cart" },
 ): Promise<CurrentCheckoutData> {

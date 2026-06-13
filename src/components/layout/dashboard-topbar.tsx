@@ -22,10 +22,11 @@ import type { DashboardAccountPreview } from "@/components/layout/dashboard-shel
 
 type DashboardTopbarProps = {
   accountPreview?: DashboardAccountPreview | null;
+  cartCount?: number;
   variant: DashboardNavigationVariant;
 };
 
-export function DashboardTopbar({ accountPreview, variant }: DashboardTopbarProps) {
+export function DashboardTopbar({ accountPreview, cartCount = 0, variant }: DashboardTopbarProps) {
   const roleLabel = dashboardRoleLabels[variant];
   const displayName = accountPreview?.displayName ?? roleLabel;
   const initials = accountPreview?.initials ?? roleLabel.slice(0, 1);
@@ -78,8 +79,9 @@ export function DashboardTopbar({ accountPreview, variant }: DashboardTopbarProp
           </Button>
           {variant === "umkm" ? (
             <Button asChild variant="outline" size="icon" className="rounded-full">
-              <Link href="/umkm/cart" aria-label="Buka keranjang">
+              <Link href="/umkm/cart" aria-label="Buka keranjang" className="relative">
                 <ShoppingCart aria-hidden="true" />
+                {cartCount > 0 ? <CartCountBadge count={cartCount} /> : null}
               </Link>
             </Button>
           ) : null}
@@ -113,5 +115,13 @@ export function DashboardTopbar({ accountPreview, variant }: DashboardTopbarProp
         </div>
       </div>
     </header>
+  );
+}
+
+function CartCountBadge({ count }: { count: number }) {
+  return (
+    <span className="absolute -right-2 -top-2 grid min-w-5 place-items-center rounded-full bg-amber-500 px-1.5 text-[0.68rem] font-bold leading-5 text-white shadow-sm ring-2 ring-background">
+      {count > 99 ? "99+" : count}
+    </span>
   );
 }

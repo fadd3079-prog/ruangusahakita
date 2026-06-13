@@ -6,10 +6,9 @@ import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import {
   InvoiceSummary,
-  PaymentContextCard,
   PaymentDetailSummary,
+  PaymentFlowSteps,
 } from "@/features/payments/components/payment-detail-summary";
-import { PaymentMethodSelector } from "@/features/payments/components/payment-method-selector";
 import { getCurrentUmkmPaymentDetail } from "@/features/payments/data/payment-queries";
 
 type PaymentPageProps = {
@@ -83,13 +82,10 @@ export default async function UmkmPaymentDetailPage({
             </div>
           ) : null}
 
+          <PaymentFlowSteps detail={detail} />
           <PaymentDetailSummary detail={detail} />
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-            <div className="space-y-6">
-              <PaymentMethodSelector selectedMethod={detail.payment.payment_method} />
-              <PaymentContextCard detail={detail} />
-            </div>
+          <div className="mx-auto max-w-xl">
             <InvoiceSummary detail={detail} />
           </div>
         </div>

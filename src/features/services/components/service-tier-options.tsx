@@ -82,7 +82,7 @@ export function ServiceTierOptions({ serviceId, tiers }: ServiceTierOptionsProps
             <form action={addServiceToCart}>
               <input type="hidden" name="serviceId" value={serviceId} />
               <input type="hidden" name="tierId" value={tier.id} />
-              <input type="hidden" name="redirectTo" value="/umkm/cart" />
+              <input type="hidden" name="redirectTo" value={`/layanan/${serviceId}`} />
               <SubmitButton pendingLabel="Menambahkan..." className="h-10 w-full rounded-full">
                 Tambah ke Keranjang
               </SubmitButton>

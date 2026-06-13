@@ -84,12 +84,22 @@ function getCheckoutSelection(formData: FormData): CheckoutSelection {
   });
 }
 
-function sanitizeRedirectPath(value: string) {
+function sanitizeRedirectPath(value: string, fallback: string) {
   if (value === "/umkm/checkout") {
     return value;
   }
 
-  return "/umkm/cart";
+  if (
+    value === "/" ||
+    value === "/katalog" ||
+    value.startsWith("/layanan/") ||
+    value.startsWith("/kreator/") ||
+    value.startsWith("/umkm/cart")
+  ) {
+    return value;
+  }
+
+  return fallback;
 }
 
 function addRedirectError(path: string, error: string) {
@@ -422,12 +432,15 @@ async function upsertCartItem(
 export async function addServiceToCart(formData: FormData) {
   const serviceId = getText(formData, "serviceId");
   const tierId = getText(formData, "tierId");
-  const redirectTo = sanitizeRedirectPath(getText(formData, "redirectTo"));
 
   if (!serviceId) {
     redirect("/katalog?error=service");
   }
 
+  const redirectTo = sanitizeRedirectPath(
+    getText(formData, "redirectTo"),
+    `/layanan/${serviceId}`,
+  );
   const { supabase, umkm } = await requireUmkmContext(`/layanan/${serviceId}`);
   const cart = await getOrCreateActiveCart(supabase, umkm.id);
   const selection = await getActiveServiceSelection(
@@ -445,7 +458,8 @@ export async function addServiceToCart(formData: FormData) {
 
   revalidatePath("/umkm/cart");
   revalidatePath("/umkm/checkout");
-  redirect(`${redirectTo}?added=1`);
+  revalidatePath(redirectTo);
+  redirect(`${redirectTo}?added=${Date.now()}`);
 }
 
 export async function updateCartItem(formData: FormData) {

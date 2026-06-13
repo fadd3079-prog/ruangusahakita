@@ -5,4 +5,5 @@ export const FILE_SIZE_LIMITS = {
   serviceCover: 5 * 1024 * 1024,
   umkmLogo: 2 * 1024 * 1024,
   portfolioImage: 5 * 1024 * 1024,
+  projectResult: 50 * 1024 * 1024,
 } as const;

@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import type { ChangeEvent, DragEvent } from "react";
-import { useRef, useState } from "react";
-import { FileImage, UploadCloud } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { FileImage, FileText, FileVideo, UploadCloud } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,13 @@ type FileDropzoneProps = {
   required?: boolean;
 };
 
+type FilePreview = {
+  id: string;
+  name: string;
+  type: "image" | "video" | "file";
+  url: string;
+};
+
 export function FileDropzone({
   accept,
   className,
@@ -33,7 +41,13 @@ export function FileDropzone({
 }: FileDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [fileNames, setFileNames] = useState<readonly string[]>([]);
+  const [previews, setPreviews] = useState<readonly FilePreview[]>([]);
+
+  useEffect(() => {
+    return () => {
+      previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [previews]);
 
   function getLimitedFiles(files: FileList) {
     const selectedFiles = Array.from(files);
@@ -54,18 +68,18 @@ export function FileDropzone({
     });
 
     inputRef.current.files = transfer.files;
-    setFileNames(files.map((file) => file.name));
+    setPreviews(createPreviews(files));
   }
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const files = event.currentTarget.files;
 
     if (!files) {
-      setFileNames([]);
+      setPreviews([]);
       return;
     }
 
-    setFileNames(getLimitedFiles(files).map((file) => file.name));
+    syncSelectedFiles(getLimitedFiles(files));
   }
 
   function handleDragOver(event: DragEvent<HTMLLabelElement>) {
@@ -134,19 +148,69 @@ export function FileDropzone({
         </span>
       </label>
 
-      {fileNames.length > 0 ? (
-        <div className="space-y-2 rounded-2xl border border-border/70 bg-muted/35 p-3">
-          {fileNames.map((fileName) => (
+      {previews.length > 0 ? (
+        <div className="grid gap-3 rounded-2xl border border-border/70 bg-muted/35 p-3 sm:grid-cols-2">
+          {previews.map((preview) => (
             <div
-              key={fileName}
-              className="flex items-center gap-2 text-xs font-medium text-foreground"
+              key={preview.id}
+              className="overflow-hidden rounded-xl border border-border/70 bg-card"
             >
-              <FileImage className="size-4 shrink-0 text-primary" aria-hidden="true" />
-              <span className="truncate">{fileName}</span>
+              <div className="relative grid aspect-video place-items-center bg-muted/50">
+                {preview.type === "image" ? (
+                  <Image
+                    src={preview.url}
+                    alt={preview.name}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                ) : preview.type === "video" ? (
+                  <video
+                    src={preview.url}
+                    className="h-full w-full object-cover"
+                    muted
+                    playsInline
+                    controls
+                  />
+                ) : (
+                  <FileText className="size-8 text-primary" aria-hidden="true" />
+                )}
+              </div>
+              <div className="flex items-center gap-2 p-2 text-xs font-medium text-foreground">
+                {preview.type === "video" ? (
+                  <FileVideo className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                ) : preview.type === "file" ? (
+                  <FileText className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                ) : (
+                  <FileImage className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                )}
+                <span className="truncate">{preview.name}</span>
+              </div>
             </div>
           ))}
         </div>
       ) : null}
     </div>
   );
+}
+
+function createPreviews(files: readonly File[]): readonly FilePreview[] {
+  return files.map((file) => ({
+    id: `${file.name}-${file.size}-${file.lastModified}`,
+    name: file.name,
+    type: getPreviewType(file),
+    url: URL.createObjectURL(file),
+  }));
+}
+
+function getPreviewType(file: File): FilePreview["type"] {
+  if (file.type.startsWith("image/")) {
+    return "image";
+  }
+
+  if (file.type.startsWith("video/")) {
+    return "video";
+  }
+
+  return "file";
 }

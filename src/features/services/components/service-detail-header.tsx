@@ -120,7 +120,7 @@ export function ServiceDetailHeader({
           <div className="mt-5 flex flex-col gap-2">
             <form action={addServiceToCart}>
               <input type="hidden" name="serviceId" value={service.id} />
-              <input type="hidden" name="redirectTo" value="/umkm/cart" />
+              <input type="hidden" name="redirectTo" value={`/layanan/${service.id}`} />
               <SubmitButton pendingLabel="Menambahkan..." className="h-11 w-full rounded-full">
                 Tambah ke Keranjang
               </SubmitButton>

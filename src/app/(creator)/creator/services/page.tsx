@@ -280,6 +280,7 @@ export default async function CreatorServicesPage({
                       <input type="hidden" name="serviceId" value={item.service.id} />
                       <SubmitButton
                         pendingLabel="Menghapus..."
+                        confirmMessage="Hapus layanan ini dari katalog aktif?"
                         variant="outline"
                         className="h-10 w-full rounded-full border-destructive/30 bg-background text-destructive hover:bg-destructive/10"
                         icon={<Trash2 className="size-4" />}

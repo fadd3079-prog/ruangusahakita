@@ -17,7 +17,7 @@ const paymentStatusClasses = {
   expired: "border-amber-200 bg-amber-50 text-amber-800",
   failed: "border-red-200 bg-red-50 text-red-700",
   partially_refunded: "border-slate-200 bg-slate-50 text-slate-700",
-  paid: "border-primary/20 bg-primary/10 text-primary",
+  paid: "border-emerald-200 bg-emerald-50 text-emerald-800",
   pending: "border-sky-200 bg-sky-50 text-sky-700",
   refunded: "border-slate-200 bg-slate-50 text-slate-700",
 } satisfies Record<PaymentStatus, string>;

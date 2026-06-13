@@ -23,10 +23,16 @@ import {
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import {
+  CreatorDeliveryForm,
+  DeliveryHistoryPanel,
+  RevisionHistoryPanel,
+} from "@/features/submissions/components/delivery-panels";
+import {
   getCurrentCreatorOrderDetail,
   type CreatorOrderDetail,
   type UmkmOrderDetailItem,
 } from "@/features/orders/data/order-queries";
+import { getOrderDeliveryData } from "@/features/submissions/data/submission-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 
@@ -38,6 +44,7 @@ type OrderPageProps = {
     accepted?: string;
     error?: string;
     started?: string;
+    submitted?: string;
   }>;
 };
 
@@ -49,6 +56,15 @@ const errorMessages = {
     "Order belum bisa diterima. Pastikan pembayaran sudah berhasil dan status menunggu konfirmasi kreator.",
   order_not_startable:
     "Order belum bisa dimulai. Terima brief terlebih dahulu sebelum memulai pengerjaan.",
+  asset_not_allowed: "File hasil belum bisa disimpan. Coba unggah ulang.",
+  delivery_update: "Hasil konten belum bisa dikirim saat ini.",
+  file_extension: "Format file belum didukung untuk hasil project.",
+  file_size: "Ukuran file terlalu besar. Maksimal 50MB per file.",
+  file_type: "Tipe file belum didukung untuk hasil project.",
+  order_not_submittable:
+    "Hasil hanya bisa dikirim saat status pesanan sedang dikerjakan atau revisi diminta.",
+  revision_not_found: "Permintaan revisi aktif tidak ditemukan.",
+  submission_empty: "Tambahkan file, link, atau catatan hasil sebelum mengirim.",
 };
 
 function getErrorMessage(error?: string) {
@@ -84,9 +100,18 @@ export default async function CreatorOrderDetailPage({
 }: OrderPageProps) {
   const [{ orderId }, query] = await Promise.all([
     params,
-    searchParams ?? Promise.resolve({ accepted: undefined, error: undefined, started: undefined }),
+    searchParams ??
+      Promise.resolve({
+        accepted: undefined,
+        error: undefined,
+        started: undefined,
+        submitted: undefined,
+      }),
   ]);
-  const data = await getCurrentCreatorOrderDetail(orderId);
+  const [data, delivery] = await Promise.all([
+    getCurrentCreatorOrderDetail(orderId),
+    getOrderDeliveryData(orderId),
+  ]);
   const errorMessage = getErrorMessage(query.error);
 
   if (!data) {
@@ -103,6 +128,9 @@ export default async function CreatorOrderDetailPage({
           {query.started === "1" ? (
             <SuccessMessage message="Order sudah masuk tahap konten diproduksi." />
           ) : null}
+          {query.submitted === "1" ? (
+            <SuccessMessage message="Hasil konten berhasil dikirim ke UMKM." />
+          ) : null}
           {errorMessage ? (
             <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
               {errorMessage}
@@ -115,10 +143,19 @@ export default async function CreatorOrderDetailPage({
             <div className="space-y-6">
               <CreatorBriefCard data={data} />
               <CreatorScopeCard items={data.items} />
+              <DeliveryHistoryPanel delivery={delivery} />
+              <RevisionHistoryPanel delivery={delivery} />
               <CreatorTimelineCard data={data} />
             </div>
             <div className="space-y-6">
               <CreatorLifecyclePanel data={data} />
+              <CreatorDeliveryForm
+                canSubmit={
+                  data.order.order_status === "in_progress" ||
+                  data.order.order_status === "revision_requested"
+                }
+                orderId={data.order.id}
+              />
               <CreatorPaymentCard data={data} />
             </div>
           </div>
@@ -355,8 +392,7 @@ function CreatorLifecyclePanel({ data }: { data: CreatorOrderDetail }) {
       </div>
 
       <p className="mt-3 text-xs leading-5 text-muted-foreground">
-        Aksi pengiriman hasil konten, revisi, dan review belum diaktifkan pada
-        fase ini.
+        Setelah pengerjaan dimulai, kirim hasil melalui panel upload hasil.
       </p>
     </section>
   );

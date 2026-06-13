@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { AllowedImageExtension } from "@/lib/storage/file-types";
 
-function createFileName(prefix: string, extension: AllowedImageExtension) {
+function createFileName(prefix: string, extension: string) {
   const suffix = randomUUID().replace(/-/g, "").slice(0, 12);
   return `${prefix}-${Date.now()}-${suffix}.${extension}`;
 }
@@ -58,4 +58,12 @@ export function createBriefAssetStoragePath(
   extension: AllowedImageExtension,
 ) {
   return `umkm/${umkmId}/briefs/${briefId}/${createFileName("brief", extension)}`;
+}
+
+export function createProjectResultStoragePath(
+  creatorId: string,
+  orderId: string,
+  extension: string,
+) {
+  return `creators/${creatorId}/orders/${orderId}/${createFileName("result", extension)}`;
 }

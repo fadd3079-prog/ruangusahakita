@@ -3,6 +3,7 @@ export const STORAGE_BUCKETS = {
   BRIEF_ASSETS: "brief-assets",
   BUSINESS_ASSETS: "business-assets",
   PORTFOLIOS: "portfolios",
+  PROJECT_RESULTS: "project-results",
   PUBLIC_ASSETS: "public-assets",
 } as const;
 

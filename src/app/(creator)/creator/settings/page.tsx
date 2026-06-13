@@ -205,6 +205,7 @@ export default async function CreatorSettingsPage({
                   <input type="hidden" name="redirectTo" value="/creator/settings" />
                   <SubmitButton
                     pendingLabel="Menghapus..."
+                    confirmMessage="Hapus avatar dari profil kreator?"
                     variant="outline"
                     className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
                     icon={<Trash2 className="size-4" />}
@@ -267,6 +268,7 @@ export default async function CreatorSettingsPage({
                       <input type="hidden" name="redirectTo" value="/creator/settings" />
                       <SubmitButton
                         pendingLabel="Menghapus..."
+                        confirmMessage="Hapus banner dari profil kreator?"
                         variant="outline"
                         className="w-full rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
                         icon={<Trash2 className="size-4" />}

@@ -10,10 +10,16 @@ import { Separator } from "@/components/ui/separator";
 import { OrderStatusBadge } from "@/features/orders/components/order-status-badge";
 import { PaymentStatusBadge } from "@/features/payments/components/payment-status-badge";
 import {
+  DeliveryHistoryPanel,
+  RevisionHistoryPanel,
+  UmkmDeliveryReviewPanel,
+} from "@/features/submissions/components/delivery-panels";
+import {
   getCurrentUmkmOrderDetail,
   type UmkmOrderDetail,
   type UmkmOrderDetailItem,
 } from "@/features/orders/data/order-queries";
+import { getOrderDeliveryData } from "@/features/submissions/data/submission-queries";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatDate } from "@/lib/formatters/date";
 
@@ -22,7 +28,10 @@ type OrderPageProps = {
     orderId: string;
   }>;
   searchParams?: Promise<{
+    completed?: string;
     created?: string;
+    error?: string;
+    revision_requested?: string;
   }>;
 };
 
@@ -50,12 +59,21 @@ export default async function UmkmOrderDetailPage({
   searchParams,
 }: OrderPageProps) {
   const { orderId } = await params;
-  const query = searchParams ? await searchParams : { created: undefined };
-  const data = await getCurrentUmkmOrderDetail(orderId);
+  const query = searchParams
+    ? await searchParams
+    : { completed: undefined, created: undefined, error: undefined, revision_requested: undefined };
+  const [data, delivery] = await Promise.all([
+    getCurrentUmkmOrderDetail(orderId),
+    getOrderDeliveryData(orderId),
+  ]);
 
   if (!data) {
     notFound();
   }
+  const errorMessage = getDeliveryErrorMessage(query.error);
+  const canReview =
+    Boolean(delivery.latestSubmission) &&
+    (data.order.order_status === "submitted" || data.order.order_status === "revised");
 
   return (
     <main>
@@ -67,6 +85,21 @@ export default async function UmkmOrderDetailPage({
               dan belum terhubung ke payment gateway.
             </div>
           ) : null}
+          {query.revision_requested === "1" ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+              Permintaan revisi sudah dikirim ke kreator.
+            </div>
+          ) : null}
+          {query.completed === "1" ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+              Hasil konten diterima dan pesanan selesai.
+            </div>
+          ) : null}
+          {errorMessage ? (
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4 text-sm font-medium text-destructive">
+              {errorMessage}
+            </div>
+          ) : null}
 
           <OrderDetailHero data={data} />
 
@@ -74,10 +107,17 @@ export default async function UmkmOrderDetailPage({
             <div className="space-y-6">
               <OrderItemsCard items={data.items} />
               <BriefPreviewCard data={data} />
+              <DeliveryHistoryPanel delivery={delivery} />
+              <RevisionHistoryPanel delivery={delivery} />
               <StatusTimelineCard data={data} />
             </div>
             <div className="space-y-6">
               <PaymentSummaryCard data={data} />
+              <UmkmDeliveryReviewPanel
+                canReview={canReview}
+                delivery={delivery}
+                orderId={data.order.id}
+              />
               <NextStepCard />
             </div>
           </div>
@@ -85,6 +125,23 @@ export default async function UmkmOrderDetailPage({
       </PageContainer>
     </main>
   );
+}
+
+function getDeliveryErrorMessage(error?: string) {
+  if (!error) {
+    return null;
+  }
+
+  const messages: Record<string, string> = {
+    not_authenticated: "Silakan masuk terlebih dahulu.",
+    not_umkm: "Hanya akun UMKM aktif yang dapat memproses hasil.",
+    order_not_approvable: "Hasil belum bisa diterima pada status pesanan ini.",
+    order_not_revisable: "Revisi belum bisa diminta pada status pesanan ini.",
+    revision_limit_reached: "Batas revisi paket sudah terpakai.",
+    revision_note_required: "Catatan revisi wajib diisi.",
+  };
+
+  return messages[error] ?? "Aksi hasil konten belum berhasil diproses.";
 }
 
 function OrderDetailHero({ data }: { data: UmkmOrderDetail }) {

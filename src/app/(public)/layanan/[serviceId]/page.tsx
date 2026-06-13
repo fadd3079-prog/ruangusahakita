@@ -226,7 +226,7 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
                 {primaryTier ? (
                   <input type="hidden" name="tierId" value={primaryTier.id} />
                 ) : null}
-                <input type="hidden" name="redirectTo" value="/umkm/cart" />
+                <input type="hidden" name="redirectTo" value={`/layanan/${service.id}`} />
                 <SubmitButton
                   pendingLabel="Menambahkan..."
                   size="lg"

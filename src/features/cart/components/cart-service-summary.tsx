@@ -152,6 +152,7 @@ export function CartServiceSummary({ items }: CartServiceSummaryProps) {
                         <input type="hidden" name="itemId" value={item.id} />
                         <SubmitButton
                           pendingLabel="Menghapus..."
+                          confirmMessage="Hapus paket jasa ini dari keranjang?"
                           variant="outline"
                           size="sm"
                           className="h-8 bg-background"
