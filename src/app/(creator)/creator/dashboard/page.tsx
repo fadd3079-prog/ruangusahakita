@@ -200,7 +200,7 @@ export default async function CreatorDashboardPage() {
         <DashboardHero
           eyebrow="Dashboard Kreator"
           title={`Halo, ${displayName}`}
-          description="Pantau order masuk, deadline terdekat, permintaan revisi, dan kualitas layanan digital dari satu dashboard ringkas."
+          description="Pantau order, deadline, revisi, dan performa layanan."
           actions={[
             { href: "/creator/orders", label: "Lihat Order" },
             {
@@ -227,7 +227,7 @@ export default async function CreatorDashboardPage() {
         {!profileComplete ? (
           <ProfileCompletionCard
             title="Profil kreator belum lengkap"
-            description="Lengkapi niche, bio, lokasi, dan ketersediaan agar profil kreator siap dinilai UMKM. Profil yang belum lengkap tidak dianggap siap tampil di katalog publik."
+            description="Lengkapi niche, bio, lokasi, dan ketersediaan."
             href="/creator/onboarding"
           />
         ) : null}
@@ -237,7 +237,7 @@ export default async function CreatorDashboardPage() {
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
           <DashboardPanel
             title="Order terbaru"
-            description="Daftar order yang perlu dipantau atau ditindaklanjuti."
+            description="Order yang perlu dipantau."
             action={{ href: "/creator/orders", label: "Buka order" }}
           >
             <DashboardList
@@ -248,7 +248,7 @@ export default async function CreatorDashboardPage() {
 
           <DashboardPanel
             title="Deadline terdekat"
-            description="Prioritaskan pekerjaan berdasarkan tanggal deadline."
+            description="Urutan pekerjaan terdekat."
           >
             <DashboardList
               items={deadlineItems}
@@ -260,7 +260,7 @@ export default async function CreatorDashboardPage() {
         <section className="grid gap-6 xl:grid-cols-2">
           <DashboardPanel
             title="Permintaan revisi"
-            description="Aksi revisi tetap placeholder sampai fitur update status dikerjakan."
+            description="Revisi yang menunggu respons."
             action={{ href: "/creator/orders", label: "Tangani revisi" }}
           >
             <DashboardList
@@ -281,7 +281,7 @@ export default async function CreatorDashboardPage() {
           <div className="grid gap-6">
             <DashboardPanel
               title="Paket layanan"
-              description="Shortcut untuk melihat paket jasa yang tampil di katalog."
+              description="Paket jasa aktif."
               action={{ href: "/creator/services", label: "Kelola layanan" }}
             >
               <DashboardList
@@ -292,7 +292,7 @@ export default async function CreatorDashboardPage() {
 
             <DashboardPanel
               title="Portofolio"
-              description="Contoh hasil kerja yang membantu UMKM menilai gaya kreator."
+              description="Preview hasil kerja."
               action={{ href: "/creator/portfolio", label: "Kelola portofolio" }}
             >
               <DashboardList
@@ -304,7 +304,6 @@ export default async function CreatorDashboardPage() {
 
           <DashboardPanel
             title="Aksi cepat"
-            description="Jalur utama kreator pada tahap dashboard read-only."
           >
             <DashboardQuickActions
               actions={[

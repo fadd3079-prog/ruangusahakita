@@ -25,6 +25,8 @@ export type PublicCreatorProfile = {
   readonly skills: readonly string[];
   readonly startingPrice: number;
   readonly tiktokUrl: string;
+  readonly youtubeUrl: string;
+  readonly portfolioUrl: string;
   readonly userId: string;
 };
 

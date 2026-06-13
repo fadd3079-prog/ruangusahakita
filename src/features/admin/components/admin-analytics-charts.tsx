@@ -2,12 +2,12 @@
 
 import type { ReactNode } from "react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -48,20 +48,21 @@ export function AdminAnalyticsCharts({
     <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)]">
       <ChartSurface title="Aktivitas 30 hari">
         <ResponsiveContainer width="100%" height={230}>
-          <LineChart data={eventsByDay}>
+          <AreaChart data={eventsByDay}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(100,116,139,0.18)" />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={32} />
             <Tooltip />
-            <Line
+            <Area
               type="monotone"
               dataKey="value"
               stroke="#167163"
               strokeWidth={3}
+              fill="rgba(22,113,99,0.16)"
               dot={false}
               activeDot={{ r: 4 }}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </ChartSurface>
 

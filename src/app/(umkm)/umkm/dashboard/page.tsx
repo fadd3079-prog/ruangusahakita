@@ -176,7 +176,7 @@ export default async function UmkmDashboardPage() {
         <DashboardHero
           eyebrow="Dashboard UMKM"
           title={`Selamat datang, ${businessName}`}
-          description="Pantau status pesanan, brief campaign, pembayaran, hasil konten, dan rekomendasi kreator dari satu ruang kerja yang rapi."
+          description="Pantau pesanan, brief campaign, pembayaran, dan hasil konten."
           actions={[
             { href: "/katalog", label: "Cari Kreator" },
             { href: "/umkm/cart", label: "Lihat Keranjang", variant: "outline" },
@@ -195,7 +195,7 @@ export default async function UmkmDashboardPage() {
         {!profileComplete ? (
           <ProfileCompletionCard
             title="Profil UMKM belum lengkap"
-            description="Lengkapi data usaha agar brief campaign lebih mudah dipahami kreator dan dashboard dapat memberi konteks yang lebih tepat."
+            description="Lengkapi data usaha agar brief campaign lebih jelas."
             href="/umkm/onboarding"
           />
         ) : null}
@@ -205,7 +205,7 @@ export default async function UmkmDashboardPage() {
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
           <DashboardPanel
             title="Pesanan terbaru"
-            description="Pantau status pesanan dan pembayaran secara terpisah."
+            description="Status pesanan dan pembayaran."
             action={{ href: "/umkm/orders", label: "Lihat semua" }}
           >
             <DashboardList
@@ -216,7 +216,7 @@ export default async function UmkmDashboardPage() {
 
           <DashboardPanel
             title="Brief campaign terbaru"
-            description="Brief yang jelas membantu kreator memahami arah konten sejak awal."
+            description="Brief aktif untuk campaign."
             action={{ href: "/umkm/briefs", label: "Kelola brief" }}
           >
             {activeBrief ? (
@@ -262,7 +262,7 @@ export default async function UmkmDashboardPage() {
         <section className="grid gap-6 xl:grid-cols-2">
           <DashboardPanel
             title="Hasil konten terbaru"
-            description="Area ringkas untuk meninjau hasil konten yang sudah dikirim kreator."
+            description="Hasil yang perlu ditinjau."
             action={{ href: "/umkm/results", label: "Buka file hasil" }}
           >
             <DashboardList
@@ -273,7 +273,7 @@ export default async function UmkmDashboardPage() {
 
           <DashboardPanel
             title="Pembayaran pending"
-            description="Status pembayaran tetap terpisah dari status pesanan."
+            description="Pembayaran yang perlu dicek."
             action={{ href: "/umkm/orders", label: "Cek pesanan" }}
           >
             <DashboardList
@@ -285,7 +285,7 @@ export default async function UmkmDashboardPage() {
 
         <DashboardPanel
           title="Rekomendasi kreator dan layanan digital"
-          description="Pilihan awal dari katalog aktif untuk membantu UMKM memulai pencarian."
+          description="Pilihan dari katalog aktif."
           action={{ href: "/katalog", label: "Jelajahi katalog" }}
         >
           {hasRecommendations ? (
@@ -326,7 +326,7 @@ export default async function UmkmDashboardPage() {
             />
           </DashboardPanel>
 
-          <DashboardPanel title="Aksi cepat" description="Jalur utama untuk tahap MVP.">
+          <DashboardPanel title="Aksi cepat">
             <DashboardQuickActions
               actions={[
                 {

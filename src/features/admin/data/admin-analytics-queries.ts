@@ -52,6 +52,15 @@ export type AdminAnalyticsDashboard = {
   umkmGrowth: readonly AnalyticsBucket[];
 };
 
+export type AnalyticsInsightTone = "good" | "warning" | "neutral";
+
+export type AnalyticsInsight = {
+  detail: string;
+  label: string;
+  tone: AnalyticsInsightTone;
+  value: string;
+};
+
 const eventTypes = [
   "page_view",
   "catalog_view",
@@ -267,6 +276,125 @@ export function parseAnalyticsEventType(value: string | string[] | undefined) {
 
 export function getAnalyticsEventTypes() {
   return eventTypes;
+}
+
+function sumBucketRange(
+  items: readonly AnalyticsBucket[],
+  start: Date,
+  end: Date,
+) {
+  return items.reduce((total, item) => {
+    const date = new Date(`${item.label}T00:00:00`);
+    return date >= start && date <= end ? total + item.value : total;
+  }, 0);
+}
+
+function getEventCount(
+  items: readonly AnalyticsBucket[],
+  eventType: AnalyticsEventType,
+) {
+  return items.find((item) => item.label === eventType)?.value ?? 0;
+}
+
+function formatTrendPercent(current: number, previous: number) {
+  if (previous === 0) {
+    return current > 0 ? "+100%" : "0%";
+  }
+
+  return `${(((current - previous) / previous) * 100).toFixed(0)}%`;
+}
+
+export function createAnalyticsInsights(
+  analytics: AdminAnalyticsDashboard,
+): readonly AnalyticsInsight[] {
+  const today = new Date();
+  const last7Start = new Date(today);
+  last7Start.setDate(today.getDate() - 6);
+  const previous7Start = new Date(today);
+  previous7Start.setDate(today.getDate() - 13);
+  const previous7End = new Date(today);
+  previous7End.setDate(today.getDate() - 7);
+  const last7Events = sumBucketRange(analytics.eventsByDay, last7Start, today);
+  const previous7Events = sumBucketRange(
+    analytics.eventsByDay,
+    previous7Start,
+    previous7End,
+  );
+  const trendValue = formatTrendPercent(last7Events, previous7Events);
+  const ctaClicks = getEventCount(analytics.eventCounts, "cta_click");
+  const orderCreated = getEventCount(analytics.eventCounts, "order_created");
+  const latestDay = analytics.eventsByDay.at(-1);
+  const previousDays = analytics.eventsByDay.slice(-8, -1);
+  const previousAverage =
+    previousDays.length > 0
+      ? previousDays.reduce((total, item) => total + item.value, 0) / previousDays.length
+      : 0;
+  const anomalyRatio =
+    latestDay && previousAverage > 0 ? latestDay.value / previousAverage : 1;
+  const topService = analytics.servicePerformance[0];
+  const topCreator = analytics.creatorPerformance[0];
+  const insights: AnalyticsInsight[] = [
+    {
+      detail:
+        analytics.summary.totalEvents < 20
+          ? "Data masih tipis. Tunggu lebih banyak event sebelum mengambil keputusan besar."
+          : `7 hari terakhir ${last7Events} event dibanding ${previous7Events} event sebelumnya.`,
+      label: "Prediksi traffic",
+      tone:
+        analytics.summary.totalEvents < 20
+          ? "neutral"
+          : last7Events >= previous7Events
+            ? "good"
+            : "warning",
+      value:
+        analytics.summary.totalEvents < 20
+          ? "Data awal"
+          : `${trendValue} tren`,
+    },
+    {
+      detail:
+        anomalyRatio >= 2
+          ? "Event terbaru melonjak dibanding rata-rata. Cek source/referrer dan halaman teratas."
+          : anomalyRatio <= 0.45 && latestDay
+            ? "Event terbaru turun tajam. Cek tracking, campaign, dan akses halaman publik."
+            : "Belum ada spike atau drop ekstrem pada 7 hari terakhir.",
+      label: "Anomaly warning",
+      tone: anomalyRatio >= 2 || (anomalyRatio <= 0.45 && latestDay) ? "warning" : "good",
+      value:
+        anomalyRatio >= 2
+          ? "Spike"
+          : anomalyRatio <= 0.45 && latestDay
+            ? "Drop"
+            : "Stabil",
+    },
+    {
+      detail:
+        analytics.summary.totalPageViews > 20 && ctaClicks === 0
+          ? "Page view sudah ada, tetapi CTA belum bergerak. Perkuat CTA di katalog dan detail layanan."
+          : `CTA click ${ctaClicks}, order created ${orderCreated}.`,
+      label: "CTA performance",
+      tone: analytics.summary.totalPageViews > 20 && ctaClicks === 0 ? "warning" : "neutral",
+      value: `${ctaClicks} klik`,
+    },
+    {
+      detail: topService
+        ? `${topService.label} paling sering dilihat. Pertimbangkan kurasi posisi dan kualitas paketnya.`
+        : "Belum ada service_view yang cukup untuk rekomendasi layanan.",
+      label: "Layanan potensial",
+      tone: topService ? "good" : "neutral",
+      value: topService ? `${topService.value} view` : "Belum cukup",
+    },
+    {
+      detail: topCreator
+        ? `${topCreator.label} paling sering dilihat. Cek portofolio dan CTA profil kreator ini.`
+        : "Belum ada creator_view yang cukup untuk rekomendasi kreator.",
+      label: "Kreator potensial",
+      tone: topCreator ? "good" : "neutral",
+      value: topCreator ? `${topCreator.value} view` : "Belum cukup",
+    },
+  ];
+
+  return insights;
 }
 
 export async function getAdminAnalyticsDashboard(

@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 export type DashboardMetric = {
   label: string;
   value: string;
-  description: string;
+  description?: string;
   icon: LucideIcon;
 };
 
@@ -112,19 +112,38 @@ export function DashboardHero({
 
 type DashboardMetricGridProps = {
   metrics: readonly DashboardMetric[];
+  showDescriptions?: boolean;
+  showIcons?: boolean;
 };
 
-export function DashboardMetricGrid({ metrics }: DashboardMetricGridProps) {
+export function DashboardMetricGrid({
+  metrics,
+  showDescriptions = true,
+  showIcons = true,
+}: DashboardMetricGridProps) {
   return (
     <section className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(190px,1fr))]">
       {metrics.map((metric) => (
-        <DashboardMetricCard key={metric.label} metric={metric} />
+        <DashboardMetricCard
+          key={metric.label}
+          metric={metric}
+          showDescription={showDescriptions}
+          showIcon={showIcons}
+        />
       ))}
     </section>
   );
 }
 
-function DashboardMetricCard({ metric }: { metric: DashboardMetric }) {
+function DashboardMetricCard({
+  metric,
+  showDescription,
+  showIcon,
+}: {
+  metric: DashboardMetric;
+  showDescription: boolean;
+  showIcon: boolean;
+}) {
   const Icon = metric.icon;
 
   return (
@@ -139,13 +158,17 @@ function DashboardMetricCard({ metric }: { metric: DashboardMetric }) {
               {metric.value}
             </p>
           </div>
-          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
-            <Icon className="size-5" aria-hidden="true" />
-          </div>
+          {showIcon ? (
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+              <Icon className="size-5" aria-hidden="true" />
+            </div>
+          ) : null}
         </div>
-        <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-          {metric.description}
-        </p>
+        {showDescription && metric.description ? (
+          <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+            {metric.description}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -279,7 +302,7 @@ export function DashboardQuickActions({ actions }: DashboardQuickActionsProps) {
           <Link
             key={action.href}
             href={action.href}
-            className="group min-w-0 rounded-xl border border-border/70 bg-card/90 p-4 shadow-[var(--shadow-soft)] transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transform-none"
+            className="group min-w-0 rounded-xl border border-border/70 bg-card/90 p-4 shadow-[var(--shadow-soft)] transition-[border-color,background-color] duration-200 hover:border-primary/30 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <div className="flex items-start gap-3">
               <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">

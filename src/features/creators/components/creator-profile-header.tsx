@@ -2,10 +2,15 @@ import Link from "next/link";
 import {
   CheckCircle2,
   Clock,
+  Globe2,
+  Instagram,
   MapPin,
   MessageCircle,
+  Music2,
   Star,
   Tag,
+  Youtube,
+  type LucideIcon,
 } from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
@@ -40,6 +45,7 @@ export function CreatorProfileHeader({
     .map((part) => part[0])
     .join("")
     .slice(0, 2);
+  const socialLinks = getCreatorSocialLinks(creator);
 
   return (
     <section className="border-b border-border/70 bg-background">
@@ -111,6 +117,29 @@ export function CreatorProfileHeader({
               value={`Sekitar ${creator.responseTimeHours} jam`}
             />
           </dl>
+
+          {socialLinks.length > 0 ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {socialLinks.map((social) => {
+                const Icon = social.icon;
+
+                return (
+                  <Button
+                    key={social.label}
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                  >
+                    <a href={social.href} target="_blank" rel="noreferrer">
+                      <Icon className="size-4" aria-hidden="true" />
+                      {social.label}
+                    </a>
+                  </Button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
 
         <aside className="marketplace-card p-5 lg:sticky lg:top-24">
@@ -159,4 +188,37 @@ function Metric({ icon: Icon, label, value }: MetricProps) {
       <dd className="mt-2 text-sm font-semibold text-foreground">{value}</dd>
     </div>
   );
+}
+
+function getSafeUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function getCreatorSocialLinks(creator: PublicCreatorProfile) {
+  const links: {
+    href: string;
+    icon: LucideIcon;
+    label: string;
+  }[] = [];
+  const values = [
+    { href: creator.instagramUrl, icon: Instagram, label: "Instagram" },
+    { href: creator.tiktokUrl, icon: Music2, label: "TikTok" },
+    { href: creator.youtubeUrl, icon: Youtube, label: "YouTube" },
+    { href: creator.portfolioUrl, icon: Globe2, label: "Portfolio" },
+  ];
+
+  for (const item of values) {
+    const safeUrl = getSafeUrl(item.href);
+
+    if (safeUrl) {
+      links.push({ ...item, href: safeUrl });
+    }
+  }
+
+  return links;
 }

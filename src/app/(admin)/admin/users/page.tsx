@@ -3,6 +3,7 @@ import { CheckCircle2, Search, UserCircle } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { SubmitButton } from "@/components/common/submit-button";
+import { TruncateText } from "@/components/common/truncate-text";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -99,31 +100,33 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
         <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
           {users.length > 0 ? (
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead>Pengguna</TableHead>
-                  <TableHead>Peran</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Bergabung Sejak</TableHead>
-                  <TableHead className="text-right">Moderasi</TableHead>
+                  <TableHead className="w-[38%]">Pengguna</TableHead>
+                  <TableHead className="w-[12%]">Peran</TableHead>
+                  <TableHead className="w-[16%]">Status</TableHead>
+                  <TableHead className="w-[16%]">Bergabung</TableHead>
+                  <TableHead className="w-[18%] text-right">Moderasi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell>
+                    <TableCell className="min-w-0">
                       <div className="flex items-center gap-3">
-                        <div className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary">
+                        <div className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
                           <UserCircle className="size-5" />
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {user.full_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
+                        <div className="min-w-0">
+                          <TruncateText
+                            text={user.full_name}
+                            className="font-medium text-foreground"
+                          />
+                          <TruncateText
+                            text={user.email}
+                            className="text-sm text-muted-foreground"
+                          />
                         </div>
                       </div>
                     </TableCell>
@@ -149,7 +152,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                       {formatDate(user.created_at)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap justify-end gap-2">
+                      <div className="flex flex-col items-end gap-1.5">
                         {user.account_status !== "active" ? (
                           <StatusForm
                             profileId={user.id}
@@ -207,7 +210,7 @@ function StatusForm({
         pendingLabel="Memproses..."
         variant={variant}
         size="sm"
-        className="h-8 rounded-full"
+        className="h-8 w-[112px] rounded-full text-xs"
       >
         {label}
       </SubmitButton>

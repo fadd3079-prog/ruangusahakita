@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
+  Activity,
   BarChart3,
   BriefcaseBusiness,
   Building2,
@@ -46,6 +47,7 @@ import { cn } from "@/lib/utils";
 
 const iconMap = {
   adminReports: BarChart3,
+  analytics: Activity,
   brief: FileText,
   cart: ListPlus,
   checkout: ClipboardList,

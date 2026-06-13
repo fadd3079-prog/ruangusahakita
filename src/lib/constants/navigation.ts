@@ -1,5 +1,6 @@
 export type NavigationIcon =
   | "adminReports"
+  | "analytics"
   | "brief"
   | "cart"
   | "checkout"
@@ -148,6 +149,11 @@ export const dashboardNavigation = {
       title: "Dashboard",
       href: "/admin/dashboard",
       icon: "dashboard",
+    },
+    {
+      title: "Analytics",
+      href: "/admin/analytics",
+      icon: "analytics",
     },
     {
       title: "Users",

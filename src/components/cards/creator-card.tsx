@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   CheckCircle2,
-  Clock,
   Layers3,
   MapPin,
   Star,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { PriceText } from "@/components/common/price-text";
+import { TruncateText } from "@/components/common/truncate-text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +55,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
   return (
     <Card className="marketplace-card group flex h-full flex-col overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
       <div
-        className="relative aspect-[16/9] shrink-0 bg-muted/50 bg-cover bg-center"
+        className="relative aspect-[16/7] shrink-0 bg-muted/50 bg-cover bg-center"
         style={
           visualUrl ? { backgroundImage: `url("${visualUrl}")` } : undefined
         }
@@ -67,9 +67,9 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
             {initials}
           </div>
         )}
-        <div className="absolute bottom-3 left-3 flex min-w-0 items-center gap-2 pr-3">
+        <div className="absolute bottom-2.5 left-3 flex min-w-0 items-center gap-2 pr-3">
           <div
-            className="grid size-10 shrink-0 place-items-center rounded-full bg-white bg-cover bg-center text-sm font-semibold text-primary shadow-sm ring-1 ring-white/40"
+            className="grid size-9 shrink-0 place-items-center rounded-full bg-white bg-cover bg-center text-xs font-semibold text-primary shadow-sm ring-1 ring-white/40"
             style={
               creator.avatarUrl
                 ? { backgroundImage: `url("${creator.avatarUrl}")` }
@@ -79,67 +79,69 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
             {creator.avatarUrl ? null : initials}
           </div>
           <div className="min-w-0 rounded-full bg-white/88 px-3 py-1.5 backdrop-blur-sm">
-            <p className="truncate text-xs font-semibold text-brand-navy">
-              {creator.displayName}
-            </p>
+            <TruncateText
+              text={creator.displayName}
+              className="text-xs font-semibold text-brand-navy"
+            />
           </div>
         </div>
       </div>
 
-      <CardHeader className="px-4 pb-1 pt-4">
+      <CardHeader className="px-3.5 pb-1 pt-3">
         <CardTitle className="line-clamp-1 text-base">
           {creator.displayName}
         </CardTitle>
-        <p className="line-clamp-1 text-sm leading-5 text-muted-foreground">
-          {creator.niche || "Kreator digital"}
-        </p>
+        <TruncateText
+          text={creator.niche || "Kreator digital"}
+          className="text-sm leading-5 text-muted-foreground"
+        />
       </CardHeader>
 
-      <CardContent className="flex flex-1 flex-col space-y-3 px-4">
+      <CardContent className="flex flex-1 flex-col space-y-2.5 px-3.5">
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="rounded-full">
+          <Badge variant="secondary" className="rounded-full text-[11px]">
             <CheckCircle2 aria-hidden="true" />
             {availabilityLabels[creator.availabilityStatus]}
           </Badge>
           {creator.isVerified ? (
-            <Badge variant="outline" className="rounded-full text-primary">
+            <Badge variant="outline" className="rounded-full text-[11px] text-primary">
               Terverifikasi
             </Badge>
           ) : null}
         </div>
 
-        <div className="grid gap-1.5 text-sm text-muted-foreground">
+        <div className="grid gap-1 text-xs text-muted-foreground">
           <CreatorMeta icon={MapPin}>
             {creator.city}, {creator.province}
           </CreatorMeta>
           <CreatorMeta icon={Star} emphasized>
-            {creator.averageRating.toFixed(1)} rating rata-rata
-          </CreatorMeta>
-          <CreatorMeta icon={Clock}>
-            Respons sekitar {creator.responseTimeHours} jam
+            {creator.averageRating.toFixed(1)} · {creator.completedOrdersCount} selesai
           </CreatorMeta>
         </div>
 
         {primaryService ? (
-          <div className="rounded-2xl border border-border/70 bg-muted/30 p-3">
+          <div className="rounded-xl border border-border/70 bg-muted/30 p-2.5">
             <div className="flex items-start gap-2">
               <Layers3
                 className="mt-0.5 size-4 shrink-0 text-primary"
                 aria-hidden="true"
               />
               <div className="min-w-0">
-                <p className="line-clamp-2 min-h-10 text-sm font-medium leading-5 text-foreground">
-                  {primaryService.title}
-                </p>
-                <p className="mt-1 truncate text-xs leading-5 text-muted-foreground">
-                  {primaryService.categoryName} · {primaryService.estimatedDays} hari
-                </p>
+                <TruncateText
+                  lines={2}
+                  text={primaryService.title}
+                  className="text-sm font-medium leading-5 text-foreground"
+                />
+                <TruncateText
+                  text={`${primaryService.categoryName} · ${primaryService.estimatedDays} hari`}
+                  className="mt-1 text-xs leading-5 text-muted-foreground"
+                />
               </div>
             </div>
           </div>
         ) : null}
 
-        <div className="mt-auto grid grid-cols-2 overflow-hidden rounded-2xl border border-border/70 bg-background">
+        <div className="mt-auto grid grid-cols-2 overflow-hidden rounded-xl border border-border/70 bg-background">
           <div className="border-r border-border/70 p-2.5">
             <p className="text-xs text-muted-foreground">Mulai dari</p>
             <p className="mt-1 text-sm font-semibold text-foreground">
@@ -161,19 +163,19 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
       <CardFooter
         className={
           primaryService
-            ? "mt-auto grid gap-2 border-t border-border/70 bg-muted/25 p-3 sm:grid-cols-2"
-            : "mt-auto border-t border-border/70 bg-muted/25 p-3"
+            ? "mt-auto grid gap-2 border-t border-border/70 bg-muted/25 p-2.5 sm:grid-cols-2"
+            : "mt-auto border-t border-border/70 bg-muted/25 p-2.5"
         }
       >
         <Button
           asChild
           variant={primaryService ? "outline" : "default"}
-          className="h-10 w-full rounded-full"
+          className="h-9 w-full rounded-full text-xs"
         >
           <Link href={`/kreator/${creator.id}`}>Lihat Profil</Link>
         </Button>
         {primaryService ? (
-          <Button asChild className="h-10 w-full rounded-full">
+          <Button asChild className="h-9 w-full rounded-full text-xs">
             <Link href={`/layanan/${primaryService.id}`}>Pilih Layanan</Link>
           </Button>
         ) : null}

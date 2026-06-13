@@ -3,6 +3,7 @@ import { CheckCircle2, Search, ShieldCheck, Star } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { SubmitButton } from "@/components/common/submit-button";
+import { TruncateText } from "@/components/common/truncate-text";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -97,33 +98,34 @@ export default async function AdminCreatorsPage({
 
         <div className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
           {creators.length > 0 ? (
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead>Kreator & niche</TableHead>
-                  <TableHead>Lokasi</TableHead>
-                  <TableHead>Ketersediaan</TableHead>
-                  <TableHead>Rating & selesai</TableHead>
-                  <TableHead className="text-right">Moderasi</TableHead>
+                  <TableHead className="w-[32%]">Kreator</TableHead>
+                  <TableHead className="w-[18%]">Lokasi</TableHead>
+                  <TableHead className="w-[15%]">Status</TableHead>
+                  <TableHead className="w-[15%]">Kinerja</TableHead>
+                  <TableHead className="w-[20%] text-right">Moderasi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {creators.map((creator) => (
                   <TableRow key={creator.id}>
-                    <TableCell>
+                    <TableCell className="min-w-0">
                       <div className="flex items-center gap-3">
-                        <div className="grid size-10 place-items-center rounded-full bg-[linear-gradient(135deg,rgba(22,113,99,0.14),rgba(12,41,73,0.08))] font-semibold text-primary ring-1 ring-primary/10">
+                        <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,rgba(22,113,99,0.14),rgba(12,41,73,0.08))] font-semibold text-primary ring-1 ring-primary/10">
                           {creator.display_name
                             .split(" ")
                             .map((part) => part[0])
                             .join("")
                             .slice(0, 2)}
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <p className="font-semibold text-foreground">
-                              {creator.display_name}
-                            </p>
+                            <TruncateText
+                              text={creator.display_name}
+                              className="font-semibold text-foreground"
+                            />
                             {creator.is_verified ? (
                               <ShieldCheck className="size-4 text-primary" />
                             ) : null}
@@ -133,15 +135,20 @@ export default async function AdminCreatorsPage({
                               </Badge>
                             ) : null}
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {creator.niche ?? "Niche belum diisi"}
-                          </p>
+                          <TruncateText
+                            text={creator.niche ?? "Niche belum diisi"}
+                            className="text-sm text-muted-foreground"
+                          />
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {[creator.city, creator.province].filter(Boolean).join(", ") ||
-                        "Belum diisi"}
+                    <TableCell className="min-w-0 text-sm text-muted-foreground">
+                      <TruncateText
+                        text={
+                          [creator.city, creator.province].filter(Boolean).join(", ") ||
+                          "Belum diisi"
+                        }
+                      />
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-muted/50 text-foreground">
@@ -161,7 +168,7 @@ export default async function AdminCreatorsPage({
                       </p>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap justify-end gap-2">
+                      <div className="flex flex-col items-end gap-1.5">
                         <CreatorModerationForm
                           creator={creator}
                           field="verified"
@@ -214,7 +221,7 @@ function CreatorModerationForm({
         pendingLabel="Memproses..."
         variant={variant}
         size="sm"
-        className="h-8 rounded-full"
+        className="h-8 w-[130px] rounded-full text-xs"
       >
         {label}
       </SubmitButton>
