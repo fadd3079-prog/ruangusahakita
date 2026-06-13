@@ -1,0 +1,376 @@
+Lewati ke konten utama
+
+
+
+
+
+
+
+
+
+Analytics
+
+Dashboard admin
+fadd3079@gmail.com
+
+Command center
+
+Analytics Fadd Graphics
+Monitor traffic, portfolio demand, CTA, dan brief masuk secara anonim. Dashboard ini membaca event agregat tanpa menyimpan raw IP, pesan brief, email, atau data sensitif pengunjung.
+
+Business pulse
+
+tes
+
+0.0%
+Visitor to brief
+0
+Views hari ini
+Hari ini
+7 hari
+30 hari
+Semua
+Refresh
+Export
+Total visitors
+
+8
+
+-50%
+Session anonim
+Unique visitors
+
+7
+
+-53%
+Estimasi hash/session
+Page views
+
+24
+
+-20%
+Sesuai filter
+CTA clicks
+
+0
+
+-100%
+Contact, social, CTA
+Brief submitted
+
+0
+
+Stabil
+0 dalam 7 hari
+Conversion
+
+0.0%
+
+Stabil
+Visitor ke brief
+Top portfolio
+
+tes
+
+Berdasarkan views, clicks, dan CTA.
+
+Traffic & audience
+
+Page views, unique visitor, CTA, dan brief per hari
+Views 7 hari: 24
+
+Page views
+Unique
+CTA
+Brief
+07 Jun
+Max 15
+13 Jun
+Insight cepat
+
+Portfolio utama: tes
+
+Source dominan: faddgraphics.my.id
+
+Device dominan: desktop
+
+Brief 30 hari: 0
+
+Device breakdown
+
+Perangkat pengunjung
+desktop
+35
+tablet
+5
+mobile
+2
+Top pages
+
+Halaman paling sering dibuka
+/
+7
+/portfolio
+6
+/about
+3
+/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPNTY3MDY3MzQzMzUyNDI3AAGnymXDqyGzvDHjpSMV4Sb1-mZVt20N-zo3PnLn66Y6GMXUsrrQjCrfuuM0Ncw_aem_PkyXBGrL5A-SyRnaErhm2A
+2
+/#hero
+2
+/?fbclid=IwZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAEeHjpElCgyqAJ4fQQiIKuu_yrUC-JJTpTA5M35C5IGoiXUFcbvooOIjGpFlUI_aem__ueJU5T_-ddlIFXcFuzOAA
+1
+/#profile
+1
+/cv
+1
+Landing pages
+
+Pintu masuk pertama
+/
+6
+/?fbclid=IwZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAEeHjpElCgyqAJ4fQQiIKuu_yrUC-JJTpTA5M35C5IGoiXUFcbvooOIjGpFlUI_aem__ueJU5T_-ddlIFXcFuzOAA
+1
+/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPNTY3MDY3MzQzMzUyNDI3AAGnymXDqyGzvDHjpSMV4Sb1-mZVt20N-zo3PnLn66Y6GMXUsrrQjCrfuuM0Ncw_aem_PkyXBGrL5A-SyRnaErhm2A
+1
+Source/referrer
+
+Sumber traffic
+faddgraphics.my.id
+35
+l.instagram.com
+5
+facebook.com
+1
+google.com
+1
+Portfolio performance
+
+Karya yang benar-benar menarik minat calon klien
+Views, clicks, modal open, dan CTA per portfolio.
+
+By views
+
+tes
+3
+masa-bodo-demokrasi
+2
+powerpoint-morph-transition
+2
+ruang-usaha-kita-branding
+1
+student-education
+1
+By clicks
+
+tes
+3
+masa-bodo-demokrasi
+2
+powerpoint-morph-transition
+2
+ruang-usaha-kita-branding
+1
+student-education
+1
+Portfolio	Views	Clicks	Modal	CTA	Conv.	Last activity
+tes	3	3	3	0	0.0%	10 Jun 2026, 00.39
+masa-bodo-demokrasi	2	2	2	0	0.0%	9 Jun 2026, 13.56
+powerpoint-morph-transition	2	2	2	0	0.0%	9 Jun 2026, 13.55
+student-education	1	1	1	0	0.0%	9 Jun 2026, 13.55
+ruang-usaha-kita-branding	1	1	0	0	0.0%	9 Jun 2026, 13.55
+CTA & conversion
+
+Funnel visitor ke brief
+1. Visitor
+
+Awal funnel
+
+7
+2. Portfolio view
+
+129% dari step sebelumnya
+
+9
+3. CTA click
+
+0.0% dari step sebelumnya
+
+0
+4. Brief submit
+
+100% dari step sebelumnya
+
+0
+CTA breakdown
+
+Aksi yang paling sering diklik
+Belum ada CTA click pada filter ini.
+
+Service demand
+
+Layanan yang dipilih saat brief
+Service akan muncul dari brief baru yang dikirim lewat form.
+
+Leads / customer brief
+
+Brief masuk tanpa menyimpan pesan dan identitas pribadi
+Hari ini 0
+7 hari 0
+30 hari 0
+Belum ada brief yang tercatat. Brief baru akan tercatat saat form contact valid dikirim ke WhatsApp.
+Event mix
+
+Komposisi event
+Page view
+24
+Portfolio click
+9
+Portfolio view
+9
+Quality notes
+
+Engagement proxy: portfolio views dan CTA dipakai sebagai sinyal minat, bukan durasi baca.
+
+Privacy: brief table sengaja anonim; nama, email, nomor, dan pesan tidak disimpan di analytics.
+
+Decision cue: portfolio dengan views tinggi tapi CTA rendah layak diberi copy/CTA yang lebih kuat.
+
+Data freshness: tracking berjalan fire-and-forget, sehingga website tetap cepat walau analytics gagal.
+
+Recent activity
+
+Event stream operasional
+Semua event
+Page view
+Portfolio view
+Portfolio click
+CTA/contact
+Outbound
+Waktu	Event	Path	Portfolio	Device	Negara	Referrer
+12 Jun 2026, 07.33	Page view	/about	-	mobile
+Chrome / Android
+-	faddgraphics.my.id
+12 Jun 2026, 07.33	Page view	/	-	mobile
+Chrome / Android
+-	faddgraphics.my.id
+11 Jun 2026, 03.00	Page view	/	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+10 Jun 2026, 00.39	Page view	/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPNTY3MDY3MzQzMzUyNDI3AAGnymXDqyGzvDHjpSMV4Sb1-mZVt20N-zo3PnLn66Y6GMXUsrrQjCrfuuM0Ncw_aem_PkyXBGrL5A-SyRnaErhm2A	-	tablet
+Chrome / Android
+-	l.instagram.com
+10 Jun 2026, 00.39	Portfolio view	/portfolio	tes	tablet
+Chrome / Android
+-	l.instagram.com
+10 Jun 2026, 00.39	Portfolio click	/portfolio	tes	tablet
+Chrome / Android
+-	l.instagram.com
+10 Jun 2026, 00.38	Page view	/portfolio	-	tablet
+Chrome / Android
+-	l.instagram.com
+10 Jun 2026, 00.38	Page view	/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQPNTY3MDY3MzQzMzUyNDI3AAGnymXDqyGzvDHjpSMV4Sb1-mZVt20N-zo3PnLn66Y6GMXUsrrQjCrfuuM0Ncw_aem_PkyXBGrL5A-SyRnaErhm2A	-	tablet
+Chrome / Android
+-	l.instagram.com
+10 Jun 2026, 00.25	Page view	/?fbclid=IwZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAEeHjpElCgyqAJ4fQQiIKuu_yrUC-JJTpTA5M35C5IGoiXUFcbvooOIjGpFlUI_aem__ueJU5T_-ddlIFXcFuzOAA	-	desktop
+Chrome / Windows
+-	facebook.com
+9 Jun 2026, 13.56	Page view	/#hero	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.56	Page view	/about	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.56	Page view	/cv	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.56	Page view	/about	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.56	Page view	/#profile	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.56	Portfolio view	/portfolio	masa-bodo-demokrasi	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.56	Portfolio click	/portfolio	masa-bodo-demokrasi	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio click	/portfolio	masa-bodo-demokrasi	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio view	/portfolio	masa-bodo-demokrasi	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio view	/portfolio	powerpoint-morph-transition	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio click	/portfolio	powerpoint-morph-transition	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio view	/portfolio	student-education	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio click	/portfolio	student-education	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Page view	/portfolio	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio view	/portfolio/ruang-usaha-kita-branding	ruang-usaha-kita-branding	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Page view	/portfolio/ruang-usaha-kita-branding	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio click	/portfolio	ruang-usaha-kita-branding	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio view	/portfolio	powerpoint-morph-transition	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio click	/portfolio	powerpoint-morph-transition	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Page view	/portfolio	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Page view	/#hero	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio view	/portfolio	tes	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.55	Portfolio click	/portfolio	tes	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.54	Page view	/portfolio	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.54	Portfolio view	/portfolio	tes	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.54	Portfolio click	/portfolio	tes	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.54	Page view	/portfolio	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.54	Page view	/	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.54	Page view	/portfolio	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.53	Page view	/	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+9 Jun 2026, 13.53	Page view	/	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id
+8 Jun 2026, 16.49	Page view	/	-	desktop
+Chrome / Windows
+-	google.com/url
+8 Jun 2026, 15.04	Page view	/	-	desktop
+Chrome / Windows
+-	faddgraphics.my.id

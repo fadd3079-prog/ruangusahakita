@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Menu, ShoppingCart } from "lucide-react";
+import { Home, LogOut, Menu, ShoppingCart } from "lucide-react";
 
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+import { SubmitButton } from "@/components/common/submit-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import {
   dashboardRoleLabels,
   type DashboardNavigationVariant,
 } from "@/lib/constants/navigation";
+import { logoutAction } from "@/lib/auth/actions";
 import type { DashboardAccountPreview } from "@/components/layout/dashboard-shell";
 
 type DashboardTopbarProps = {
@@ -69,6 +71,11 @@ export function DashboardTopbar({ accountPreview, variant }: DashboardTopbarProp
         </div>
 
         <div className="flex items-center gap-3">
+          <Button asChild variant="outline" size="icon" className="hidden rounded-full sm:inline-flex">
+            <Link href="/" aria-label="Kembali ke Home">
+              <Home aria-hidden="true" />
+            </Link>
+          </Button>
           {variant === "umkm" ? (
             <Button asChild variant="outline" size="icon" className="rounded-full">
               <Link href="/umkm/cart" aria-label="Buka keranjang">
@@ -92,6 +99,17 @@ export function DashboardTopbar({ accountPreview, variant }: DashboardTopbarProp
               {displayName}
             </span>
           </div>
+          <form action={logoutAction}>
+            <SubmitButton
+              pendingLabel="Keluar..."
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              icon={<LogOut aria-hidden="true" />}
+            >
+              Keluar
+            </SubmitButton>
+          </form>
         </div>
       </div>
     </header>

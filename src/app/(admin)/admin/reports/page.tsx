@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   AlertCircle,
+  ArrowDownToLine,
   BarChart3,
   CalendarDays,
   FolderCheck,
@@ -9,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
+import { Button } from "@/components/ui/button";
 import {
   DashboardMetricGrid,
   type DashboardMetric,
@@ -54,12 +57,34 @@ export default async function AdminReportsPage() {
     <PageContainer>
       <div className="space-y-8 pb-10">
         <div className="border-b border-border pb-6">
-          <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">
-            Laporan Operasional
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Tinjau metrik pertumbuhan, gross transaction value, dan estimasi pendapatan platform.
-          </p>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-brand-navy">
+                Laporan Operasional
+              </h1>
+              <p className="mt-2 text-muted-foreground">
+                Tinjau metrik pertumbuhan, gross transaction value, dan estimasi pendapatan platform.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link href="/admin/reports/export?format=csv">
+                  <ArrowDownToLine aria-hidden="true" />
+                  Export CSV
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/admin/reports/export?format=html" target="_blank">
+                  HTML report
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="/admin/reports/export?format=print" target="_blank">
+                  Print / PDF
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
 
         <DashboardMetricGrid metrics={metrics} />

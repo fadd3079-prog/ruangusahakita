@@ -9,6 +9,55 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          id: string
+          event_type: Database['public']['Enums']['analytics_event_type']
+          user_id: string | null
+          role: string
+          path: string
+          referrer: string | null
+          source: string | null
+          device_type: string | null
+          browser_name: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_type: Database['public']['Enums']['analytics_event_type']
+          user_id?: string | null
+          role?: string
+          path: string
+          referrer?: string | null
+          source?: string | null
+          device_type?: string | null
+          browser_name?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          event_type?: Database['public']['Enums']['analytics_event_type']
+          user_id?: string | null
+          role?: string
+          path?: string
+          referrer?: string | null
+          source?: string | null
+          device_type?: string | null
+          browser_name?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           id: string
@@ -1518,6 +1567,7 @@ export interface Database {
       }
     }
     Enums: {
+      analytics_event_type: 'page_view' | 'catalog_view' | 'service_view' | 'creator_view' | 'portfolio_view' | 'cta_click' | 'add_to_cart' | 'checkout_start' | 'brief_submit' | 'order_created' | 'payment_opened' | 'payment_paid' | 'creator_accept_order' | 'creator_start_order' | 'outbound_click'
       user_role: 'admin' | 'umkm' | 'creator'
       account_status: 'active' | 'inactive' | 'suspended' | 'pending_verification'
       creator_availability_status: 'available' | 'limited' | 'busy' | 'unavailable'

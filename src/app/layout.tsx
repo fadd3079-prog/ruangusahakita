@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Suspense } from "react";
 
 import { ActionFeedback } from "@/components/common/action-feedback";
+import { AnalyticsTracker } from "@/components/common/analytics-tracker";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -30,6 +31,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
+        <Suspense fallback={null}>
+          <AnalyticsTracker />
+        </Suspense>
         <Suspense fallback={null}>
           <ActionFeedback />
         </Suspense>

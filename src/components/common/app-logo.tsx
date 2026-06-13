@@ -47,7 +47,7 @@ export function AppLogo({
         priority={priority}
         className={cn(
           "block object-contain",
-          showText ? "h-7 w-auto sm:h-8" : "size-8",
+          showText ? "h-4 w-auto sm:h-[18px]" : "size-7",
           imageClassName,
         )}
       />

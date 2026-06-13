@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { getCurrentAccountSummary } from "@/lib/auth/account";
 import { requireRole } from "@/lib/auth/guards";
 
 type AdminLayoutProps = {
@@ -9,5 +10,22 @@ type AdminLayoutProps = {
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   await requireRole("admin");
-  return <DashboardShell variant="admin">{children}</DashboardShell>;
+  const account = await getCurrentAccountSummary();
+
+  return (
+    <DashboardShell
+      accountPreview={
+        account
+          ? {
+              avatarUrl: account.avatarUrl,
+              displayName: account.displayName,
+              initials: account.initials,
+            }
+          : null
+      }
+      variant="admin"
+    >
+      {children}
+    </DashboardShell>
+  );
 }
