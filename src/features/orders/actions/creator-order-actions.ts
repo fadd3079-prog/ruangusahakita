@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { sendOrderEventEmail } from "@/lib/email/order-notifications";
 import { createClient } from "@/lib/supabase/server";
 
 const creatorOrderErrorCodes = [
@@ -53,6 +54,7 @@ export async function acceptCreatorOrder(formData: FormData) {
   revalidatePath("/creator/orders");
   revalidatePath(`/creator/orders/${orderId}`);
   revalidatePath("/creator/dashboard");
+  await sendOrderEventEmail(orderId, "creator_accepted");
   redirect(`/creator/orders/${orderId}?accepted=1`);
 }
 
@@ -76,5 +78,6 @@ export async function startCreatorOrder(formData: FormData) {
   revalidatePath("/creator/orders");
   revalidatePath(`/creator/orders/${orderId}`);
   revalidatePath("/creator/dashboard");
+  await sendOrderEventEmail(orderId, "creator_started");
   redirect(`/creator/orders/${orderId}?started=1`);
 }

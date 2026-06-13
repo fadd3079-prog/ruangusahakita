@@ -202,6 +202,20 @@ export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
           Server Action
         </Badge>
       </div>
+      <div className="mt-5 grid gap-2">
+        <Button asChild variant="outline" className="h-10 w-full">
+          <Link href={`/umkm/orders/${detail.order.id}/invoice`}>
+            Lihat Invoice
+          </Link>
+        </Button>
+        {detail.order.payment_status === "paid" ? (
+          <Button asChild className="h-10 w-full">
+            <Link href={`/umkm/orders/${detail.order.id}/receipt`}>
+              Lihat Receipt
+            </Link>
+          </Button>
+        ) : null}
+      </div>
     </aside>
   );
 }

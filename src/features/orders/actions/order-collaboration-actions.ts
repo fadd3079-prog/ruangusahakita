@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendOrderEventEmail } from "@/lib/email/order-notifications";
 
 function getText(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -60,6 +61,7 @@ export async function submitOrderReviewAction(formData: FormData) {
   revalidatePath(returnPath);
   revalidatePath("/katalog");
   revalidatePath("/creator/dashboard");
+  await sendOrderEventEmail(orderId, "review_created");
   redirect(`${returnPath}?reviewed=1`);
 }
 
@@ -85,6 +87,7 @@ export async function createOrderComplaintAction(formData: FormData) {
   revalidatePath(returnPath);
   revalidatePath("/admin/complaints");
   revalidatePath("/admin/dashboard");
+  await sendOrderEventEmail(orderId, "complaint_created");
   redirect(`${returnPath}?complaint_created=1`);
 }
 
@@ -108,4 +111,58 @@ export async function sendOrderMessageAction(formData: FormData) {
 
   revalidatePath(returnPath);
   redirect(`${returnPath}?message_sent=1`);
+}
+
+export type SendOrderMessageState = {
+  message: string;
+  ok: boolean;
+};
+
+export async function sendOrderMessageInlineAction(
+  orderId: string,
+  message: string,
+): Promise<SendOrderMessageState> {
+  const cleanOrderId = orderId.trim();
+  const cleanMessage = message.trim();
+
+  if (!cleanOrderId || !cleanMessage) {
+    return {
+      message: "Pesan wajib diisi.",
+      ok: false,
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("send_order_message", {
+    message_body: cleanMessage,
+    target_order_id: cleanOrderId,
+  });
+
+  if (error) {
+    return {
+      message: "Pesan belum terkirim. Coba beberapa saat lagi.",
+      ok: false,
+    };
+  }
+
+  revalidatePath(`/umkm/orders/${cleanOrderId}`);
+  revalidatePath(`/creator/orders/${cleanOrderId}`);
+
+  return {
+    message: "Pesan terkirim.",
+    ok: true,
+  };
+}
+
+export async function markOrderMessagesReadAction(orderId: string) {
+  const cleanOrderId = orderId.trim();
+
+  if (!cleanOrderId) {
+    return;
+  }
+
+  const supabase = await createClient();
+  await supabase.rpc("mark_order_messages_read", {
+    target_order_id: cleanOrderId,
+  });
 }

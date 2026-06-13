@@ -1583,6 +1583,7 @@ export interface Database {
           message: string
           attachment_urls: string[] | null
           is_internal: boolean
+          read_at: string | null
           created_at: string
         }
         Insert: {
@@ -1592,6 +1593,7 @@ export interface Database {
           message: string
           attachment_urls?: string[] | null
           is_internal?: boolean
+          read_at?: string | null
           created_at?: string
         }
         Update: {
@@ -1601,6 +1603,7 @@ export interface Database {
           message?: string
           attachment_urls?: string[] | null
           is_internal?: boolean
+          read_at?: string | null
           created_at?: string
         }
         Relationships: [
@@ -1763,6 +1766,12 @@ export interface Database {
       mark_notification_read: {
         Args: {
           target_notification_id: string
+        }
+        Returns: string
+      }
+      mark_order_messages_read: {
+        Args: {
+          target_order_id: string
         }
         Returns: string
       }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { sendOrderEventEmail } from "@/lib/email/order-notifications";
 import { createClient } from "@/lib/supabase/server";
 
 const paymentErrorCodes = [
@@ -75,6 +76,7 @@ export async function markSandboxPaymentAsPaid(formData: FormData) {
   revalidatePath(`/umkm/orders/${orderId}`);
   revalidatePath("/umkm/orders");
   revalidatePath("/umkm/dashboard");
+  await sendOrderEventEmail(orderId, "payment_paid");
   redirect(`/umkm/orders/${orderId}?paid=1`);
 }
 
@@ -132,6 +134,7 @@ export async function markSandboxPaymentAsPaidWithState(
   revalidatePath(`/umkm/orders/${orderId}`);
   revalidatePath("/umkm/orders");
   revalidatePath("/umkm/dashboard");
+  await sendOrderEventEmail(orderId, "payment_paid");
   return {
     message: "Pembayaran berhasil diproses.",
     ok: true,

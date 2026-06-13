@@ -36,13 +36,26 @@ export type OrderMessageSummary = {
   id: string;
   isOwn: boolean;
   message: string;
+  readAt: string | null;
   senderLabel: string;
+  senderId: string;
   senderRole: "creator" | "umkm" | "admin" | "participant";
 };
 
 export type OrderCollaborationData = {
   complaints: readonly OrderComplaintSummary[];
+  currentUserId: string | null;
   messages: readonly OrderMessageSummary[];
+  participants: {
+    creator: {
+      label: string;
+      userId: string | null;
+    };
+    umkm: {
+      label: string;
+      userId: string | null;
+    };
+  };
   review: OrderReviewSummary | null;
 };
 
@@ -88,9 +101,11 @@ export async function getOrderCollaborationData(
       complaints: (complaintsResult.data ?? []).map((complaint) =>
         mapComplaint(complaint, participants),
       ),
+      currentUserId,
       messages: (messagesResult.data ?? []).map((message) =>
         mapMessage(message, participants, currentUserId),
       ),
+      participants: mapParticipants(participants),
       review: reviewsResult.data ? mapReview(reviewsResult.data) : null,
     };
   } catch {
@@ -100,7 +115,18 @@ export async function getOrderCollaborationData(
 
 const emptyCollaboration: OrderCollaborationData = {
   complaints: [],
+  currentUserId: null,
   messages: [],
+  participants: {
+    creator: {
+      label: "Kreator",
+      userId: null,
+    },
+    umkm: {
+      label: "UMKM",
+      userId: null,
+    },
+  },
   review: null,
 };
 
@@ -163,8 +189,23 @@ function mapMessage(
     id: message.id,
     isOwn: Boolean(currentUserId && currentUserId === message.sender_id),
     message: message.message,
+    readAt: message.read_at,
     senderLabel: getSenderLabel(message.sender_id, participants),
+    senderId: message.sender_id,
     senderRole,
+  };
+}
+
+function mapParticipants(participants: { creator: CreatorRow | null; umkm: UmkmRow | null }) {
+  return {
+    creator: {
+      label: participants.creator?.display_name ?? "Kreator",
+      userId: participants.creator?.user_id ?? null,
+    },
+    umkm: {
+      label: participants.umkm?.business_name ?? "UMKM",
+      userId: participants.umkm?.user_id ?? null,
+    },
   };
 }
 

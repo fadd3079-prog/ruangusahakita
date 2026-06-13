@@ -1,4 +1,4 @@
-import { MessageCircle, Send, ShieldAlert, Star } from "lucide-react";
+import { MessageCircle, ShieldAlert, Star } from "lucide-react";
 
 import { SubmitButton } from "@/components/common/submit-button";
 import { Badge } from "@/components/ui/badge";
@@ -6,15 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   createOrderComplaintAction,
-  sendOrderMessageAction,
   submitOrderReviewAction,
 } from "@/features/orders/actions/order-collaboration-actions";
 import type {
   OrderCollaborationData,
-  OrderMessageSummary,
 } from "@/features/orders/data/order-collaboration-queries";
+import { RealtimeOrderChat } from "@/features/orders/components/realtime-order-chat";
 import { formatDate } from "@/lib/formatters/date";
-import { cn } from "@/lib/utils";
 
 type OrderCollaborationPanelProps = {
   canReview: boolean;
@@ -31,13 +29,6 @@ const complaintStatusLabels = {
   under_review: "Ditinjau",
   waiting_creator: "Menunggu Kreator",
   waiting_umkm: "Menunggu UMKM",
-} as const;
-
-const roleLabels = {
-  admin: "Admin",
-  creator: "Kreator",
-  participant: "Participant",
-  umkm: "UMKM",
 } as const;
 
 export function OrderCollaborationPanel({
@@ -65,7 +56,6 @@ export function OrderCollaborationPanel({
       <MessagePanel
         collaboration={collaboration}
         orderId={orderId}
-        returnPath={returnPath}
       />
     </section>
   );
@@ -237,11 +227,9 @@ function ComplaintPanel({
 function MessagePanel({
   collaboration,
   orderId,
-  returnPath,
 }: {
   collaboration: OrderCollaborationData;
   orderId: string;
-  returnPath: string;
 }) {
   return (
     <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
@@ -259,60 +247,10 @@ function MessagePanel({
         </div>
       </div>
 
-      <div className="mt-5 max-h-[360px] space-y-3 overflow-y-auto rounded-2xl border border-border/70 bg-background p-3">
-        {collaboration.messages.length > 0 ? (
-          collaboration.messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
-          ))
-        ) : (
-          <p className="rounded-xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
-            Belum ada pesan di order ini.
-          </p>
-        )}
+      <div className="mt-5">
+        <RealtimeOrderChat collaboration={collaboration} orderId={orderId} />
       </div>
-
-      <form action={sendOrderMessageAction} className="mt-4 flex gap-2">
-        <input type="hidden" name="orderId" value={orderId} />
-        <input type="hidden" name="returnPath" value={returnPath} />
-        <Input
-          name="message"
-          placeholder="Tulis pesan singkat..."
-          required
-          className="h-11"
-        />
-        <SubmitButton
-          pendingLabel="Mengirim..."
-          className="h-11 shrink-0"
-          icon={<Send className="size-4" aria-hidden="true" />}
-        >
-          Kirim
-        </SubmitButton>
-      </form>
     </section>
-  );
-}
-
-function MessageBubble({ message }: { message: OrderMessageSummary }) {
-  return (
-    <article
-      className={cn(
-        "max-w-[86%] rounded-2xl border px-4 py-3",
-        message.isOwn
-          ? "ml-auto border-primary/20 bg-primary text-primary-foreground"
-          : "border-border/70 bg-card text-foreground",
-      )}
-    >
-      <div className="mb-1 flex flex-wrap items-center gap-2 text-xs">
-        <span className="font-semibold">{message.senderLabel}</span>
-        <span className={message.isOwn ? "text-white/70" : "text-muted-foreground"}>
-          {roleLabels[message.senderRole]}
-        </span>
-      </div>
-      <p className="break-words text-sm leading-6">{message.message}</p>
-      <p className={cn("mt-2 text-xs", message.isOwn ? "text-white/70" : "text-muted-foreground")}>
-        {formatDate(message.createdAt)}
-      </p>
-    </article>
   );
 }
 

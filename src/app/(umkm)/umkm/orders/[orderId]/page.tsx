@@ -416,6 +416,20 @@ function PaymentPanel({ data }: { data: UmkmOrderDetail }) {
           </Badge>
         ) : null}
       </div>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <Button asChild variant="outline" className="h-10">
+          <Link href={`/umkm/orders/${data.order.id}/invoice`}>
+            Lihat Invoice
+          </Link>
+        </Button>
+        {data.order.payment_status === "paid" ? (
+          <Button asChild className="h-10">
+            <Link href={`/umkm/orders/${data.order.id}/receipt`}>
+              Lihat Receipt
+            </Link>
+          </Button>
+        ) : null}
+      </div>
     </section>
   );
 }
