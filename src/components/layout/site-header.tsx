@@ -85,8 +85,15 @@ export async function SiteHeader({ account: accountProp }: SiteHeaderProps = {})
                   variant="outline"
                   className="h-10 gap-3 rounded-full px-2 pr-4"
                 >
-                  <span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                    {account.initials}
+                  <span
+                    className="flex size-7 items-center justify-center rounded-full bg-primary bg-cover bg-center text-xs font-semibold text-primary-foreground"
+                    style={
+                      account.avatarUrl
+                        ? { backgroundImage: `url("${account.avatarUrl}")` }
+                        : undefined
+                    }
+                  >
+                    {account.avatarUrl ? null : account.initials}
                   </span>
                   <span className="max-w-36 truncate text-sm font-semibold">
                     {account.displayName}
@@ -209,8 +216,15 @@ export async function SiteHeader({ account: accountProp }: SiteHeaderProps = {})
                 {account ? (
                   <div className="w-full space-y-3">
                     <div className="flex items-center gap-3 rounded-xl border bg-card p-3 text-left">
-                      <div className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                        {account.initials}
+                      <div
+                        className="flex size-9 items-center justify-center rounded-full bg-primary bg-cover bg-center text-xs font-semibold text-primary-foreground"
+                        style={
+                          account.avatarUrl
+                            ? { backgroundImage: `url("${account.avatarUrl}")` }
+                            : undefined
+                        }
+                      >
+                        {account.avatarUrl ? null : account.initials}
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">

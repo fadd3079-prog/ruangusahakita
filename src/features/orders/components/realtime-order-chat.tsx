@@ -57,8 +57,13 @@ export function RealtimeOrderChat({
   >("connecting");
   const [isPending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
 
   useEffect(() => {
+    if (!shouldAutoScrollRef.current) {
+      return;
+    }
+
     scrollRef.current?.scrollTo({
       behavior: "smooth",
       top: scrollRef.current.scrollHeight,
@@ -86,6 +91,8 @@ export function RealtimeOrderChat({
           }
 
           const nextMessage = mapRealtimeMessage(row, collaboration);
+
+          shouldAutoScrollRef.current = isNearBottom(scrollRef.current);
 
           setLocalMessages((currentMessages) => {
             const withoutOptimistic = currentMessages.filter(
@@ -144,6 +151,7 @@ export function RealtimeOrderChat({
       temp: true,
     };
 
+    shouldAutoScrollRef.current = isNearBottom(scrollRef.current);
     setInput("");
     setLocalMessages((currentMessages) => [...currentMessages, optimisticMessage]);
 
@@ -163,14 +171,6 @@ export function RealtimeOrderChat({
       }
 
       toast.success(result.message);
-
-      if (connectionState !== "connected") {
-        setLocalMessages((currentMessages) =>
-          currentMessages.filter((currentMessage) => currentMessage.id !== tempId),
-        );
-        router.refresh();
-        return;
-      }
 
       setLocalMessages((currentMessages) =>
         currentMessages.map((currentMessage) =>
@@ -206,6 +206,9 @@ export function RealtimeOrderChat({
 
       <div
         ref={scrollRef}
+        onScroll={(event) => {
+          shouldAutoScrollRef.current = isNearBottom(event.currentTarget);
+        }}
         className="max-h-[380px] space-y-3 overflow-y-auto rounded-2xl border border-border/70 bg-background p-3 sm:max-h-[420px]"
       >
         {messages.length > 0 ? (
@@ -240,6 +243,14 @@ export function RealtimeOrderChat({
       </form>
     </div>
   );
+}
+
+function isNearBottom(element: HTMLDivElement | null) {
+  if (!element) {
+    return true;
+  }
+
+  return element.scrollHeight - element.scrollTop - element.clientHeight < 72;
 }
 
 function mergeMessages(

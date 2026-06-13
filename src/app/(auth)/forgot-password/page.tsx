@@ -15,23 +15,34 @@ export const metadata: Metadata = {
 
 type ForgotPasswordPageProps = {
   searchParams?: Promise<{
+    debug?: string;
     error?: string;
     sent?: string;
   }>;
 };
 
+type ForgotPasswordSearchParams = Awaited<NonNullable<ForgotPasswordPageProps["searchParams"]>>;
+
 const errorMessages = {
   email_required: "Email wajib diisi.",
+  email_invalid: "Format email belum valid.",
   reset_failed: "Instruksi pemulihan belum bisa dikirim. Coba beberapa saat lagi.",
 } as const;
 
 export default async function ForgotPasswordPage({
   searchParams,
 }: ForgotPasswordPageProps) {
-  const params = await (searchParams ?? Promise.resolve({ error: undefined, sent: undefined }));
+  const params = await (searchParams ??
+    Promise.resolve<ForgotPasswordSearchParams>({
+      debug: undefined,
+      error: undefined,
+      sent: undefined,
+    }));
   const errorMessage = params.error
     ? errorMessages[params.error as keyof typeof errorMessages] ?? errorMessages.reset_failed
     : null;
+  const debugMessage =
+    process.env.NODE_ENV === "development" && params.debug ? params.debug : null;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -40,7 +51,7 @@ export default async function ForgotPasswordPage({
           Lupa password?
         </h1>
         <p className="text-muted-foreground">
-          Masukkan email akun. Link reset akan dikirim lewat Supabase Auth.
+          Masukkan email akun. Link reset akan dikirim ke email Anda.
         </p>
       </div>
 
@@ -57,7 +68,14 @@ export default async function ForgotPasswordPage({
       {errorMessage ? (
         <Alert variant="destructive">
           <AlertTitle>Reset belum berhasil</AlertTitle>
-          <AlertDescription>{errorMessage}</AlertDescription>
+          <AlertDescription>
+            {errorMessage}
+            {debugMessage ? (
+              <span className="mt-2 block text-xs opacity-80">
+                Dev detail: {debugMessage}
+              </span>
+            ) : null}
+          </AlertDescription>
         </Alert>
       ) : null}
 

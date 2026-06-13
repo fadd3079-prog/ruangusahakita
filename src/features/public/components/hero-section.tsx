@@ -1,135 +1,137 @@
+import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  ClipboardList,
-  CreditCard,
-  FileCheck2,
-  PlayCircle,
-  Search,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Search, ShieldCheck, Sparkles, Star } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 
-const flowItems = [
+const popularSearches = [
+  "Video Reels",
+  "Desain Grafis",
+  "Copywriting",
+  "Digital Marketing",
+] as const;
+
+const heroStats = [
   {
-    label: "Cari kreator",
-    description: "Bandingkan niche, portofolio, dan rating.",
-    icon: Search,
+    label: "kategori",
+    value: "6",
   },
   {
-    label: "Isi brief campaign",
-    description: "Tuliskan tujuan promosi dan arahan konten.",
-    icon: ClipboardList,
+    label: "alur order",
+    value: "brief",
   },
   {
-    label: "Lakukan pembayaran",
-    description: "Gunakan alur pembayaran sandbox untuk tahap MVP.",
-    icon: CreditCard,
-  },
-  {
-    label: "Terima hasil konten",
-    description: "Review hasil, ajukan revisi, lalu beri review.",
-    icon: FileCheck2,
+    label: "review",
+    value: "real",
   },
 ] as const;
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[100svh] overflow-hidden bg-[url('/images/hero-background.webp')] bg-cover bg-center bg-no-repeat">
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,15,25,0.78),rgba(4,15,25,0.52),rgba(4,15,25,0.46))]" aria-hidden="true" />
-      <PageContainer className="relative z-10 grid min-h-[100svh] items-center gap-10 py-24 sm:py-28 lg:grid-cols-[minmax(0,0.96fr)_minmax(360px,0.62fr)] lg:py-32">
-        <div className="max-w-4xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/12 px-4 py-2 text-sm font-semibold text-white/86 shadow-sm backdrop-blur-md">
-            <Sparkles className="size-4 text-white" aria-hidden="true" />
-            Marketplace jasa digital untuk UMKM
+    <section className="relative isolate min-h-[100svh] overflow-hidden bg-[#06111f]">
+      <Image
+        src="/images/hero-background.webp"
+        alt="Ruang kerja kreatif untuk layanan digital UMKM"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,12,22,0.86),rgba(3,12,22,0.62),rgba(3,12,22,0.48))]" />
+      <div className="absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(180deg,transparent,var(--background))]" />
+
+      <PageContainer className="relative z-10 grid min-h-[100svh] items-center gap-10 py-24 sm:py-28 lg:grid-cols-[minmax(0,1fr)_420px] lg:py-32">
+        <div className="min-w-0 max-w-5xl">
+          <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/16 bg-white/12 px-4 py-2 text-sm font-semibold text-white/88 shadow-sm backdrop-blur-md">
+            <Sparkles className="size-4 shrink-0 text-[#9fe0d4]" aria-hidden="true" />
+            <span className="truncate">Marketplace jasa digital untuk UMKM</span>
           </div>
+
           <h1 className="mt-7 max-w-5xl text-5xl font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
-            Temukan Kreator yang Tepat untuk Promosi UMKM Anda
+            Temukan kreator untuk campaign yang lebih terarah.
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-white/78 sm:text-lg">
-            Cari kreator, pilih paket jasa, susun brief campaign, dan pantau
-            status pesanan dalam satu alur yang rapi.
+          <p className="mt-6 max-w-2xl text-base leading-7 text-white/76 sm:text-lg">
+            Cari layanan digital, pilih paket jasa, kirim brief campaign, dan
+            pantau hasil konten dari satu ruang kerja.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg" className="h-12 rounded-full bg-white px-6 text-brand-navy hover:bg-white/90">
-              <Link href="/katalog">
-                Cari Kreator
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="h-12 rounded-full border-white/24 bg-white/10 px-6 text-white hover:bg-white/16 hover:text-white"
-            >
-              <Link href="/cara-kerja">Lihat Cara Kerja</Link>
-            </Button>
-          </div>
-          <div className="mt-10 grid max-w-2xl grid-cols-3 gap-3 text-white">
-            {[
-              ["Kreator", "aktif"],
-              ["Paket jasa", "terstruktur"],
-              ["Brief", "terarah"],
-            ].map(([value, label]) => (
-              <div key={value} className="rounded-2xl border border-white/14 bg-white/10 px-4 py-3 backdrop-blur-md">
-                <p className="text-base font-semibold">{value}</p>
-                <p className="mt-1 text-xs text-white/62">{label}</p>
+
+          <div className="mt-8 max-w-3xl rounded-[1.75rem] border border-white/18 bg-white/94 p-2 shadow-2xl shadow-black/25 backdrop-blur-md">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-[#f5f7f7] px-4 py-3 text-sm text-muted-foreground">
+                <Search className="size-5 shrink-0 text-primary" aria-hidden="true" />
+                <span className="truncate">Cari kreator, layanan, atau kategori</span>
               </div>
+              <Button asChild size="lg" className="h-12 rounded-2xl px-6">
+                <Link href="/katalog">
+                  Cari Kreator
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {popularSearches.map((item) => (
+              <Link
+                key={item}
+                href="/katalog"
+                className="rounded-full border border-white/16 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/82 backdrop-blur-sm transition-colors hover:bg-white/16"
+              >
+                {item}
+              </Link>
             ))}
           </div>
         </div>
 
-        <div className="marketplace-card border-white/16 bg-white/92 p-4 shadow-2xl shadow-black/20 backdrop-blur-md">
-          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background px-4 py-3">
-            <Search className="size-5 text-primary" aria-hidden="true" />
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground">
-              Cari kreator, layanan, atau niche
-            </span>
-            <Button asChild size="sm" className="rounded-full">
-              <Link href="/katalog">Cari</Link>
-            </Button>
-          </div>
-          <div className="mt-4 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-white/70">
-                  Alur marketplace
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
-                  Dari brief sampai hasil konten.
-                </h2>
-              </div>
-              <div className="grid size-11 place-items-center rounded-full bg-white/12 ring-1 ring-white/14">
-                <PlayCircle className="size-5 text-white" aria-hidden="true" />
+        <aside className="hidden min-w-0 rounded-[2rem] border border-white/16 bg-white/12 p-4 text-white shadow-2xl shadow-black/20 backdrop-blur-xl lg:block">
+          <div className="rounded-[1.5rem] bg-white p-4 text-[#06111f]">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-muted">
+              <Image
+                src="/images/abstract (8).webp"
+                alt="Visual marketplace jasa digital"
+                fill
+                sizes="420px"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,17,31,0.04),rgba(6,17,31,0.5))]" />
+              <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-white/92 p-4 shadow-lg backdrop-blur-md">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[#0c2949]">
+                      Paket konten promosi
+                    </p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      Brief, status, revisi, review
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    <Star className="size-3.5 fill-emerald-600" aria-hidden="true" />
+                    4.8
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="mt-5 grid gap-2">
-              {flowItems.map((item, index) => {
-                const Icon = item.icon;
-
-                return (
-                  <article
-                    key={item.label}
-                    className="flex items-center gap-3 rounded-xl bg-white/8 px-3 py-2.5"
-                  >
-                    <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-white/12 text-white">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-white">
-                        {index + 1}. {item.label}
-                      </p>
-                      <p className="truncate text-xs text-white/62">{item.description}</p>
-                    </div>
-                  </article>
-                );
-              })}
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {heroStats.map((item) => (
+                <div key={item.label} className="rounded-2xl bg-[#f5f7f7] p-3">
+                  <p className="truncate text-lg font-semibold text-[#0c2949]">
+                    {item.value}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {item.label}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/12 bg-white/10 p-4">
+            <ShieldCheck className="size-5 shrink-0 text-[#9fe0d4]" aria-hidden="true" />
+            <p className="line-clamp-2 text-sm leading-6 text-white/76">
+              Order, pembayaran, hasil konten, dan review tersusun dalam satu flow.
+            </p>
+          </div>
+        </aside>
       </PageContainer>
     </section>
   );

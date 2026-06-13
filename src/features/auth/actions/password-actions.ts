@@ -12,10 +12,41 @@ function getText(formData: FormData, key: string) {
 
 async function getOrigin() {
   const headerStore = await headers();
+  const configuredUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const requestOrigin = headerStore.get("origin") ?? "";
+  const isLocalRequest = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(
+    requestOrigin,
+  );
+  const siteUrl =
+    (isLocalRequest ? requestOrigin : "") ||
+    configuredUrl ||
+    requestOrigin ||
+    "http://localhost:3000";
+
+  return siteUrl.replace(/\/+$/, "");
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function getResetErrorRedirect(error: {
+  code?: string;
+  message?: string;
+  status?: number | string;
+}) {
+  if (process.env.NODE_ENV !== "development") {
+    return "/forgot-password?error=reset_failed";
+  }
+
+  const detail = encodeURIComponent(
+    [error.code, error.status, error.message].filter(Boolean).join(" · "),
+  );
+
   return (
-    headerStore.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
+    "/forgot-password?error=reset_failed" +
+    (detail.length > 0 ? `&debug=${detail}` : "")
   );
 }
 
@@ -26,6 +57,10 @@ export async function requestPasswordResetAction(formData: FormData) {
     redirect("/forgot-password?error=email_required");
   }
 
+  if (!isValidEmail(email)) {
+    redirect("/forgot-password?error=email_invalid");
+  }
+
   const supabase = await createClient();
   const origin = await getOrigin();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -33,7 +68,7 @@ export async function requestPasswordResetAction(formData: FormData) {
   });
 
   if (error) {
-    redirect("/forgot-password?error=reset_failed");
+    redirect(getResetErrorRedirect(error));
   }
 
   redirect("/forgot-password?sent=1");

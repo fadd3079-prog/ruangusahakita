@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { getPublicCatalogData } from "@/features/catalog/data/catalog-queries";
 import {
   DashboardHero,
+  DashboardColorBars,
   DashboardList,
   DashboardMetricGrid,
   DashboardPanel,
@@ -96,29 +97,34 @@ export default async function UmkmDashboardPage() {
       value: String(dashboard.metrics.activeOrders),
       description: "Paket jasa digital yang sedang berjalan atau menunggu proses.",
       icon: ListChecks,
+      tone: "blue",
     },
     {
       label: "Pesanan selesai",
       value: String(dashboard.metrics.completedOrders),
       description: "Campaign yang sudah selesai dan dapat menjadi referensi.",
       icon: FolderCheck,
+      tone: "green",
     },
     {
       label: "Pembayaran pending",
       value: String(dashboard.metrics.pendingPayments),
       description: "Pembayaran yang masih perlu dipantau secara terpisah.",
       icon: CreditCard,
+      tone: "amber",
     },
     {
       label: "Total nilai pesanan",
       value: formatCurrency(dashboard.metrics.totalSpend),
       description: "Akumulasi nilai pesanan yang terbaca dari database.",
       icon: LayoutDashboard,
+      tone: "cyan",
     },
   ];
 
   const orderItems: readonly DashboardListItem[] = dashboard.recentOrders.map(
     (order) => ({
+      id: `order:${order.id}`,
       title: order.orderNumber,
       description: `${order.serviceTitle} oleh ${order.counterpartName}`,
       meta: `Deadline ${formatOptionalDate(order.deadline)} · ${formatCurrency(
@@ -131,6 +137,7 @@ export default async function UmkmDashboardPage() {
 
   const paymentItems: readonly DashboardListItem[] =
     dashboard.pendingPaymentOrders.map((order) => ({
+      id: `pending-payment:${order.id}`,
       title: order.orderNumber,
       description: `Pembayaran untuk ${order.serviceTitle}`,
       meta: formatCurrency(order.totalAmount),
@@ -142,6 +149,7 @@ export default async function UmkmDashboardPage() {
 
   const resultItems: readonly DashboardListItem[] = dashboard.latestResults.map(
     (order) => ({
+      id: `result:${order.id}`,
       title: `Hasil konten · ${order.orderNumber}`,
       description: `${order.serviceTitle} dari ${order.counterpartName}`,
       meta:
@@ -155,6 +163,7 @@ export default async function UmkmDashboardPage() {
 
   const activityItems: readonly DashboardListItem[] =
     dashboard.notifications.map((notification) => ({
+      id: `notification:${notification.id}`,
       title: notification.title,
       description: notification.message ?? "Aktivitas terbaru untuk akun UMKM.",
       meta: formatDate(notification.createdAt),
@@ -201,6 +210,57 @@ export default async function UmkmDashboardPage() {
         ) : null}
 
         <DashboardMetricGrid metrics={metrics} />
+
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <DashboardPanel title="Grafik ringkas pesanan" description="Distribusi status utama.">
+            <DashboardColorBars
+              items={[
+                {
+                  label: "Aktif",
+                  tone: "blue",
+                  value: dashboard.metrics.activeOrders,
+                },
+                {
+                  label: "Pending bayar",
+                  tone: "amber",
+                  value: dashboard.metrics.pendingPayments,
+                },
+                {
+                  label: "Selesai",
+                  tone: "green",
+                  value: dashboard.metrics.completedOrders,
+                },
+                {
+                  label: "Hasil review",
+                  tone: "violet",
+                  value: dashboard.latestResults.length,
+                },
+              ]}
+            />
+          </DashboardPanel>
+
+          <DashboardPanel title="Pengeluaran">
+            <DashboardColorBars
+              items={[
+                {
+                  label: "Total nilai pesanan",
+                  tone: "cyan",
+                  value: Math.round(dashboard.metrics.totalSpend / 1000),
+                },
+                {
+                  label: "Pesanan aktif",
+                  tone: "blue",
+                  value: dashboard.metrics.activeOrders,
+                },
+                {
+                  label: "Pembayaran pending",
+                  tone: "amber",
+                  value: dashboard.metrics.pendingPayments,
+                },
+              ]}
+            />
+          </DashboardPanel>
+        </section>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
           <DashboardPanel

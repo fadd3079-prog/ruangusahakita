@@ -17,7 +17,10 @@ export type DashboardMetric = {
   value: string;
   description?: string;
   icon: LucideIcon;
+  tone?: DashboardTone;
 };
+
+export type DashboardTone = "amber" | "blue" | "cyan" | "green" | "red" | "slate" | "violet";
 
 export type DashboardAction = {
   href: string;
@@ -26,6 +29,7 @@ export type DashboardAction = {
 };
 
 export type DashboardListItem = {
+  id: string;
   title: string;
   description: string;
   meta?: string;
@@ -118,8 +122,8 @@ type DashboardMetricGridProps = {
 
 export function DashboardMetricGrid({
   metrics,
-  showDescriptions = true,
-  showIcons = true,
+  showDescriptions = false,
+  showIcons = false,
 }: DashboardMetricGridProps) {
   return (
     <section className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(190px,1fr))]">
@@ -145,9 +149,10 @@ function DashboardMetricCard({
   showIcon: boolean;
 }) {
   const Icon = metric.icon;
+  const tone = metric.tone ?? "slate";
 
   return (
-    <Card className="dashboard-surface min-w-0 overflow-hidden">
+    <Card className={cn("dashboard-surface min-w-0 overflow-hidden border-l-4", toneBorderClasses[tone])}>
       <CardContent className="space-y-3 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -159,7 +164,7 @@ function DashboardMetricCard({
             </p>
           </div>
           {showIcon ? (
-            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10">
+            <div className={cn("grid size-10 shrink-0 place-items-center rounded-xl ring-1", toneIconClasses[tone])}>
               <Icon className="size-5" aria-hidden="true" />
             </div>
           ) : null}
@@ -171,6 +176,67 @@ function DashboardMetricCard({
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+const toneBorderClasses: Record<DashboardTone, string> = {
+  amber: "border-l-amber-400",
+  blue: "border-l-blue-500",
+  cyan: "border-l-cyan-500",
+  green: "border-l-emerald-500",
+  red: "border-l-red-500",
+  slate: "border-l-slate-400",
+  violet: "border-l-violet-500",
+};
+
+const toneIconClasses: Record<DashboardTone, string> = {
+  amber: "bg-amber-50 text-amber-700 ring-amber-200",
+  blue: "bg-blue-50 text-blue-700 ring-blue-200",
+  cyan: "bg-cyan-50 text-cyan-700 ring-cyan-200",
+  green: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  red: "bg-red-50 text-red-700 ring-red-200",
+  slate: "bg-slate-50 text-slate-700 ring-slate-200",
+  violet: "bg-violet-50 text-violet-700 ring-violet-200",
+};
+
+const toneFillClasses: Record<DashboardTone, string> = {
+  amber: "bg-amber-400",
+  blue: "bg-blue-500",
+  cyan: "bg-cyan-500",
+  green: "bg-emerald-500",
+  red: "bg-red-500",
+  slate: "bg-slate-400",
+  violet: "bg-violet-500",
+};
+
+export function DashboardColorBars({
+  items,
+}: {
+  items: readonly {
+    label: string;
+    tone: DashboardTone;
+    value: number;
+  }[];
+}) {
+  const maxValue = Math.max(...items.map((item) => item.value), 1);
+
+  return (
+    <div className="grid gap-3">
+      {items.map((item) => (
+        <div key={item.label} className="min-w-0">
+          <div className="mb-2 flex items-center justify-between gap-4 text-sm">
+            <span className="truncate font-medium text-foreground">{item.label}</span>
+            <span className="shrink-0 font-semibold text-foreground">{item.value}</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn("h-full rounded-full", toneFillClasses[item.tone])}
+              style={{ width: `${Math.max(6, (item.value / maxValue) * 100)}%` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -238,7 +304,7 @@ export function DashboardList({
 
   return (
     <div className="grid gap-3">
-      {items.map((item) => {
+      {getUniqueDashboardItems(items).map((item) => {
         const content = (
           <div className="flex min-w-0 flex-1 items-start justify-between gap-4">
             <div className="min-w-0">
@@ -261,7 +327,7 @@ export function DashboardList({
         if (item.href) {
           return (
             <Link
-              key={`${item.title}-${item.href}`}
+              key={item.id}
               href={item.href}
               className="min-w-0 rounded-xl border border-border/70 bg-background/80 p-4 transition-[border-color,background-color] duration-200 hover:border-primary/30 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
@@ -272,7 +338,7 @@ export function DashboardList({
 
         return (
           <div
-            key={`${item.title}-${item.description}`}
+            key={item.id}
             className="min-w-0 rounded-xl border border-border/70 bg-background/80 p-4"
           >
             {content}
@@ -281,6 +347,19 @@ export function DashboardList({
       })}
     </div>
   );
+}
+
+function getUniqueDashboardItems(items: readonly DashboardListItem[]) {
+  const seenIds = new Set<string>();
+
+  return items.filter((item) => {
+    if (seenIds.has(item.id)) {
+      return false;
+    }
+
+    seenIds.add(item.id);
+    return true;
+  });
 }
 
 type DashboardQuickActionsProps = {

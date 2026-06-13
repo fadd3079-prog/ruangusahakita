@@ -148,6 +148,7 @@ export default async function AdminDashboardPage() {
 
   const recentOrderItems: readonly DashboardListItem[] =
     dashboard.recentOrders.map((order) => ({
+      id: `order:${order.id}`,
       title: order.orderNumber,
       description: `${order.counterpartName} · ${order.serviceTitle}`,
       meta: `${formatDate(order.createdAt)} · ${formatCurrency(order.totalAmount)}`,
@@ -157,6 +158,7 @@ export default async function AdminDashboardPage() {
 
   const complaintItems: readonly DashboardListItem[] =
     dashboard.recentComplaints.map((complaint) => ({
+      id: `complaint:${complaint.id}`,
       title: complaint.subject,
       description: complaint.orderNumber
         ? `Pesanan ${complaint.orderNumber}`
@@ -168,18 +170,21 @@ export default async function AdminDashboardPage() {
 
   const reportItems: readonly DashboardListItem[] = [
     {
+      id: "report:gtv",
       title: "Gross transaction value",
       description: formatCurrency(dashboard.orderStats.grossTransactionValue),
       href: "/admin/reports",
       badge: <Badge variant="secondary">GTV</Badge>,
     },
     {
+      id: "report:platform-revenue",
       title: "Platform revenue",
       description: formatCurrency(dashboard.orderStats.platformRevenue),
       href: "/admin/reports",
       badge: <Badge variant="secondary">Revenue</Badge>,
     },
     {
+      id: "report:analytics",
       title: "Analytics",
       description: "Buka halaman analytics lengkap.",
       href: "/admin/analytics",

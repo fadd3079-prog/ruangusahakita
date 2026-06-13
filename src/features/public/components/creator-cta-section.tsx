@@ -1,87 +1,55 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, Images, LayoutList } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-import { AppLogo } from "@/components/common/app-logo";
 import { PageContainer } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 
-const creatorHighlights = [
-  {
-    label: "Tampilkan portofolio",
-    icon: Images,
-  },
-  {
-    label: "Buat paket layanan",
-    icon: LayoutList,
-  },
-  {
-    label: "Terima order dari UMKM",
-    icon: BriefcaseBusiness,
-  },
+const highlights = [
+  "Profil kreator",
+  "Paket layanan",
+  "Portofolio",
+  "Order UMKM",
 ] as const;
 
 export function CreatorCtaSection() {
   return (
-    <section className="border-y border-primary/15 bg-primary/5 py-16 sm:py-20 lg:py-24">
-      <PageContainer className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(360px,0.7fr)] lg:items-center">
-        <div className="max-w-3xl">
-          <AppLogo href={null} showText={false} className="mb-6" />
-          <p className="text-sm font-semibold text-primary">Untuk kreator</p>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            Tampilkan portofolio. Kelola paket jasa. Terima order UMKM.
-          </h2>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-            Bangun profil kreator yang rapi dan mudah dinilai oleh UMKM.
-          </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {creatorHighlights.map((highlight) => {
-              const Icon = highlight.icon;
-
-              return (
-                <div
-                  key={highlight.label}
-                  className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background px-3 py-3 text-sm text-muted-foreground shadow-xs"
-                >
-                  <Icon className="size-4 text-primary" aria-hidden="true" />
-                  <span>{highlight.label}</span>
-                </div>
-              );
-            })}
-          </div>
-          <Button asChild size="lg" className="mt-7 h-12 rounded-full px-6">
-            <Link href="/register">
-              Daftar sebagai Kreator
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          </Button>
-        </div>
-        <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
-          <div className="grid gap-3">
-            {creatorHighlights.map((highlight) => {
-              const Icon = highlight.icon;
-
-              return (
-                <div
-                  key={highlight.label}
-                  className="flex items-center gap-3 rounded-xl border border-border/70 bg-background px-4 py-3"
-                >
-                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground">
-                    {highlight.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-5 border-t border-border/70 pt-5">
-            <p className="text-sm font-semibold text-foreground">
-              Workspace kreator digital
+    <section className="bg-background py-14 sm:py-20 lg:py-24">
+      <PageContainer>
+        <div className="relative isolate overflow-hidden rounded-[2rem] bg-[#06111f] px-5 py-12 text-white shadow-[0_24px_80px_rgba(12,41,73,0.18)] sm:px-8 lg:px-12">
+          <Image
+            src="/images/image (11).webp"
+            alt="Visual kreator digital"
+            fill
+            sizes="(min-width: 1024px) 1200px, 100vw"
+            className="absolute inset-0 -z-20 object-cover"
+          />
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(3,12,22,0.88),rgba(12,41,73,0.7),rgba(3,12,22,0.34))]" />
+          <div className="max-w-2xl">
+            <p className="text-sm font-semibold text-[#9fe0d4]">Untuk kreator</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Bangun katalog jasa yang mudah dipilih UMKM.
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-white/74 sm:text-base">
+              Tampilkan portofolio, susun paket layanan, dan kelola order dari
+              dashboard kreator.
             </p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Satu tempat untuk profil, paket jasa, portofolio, dan pesanan masuk.
-            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {highlights.map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-white/14 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/82"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+            <Button asChild size="lg" className="mt-8 h-12 rounded-full bg-white px-6 text-[#0c2949] hover:bg-white/90">
+              <Link href="/register">
+                Daftar sebagai Kreator
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </Button>
           </div>
         </div>
       </PageContainer>

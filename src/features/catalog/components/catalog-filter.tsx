@@ -626,12 +626,12 @@ function FilterSelect({ label, value, onChange, options }: FilterSelectProps) {
   );
 
   return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-medium text-foreground">
+    <label className="block min-w-0">
+      <span className="mb-2 block truncate text-sm font-medium text-foreground">
         {label}
       </span>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-10 w-full rounded-xl bg-card">
+        <SelectTrigger className="h-10 min-w-0 w-full rounded-xl bg-card">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

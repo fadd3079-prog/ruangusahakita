@@ -209,6 +209,7 @@ export async function updateCreatorProfileAction(formData: FormData) {
   revalidatePath("/creator/dashboard");
   revalidatePath("/katalog");
   revalidatePath(`/kreator/${creator.id}`);
+  revalidatePath("/", "layout");
   redirect(`${redirectTo}?saved=1`);
 }
 
@@ -293,6 +294,7 @@ export async function uploadCreatorAvatarAction(formData: FormData) {
   revalidatePath("/creator/dashboard");
   revalidatePath("/katalog");
   revalidatePath(`/kreator/${creator.id}`);
+  revalidatePath("/", "layout");
   redirect(`${redirectTo}?saved=1`);
 }
 
@@ -337,6 +339,7 @@ export async function deleteCreatorAvatarAction(formData: FormData) {
   revalidatePath("/creator/dashboard");
   revalidatePath("/katalog");
   revalidatePath(`/kreator/${creator.id}`);
+  revalidatePath("/", "layout");
   redirect(`${redirectTo}?saved=1`);
 }
 

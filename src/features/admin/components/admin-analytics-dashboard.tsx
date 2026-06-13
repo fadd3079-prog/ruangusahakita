@@ -375,6 +375,7 @@ export function AdminAnalyticsDashboardView({
           <RankList title="Source / referrer" items={topAnalytics.sourceBreakdown} color="#7C3AED" />
           <DashboardList
             items={topAnalytics.servicePerformance.map((item) => ({
+              id: `service-performance:${item.label}`,
               title: item.label,
               description: `${item.value} service view`,
               href: "/admin/services",
@@ -384,6 +385,7 @@ export function AdminAnalyticsDashboardView({
           />
           <DashboardList
             items={topAnalytics.creatorPerformance.map((item) => ({
+              id: `creator-performance:${item.label}`,
               title: item.label,
               description: `${item.value} creator view`,
               href: "/admin/creators",

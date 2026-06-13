@@ -15,6 +15,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { Badge } from "@/components/ui/badge";
 import {
   DashboardHero,
+  DashboardColorBars,
   DashboardList,
   DashboardMetricGrid,
   DashboardPanel,
@@ -79,35 +80,41 @@ export default async function CreatorDashboardPage() {
       value: String(dashboard.metrics.activeOrders),
       description: "Order yang masih perlu dipantau atau ditindaklanjuti.",
       icon: ListChecks,
+      tone: "blue",
     },
     {
       label: "Revisi diminta",
       value: String(dashboard.metrics.revisionRequests),
       description: "Permintaan revisi yang menunggu respons kreator.",
       icon: MessageSquareWarning,
+      tone: "amber",
     },
     {
       label: "Order selesai",
       value: String(completedOrders),
       description: "Jumlah order selesai yang terbaca untuk kreator ini.",
       icon: FolderCheck,
+      tone: "green",
     },
     {
       label: "Rating rata-rata",
       value: dashboard.metrics.averageRating.toFixed(1),
       description: "Rating profil kreator berdasarkan data yang tersedia.",
       icon: Star,
+      tone: "violet",
     },
     {
       label: "Estimasi pendapatan",
       value: formatCurrency(dashboard.metrics.estimatedEarnings),
       description: "Estimasi dari order paid setelah platform fee.",
       icon: WalletCards,
+      tone: "cyan",
     },
   ];
 
   const orderItems: readonly DashboardListItem[] = dashboard.recentOrders.map(
     (order) => ({
+      id: `order:${order.id}`,
       title: order.orderNumber,
       description: `${order.counterpartName} · ${order.serviceTitle}`,
       meta: `Deadline ${formatOptionalDate(order.deadline)} · ${formatCurrency(
@@ -132,6 +139,7 @@ export default async function CreatorDashboardPage() {
     })
     .slice(0, 4)
     .map((order) => ({
+      id: `deadline:${order.id}`,
       title: `${order.orderNumber} · ${order.counterpartName}`,
       description: order.serviceTitle,
       meta: `Deadline ${formatOptionalDate(order.deadline)}`,
@@ -141,6 +149,7 @@ export default async function CreatorDashboardPage() {
 
   const revisionItems: readonly DashboardListItem[] =
     dashboard.revisionOrders.map((order) => ({
+      id: `revision:${order.id}`,
       title: `Revisi · ${order.orderNumber}`,
       description: `${order.counterpartName} meminta penyesuaian hasil konten.`,
       meta: `Deadline ${formatOptionalDate(order.deadline)}`,
@@ -150,6 +159,7 @@ export default async function CreatorDashboardPage() {
 
   const serviceItems: readonly DashboardListItem[] = dashboard.services.map(
     (service) => ({
+      id: `service:${service.id}`,
       title: service.title,
       description: service.short_description ?? "Paket jasa digital kreator.",
       meta: `${formatCurrency(Number(service.base_price))} · ${service.estimated_days} hari`,
@@ -164,6 +174,7 @@ export default async function CreatorDashboardPage() {
 
   const portfolioItems: readonly DashboardListItem[] = dashboard.portfolios.map(
     (portfolio) => ({
+      id: `portfolio:${portfolio.id}`,
       title: portfolio.title,
       description: portfolio.description ?? "Preview portofolio kreator.",
       meta: portfolio.client_type ?? "Portofolio",
@@ -178,6 +189,7 @@ export default async function CreatorDashboardPage() {
 
   const activityItems: readonly DashboardListItem[] =
     dashboard.notifications.map((notification) => ({
+      id: `notification:${notification.id}`,
       title: notification.title,
       description: notification.message ?? "Aktivitas terbaru untuk kreator.",
       meta: formatDate(notification.createdAt),
@@ -232,6 +244,52 @@ export default async function CreatorDashboardPage() {
         ) : null}
 
         <DashboardMetricGrid metrics={metrics} />
+
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <DashboardPanel title="Grafik ringkas order" description="Distribusi status utama.">
+            <DashboardColorBars
+              items={[
+                {
+                  label: "Aktif",
+                  tone: "blue",
+                  value: dashboard.metrics.activeOrders,
+                },
+                {
+                  label: "Revisi",
+                  tone: "amber",
+                  value: dashboard.metrics.revisionRequests,
+                },
+                {
+                  label: "Selesai",
+                  tone: "green",
+                  value: dashboard.metrics.completedOrders,
+                },
+              ]}
+            />
+          </DashboardPanel>
+
+          <DashboardPanel title="Ringkasan pendapatan">
+            <DashboardColorBars
+              items={[
+                {
+                  label: "Estimasi pendapatan",
+                  tone: "cyan",
+                  value: Math.round(dashboard.metrics.estimatedEarnings / 1000),
+                },
+                {
+                  label: "Order selesai",
+                  tone: "green",
+                  value: dashboard.metrics.completedOrders,
+                },
+                {
+                  label: "Rating x10",
+                  tone: "violet",
+                  value: Math.round(dashboard.metrics.averageRating * 10),
+                },
+              ]}
+            />
+          </DashboardPanel>
+        </section>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
           <DashboardPanel

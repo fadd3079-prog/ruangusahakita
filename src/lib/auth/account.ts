@@ -2,6 +2,8 @@ import { getDashboardPathByRole } from "@/lib/auth/routing";
 import type { AccountStatus, UserRole } from "@/lib/auth/roles";
 import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
+import type { StorageBucket } from "@/lib/storage/buckets";
+import { createStorageSignedUrl } from "@/lib/storage/urls";
 
 export type CurrentAccountSummary = {
   id: string;
@@ -65,25 +67,34 @@ export async function getCurrentAccountSummary(): Promise<CurrentAccountSummary 
     }
 
     let roleDisplayName: string | null = null;
+    let roleAvatarUrl: string | null = null;
 
     if (profile.role === "umkm") {
       const { data } = await supabase
         .from("umkm_profiles")
-        .select("business_name, owner_name")
+        .select("business_name, owner_name, logo_url, logo_file_asset_id")
         .eq("user_id", user.id)
         .maybeSingle();
 
       roleDisplayName = data?.business_name ?? data?.owner_name ?? null;
+      roleAvatarUrl = data
+        ? await getFileAssetPreviewUrl(
+            supabase,
+            data.logo_file_asset_id,
+            data.logo_url,
+          )
+        : null;
     }
 
     if (profile.role === "creator") {
       const { data } = await supabase
         .from("creator_profiles")
-        .select("display_name")
+        .select("display_name, avatar_url")
         .eq("user_id", user.id)
         .maybeSingle();
 
       roleDisplayName = data?.display_name ?? null;
+      roleAvatarUrl = data?.avatar_url ?? null;
     }
 
     const displayName = roleDisplayName ?? profile.full_name ?? profile.email;
@@ -98,9 +109,35 @@ export async function getCurrentAccountSummary(): Promise<CurrentAccountSummary 
       displayName,
       dashboardHref: getDashboardPathByRole(profile.role),
       initials: getInitials(displayName || profile.email) || "RU",
-      avatarUrl: profile.avatar_url,
+      avatarUrl: profile.avatar_url ?? roleAvatarUrl,
     };
   } catch {
     return null;
   }
+}
+
+async function getFileAssetPreviewUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  fileAssetId: string | null,
+  fallbackUrl: string | null,
+) {
+  if (!fileAssetId) {
+    return fallbackUrl;
+  }
+
+  const { data } = await supabase
+    .from("file_assets")
+    .select("bucket_name, storage_path")
+    .eq("id", fileAssetId)
+    .maybeSingle();
+
+  if (!data) {
+    return fallbackUrl;
+  }
+
+  return createStorageSignedUrl(
+    supabase,
+    data.bucket_name as StorageBucket,
+    data.storage_path,
+  );
 }
