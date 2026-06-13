@@ -3,13 +3,11 @@ import {
   CheckCircle2,
   Clock,
   Globe2,
-  Instagram,
   MapPin,
   MessageCircle,
   Music2,
   Star,
   Tag,
-  Youtube,
   type LucideIcon,
 } from "lucide-react";
 
@@ -63,6 +61,7 @@ export function CreatorProfileHeader({
               </span>
             )}
           </div>
+
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div
               className="-mt-12 grid size-20 shrink-0 place-items-center rounded-full bg-white bg-cover bg-center text-2xl font-semibold text-primary shadow-[var(--shadow-card)] ring-4 ring-background sm:mt-0"
@@ -74,21 +73,25 @@ export function CreatorProfileHeader({
             >
               {creator.avatarUrl ? null : initials}
             </div>
+
             <div>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="rounded-full">
                   <CheckCircle2 aria-hidden="true" />
                   {availabilityLabels[creator.availabilityStatus]}
                 </Badge>
+
                 {creator.isVerified ? (
                   <Badge variant="outline" className="rounded-full text-primary">
                     Terverifikasi
                   </Badge>
                 ) : null}
               </div>
+
               <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 {creator.displayName}
               </h1>
+
               <p className="mt-4 line-clamp-3 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
                 {creator.bio}
               </p>
@@ -96,11 +99,7 @@ export function CreatorProfileHeader({
           </div>
 
           <dl className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Metric
-              icon={Tag}
-              label="Niche"
-              value={creator.niche}
-            />
+            <Metric icon={Tag} label="Niche" value={creator.niche} />
             <Metric
               icon={MapPin}
               label="Lokasi"
@@ -146,19 +145,25 @@ export function CreatorProfileHeader({
           <p className="text-sm font-medium text-muted-foreground">
             {creator.completedOrdersCount} pesanan selesai
           </p>
+
           <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
             <PriceText value={creator.startingPrice} prefix="Mulai" />
           </p>
+
           <p className="mt-4 text-sm leading-6 text-muted-foreground">
             Mulai dari paket jasa yang tersedia, lalu isi brief campaign dengan
             kebutuhan promosi UMKM Anda.
           </p>
+
           <div className="mt-5 grid gap-2">
             {primaryService ? (
               <Button asChild className="h-11 rounded-full">
-                <Link href={`/layanan/${primaryService.id}`}>Pilih Paket Jasa</Link>
+                <Link href={`/layanan/${primaryService.id}`}>
+                  Pilih Paket Jasa
+                </Link>
               </Button>
             ) : null}
+
             <Button asChild variant="outline" className="h-11 rounded-full">
               <Link href="/katalog">
                 <MessageCircle aria-hidden="true" />
@@ -173,7 +178,7 @@ export function CreatorProfileHeader({
 }
 
 type MetricProps = {
-  icon: typeof Tag;
+  icon: LucideIcon;
   label: string;
   value: string;
 };
@@ -190,10 +195,16 @@ function Metric({ icon: Icon, label, value }: MetricProps) {
   );
 }
 
-function getSafeUrl(value: string) {
+function getSafeUrl(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
   try {
     const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.toString()
+      : null;
   } catch {
     return null;
   }
@@ -205,10 +216,11 @@ function getCreatorSocialLinks(creator: PublicCreatorProfile) {
     icon: LucideIcon;
     label: string;
   }[] = [];
+
   const values = [
-    { href: creator.instagramUrl, icon: Instagram, label: "Instagram" },
+    { href: creator.instagramUrl, icon: MessageCircle, label: "Instagram" },
     { href: creator.tiktokUrl, icon: Music2, label: "TikTok" },
-    { href: creator.youtubeUrl, icon: Youtube, label: "YouTube" },
+    { href: creator.youtubeUrl, icon: Globe2, label: "YouTube" },
     { href: creator.portfolioUrl, icon: Globe2, label: "Portfolio" },
   ];
 
