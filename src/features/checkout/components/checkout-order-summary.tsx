@@ -23,10 +23,10 @@ export function CheckoutOrderSummary({
   totalPayment,
 }: CheckoutOrderSummaryProps) {
   return (
-    <aside className="rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
-      <div className="border-b border-border/70 px-5 py-4">
+    <aside className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)]">
+      <div className="min-w-0 border-b border-border/70 px-5 py-4">
         <p className="text-sm font-semibold text-primary">Ringkasan</p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+        <h2 className="mt-1 truncate text-xl font-semibold tracking-tight text-foreground">
           {businessName}
         </h2>
       </div>
@@ -34,14 +34,14 @@ export function CheckoutOrderSummary({
       <div className="space-y-5 p-5">
         <section>
           <div className="flex flex-wrap gap-2">
-            <Badge className="rounded-lg bg-primary text-primary-foreground hover:bg-primary">
+            <Badge className="max-w-full truncate rounded-lg bg-primary text-primary-foreground hover:bg-primary">
               {item.tierName}
             </Badge>
-            <Badge variant="secondary" className="rounded-lg">
+            <Badge variant="secondary" className="max-w-full truncate rounded-lg">
               {item.categoryName}
             </Badge>
           </div>
-          <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight text-foreground">
+          <h3 className="mt-3 line-clamp-2 break-words text-lg font-semibold tracking-tight text-foreground">
             {item.serviceTitle}
           </h3>
           <p className="mt-2 flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
@@ -91,9 +91,9 @@ export function CheckoutOrderSummary({
           <SummaryRow label="Subtotal layanan" value={serviceSubtotal} />
           <SummaryRow label="Add-on" value={addonTotal} />
           <SummaryRow label="Biaya admin" value={adminFee} />
-          <div className="flex items-end justify-between gap-4 rounded-xl bg-slate-950 px-4 py-3 text-white">
-            <span className="text-sm font-medium text-white/70">Total pembayaran</span>
-            <strong className="text-xl tracking-tight">{formatCurrency(totalPayment)}</strong>
+          <div className="flex min-w-0 items-end justify-between gap-4 rounded-xl bg-slate-950 px-4 py-3 text-white">
+            <span className="min-w-0 truncate text-sm font-medium text-white/70">Total pembayaran</span>
+            <strong className="shrink-0 text-lg tracking-tight sm:text-xl">{formatCurrency(totalPayment)}</strong>
           </div>
         </section>
       </div>
@@ -111,12 +111,12 @@ function FactRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background px-3 py-2 text-sm">
-      <span className="flex items-center gap-2 text-muted-foreground">
+    <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-border/70 bg-background px-3 py-2 text-sm">
+      <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
         {icon}
-        {label}
+        <span className="truncate">{label}</span>
       </span>
-      <span className="font-semibold text-foreground">{value}</span>
+      <span className="shrink-0 font-semibold text-foreground">{value}</span>
     </div>
   );
 }

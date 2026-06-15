@@ -162,8 +162,8 @@ export default async function AdminComplaintsPage({
               <TableBody>
                 {visibleComplaints.map((complaint) => (
                   <TableRow key={complaint.id}>
-                    <TableCell>
-                      <p className="line-clamp-1 font-semibold text-foreground">
+                    <TableCell className="min-w-0">
+                      <p className="max-w-[280px] truncate font-semibold text-foreground">
                         {complaint.subject}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -174,10 +174,10 @@ export default async function AdminComplaintsPage({
                       {complaint.orderNumber ? (
                         <Link
                           href={`/admin/orders/${complaint.order_id}`}
-                          className="inline-flex items-center gap-1 font-medium text-brand-navy transition-colors hover:text-primary"
+                          className="inline-flex max-w-[180px] items-center gap-1 font-medium text-brand-navy transition-colors hover:text-primary"
                         >
-                          {complaint.orderNumber}
-                          <ExternalLink className="size-3" />
+                          <span className="truncate">{complaint.orderNumber}</span>
+                          <ExternalLink className="size-3 shrink-0" />
                         </Link>
                       ) : (
                         <span className="text-muted-foreground">Belum tersedia</span>
@@ -298,7 +298,7 @@ function ReviewModerationTable({ reviews }: { reviews: readonly AdminReviewRow[]
           <TableBody>
             {reviews.map((review) => (
               <TableRow key={review.id}>
-                <TableCell className="max-w-[360px]">
+                <TableCell className="max-w-[360px] whitespace-normal">
                   <div className="flex items-center gap-2">
                     <Star className="size-4 fill-amber-400 text-amber-500" aria-hidden="true" />
                     <span className="font-semibold text-foreground">

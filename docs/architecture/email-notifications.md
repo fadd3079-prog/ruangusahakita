@@ -1,52 +1,16 @@
-# Email Notifications
+# Email Delivery Status
 
-Ruang Usaha Kita memakai adapter email server-only untuk update penting order. Adapter akan mengirim email jika environment provider tersedia, dan menjadi no-op aman jika belum disiapkan.
+Pemulihan password memakai email bawaan Supabase Auth melalui `supabase.auth.resetPasswordForEmail`.
 
-Environment yang dibutuhkan untuk pengiriman email:
+Redirect yang digunakan:
 
-```env
-RESEND_API_KEY=
-EMAIL_FROM=
-```
+* Lokal: `http://localhost:3000/reset-password`
+* Produksi: `https://www.ruangusahakita.my.id/reset-password`
 
-Event yang didukung:
+Kedua URL harus terdaftar di Supabase Authentication Redirect URLs. Halaman `/reset-password` menukar recovery code menjadi session sebelum menerima password baru.
 
-* pembayaran berhasil
-* kreator menerima brief
-* kreator mulai pengerjaan
-* hasil konten dikirim
-* revisi diminta
-* pesanan selesai
-* review dibuat
-* komplain dibuat
+Brand styling untuk email autentikasi sementara dinonaktifkan. Repository tidak menyimpan atau merender HTML email lokal, dan aplikasi tidak melakukan pengiriman email sendiri.
 
-Aturan keamanan:
+Pengiriman receipt melalui email sementara dinonaktifkan. Status pembayaran tidak bergantung pada layanan email. Invoice dan receipt tetap tersedia di dalam aplikasi melalui halaman order terkait.
 
-* email hanya dikirim dari server
-* secret provider tidak boleh masuk client
-* email hanya dikirim ke UMKM, kreator, atau admin yang terkait
-* chat order tidak dikirim sebagai email agar tidak spam
-* analytics admin tidak menghasilkan email
-
-Jika provider belum tersedia, flow aplikasi tetap berjalan dan tidak menampilkan detail secret.
-
-Setup reset password Supabase:
-
-1. Buka Supabase Dashboard.
-2. Masuk ke Authentication.
-3. Pastikan redirect URL reset password sudah diizinkan.
-4. Gunakan email reset password bawaan Supabase.
-
-Redirect URL yang perlu diizinkan di Supabase Authentication:
-
-* `https://www.ruangusahakita.my.id/reset-password`
-* `https://ruangusahakita.my.id/reset-password`
-* `http://localhost:3000/reset-password`
-
-Flow aplikasi memakai callback untuk membuat session reset sebelum masuk ke halaman reset. Jika Supabase meminta allowlist callback, tambahkan juga:
-
-* `https://www.ruangusahakita.my.id/callback?next=/reset-password`
-* `https://ruangusahakita.my.id/callback?next=/reset-password`
-* `http://localhost:3000/callback?next=/reset-password`
-
-Receipt pembayaran dikirim lewat adapter email aplikasi setelah status pembayaran tercatat paid. Jika provider belum dikonfigurasi, adapter menjadi no-op aman dan user tetap bisa membuka receipt dari halaman order.
+Update order, hasil konten, revisi, review, dan komplain tetap menggunakan status serta notifikasi dalam aplikasi.

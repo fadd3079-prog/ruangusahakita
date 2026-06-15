@@ -48,7 +48,7 @@ export function CreatorProfileHeader({
   return (
     <section className="border-b border-border/70 bg-background">
       <PageContainer className="grid gap-8 py-12 sm:py-14 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:py-16">
-        <div>
+        <div className="min-w-0">
           <div
             className="mb-6 grid aspect-[16/6] min-h-52 place-items-center rounded-[22px] bg-muted/50 bg-cover bg-center"
             style={
@@ -74,7 +74,7 @@ export function CreatorProfileHeader({
               {creator.avatarUrl ? null : initials}
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="rounded-full">
                   <CheckCircle2 aria-hidden="true" />
@@ -88,7 +88,7 @@ export function CreatorProfileHeader({
                 ) : null}
               </div>
 
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+              <h1 className="mt-4 break-words text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 {creator.displayName}
               </h1>
 
@@ -141,7 +141,7 @@ export function CreatorProfileHeader({
           ) : null}
         </div>
 
-        <aside className="marketplace-card p-5 lg:sticky lg:top-24">
+        <aside className="marketplace-card min-w-0 overflow-hidden p-5 lg:sticky lg:top-24">
           <p className="text-sm font-medium text-muted-foreground">
             {creator.completedOrdersCount} pesanan selesai
           </p>
@@ -185,12 +185,12 @@ type MetricProps = {
 
 function Metric({ icon: Icon, label, value }: MetricProps) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-xs">
-      <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-        <Icon className="size-4 text-primary" aria-hidden="true" />
-        {label}
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-xs">
+      <dt className="flex min-w-0 items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <Icon className="size-4 shrink-0 text-primary" aria-hidden="true" />
+        <span className="truncate">{label}</span>
       </dt>
-      <dd className="mt-2 text-sm font-semibold text-foreground">{value}</dd>
+      <dd className="mt-2 truncate text-sm font-semibold text-foreground">{value}</dd>
     </div>
   );
 }

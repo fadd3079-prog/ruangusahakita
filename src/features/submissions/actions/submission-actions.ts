@@ -8,7 +8,6 @@ import { FILE_SIZE_LIMITS } from "@/lib/storage/file-limits";
 import { createProjectResultStoragePath } from "@/lib/storage/file-paths";
 import { uploadFileAsset } from "@/lib/storage/file-assets";
 import { validateProjectResultFile } from "@/lib/storage/validate-file";
-import { sendOrderEventEmail } from "@/lib/email/order-notifications";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -199,7 +198,6 @@ export async function submitCreatorDelivery(formData: FormData) {
   revalidatePath(`/creator/orders/${orderId}`);
   revalidatePath(`/umkm/orders/${orderId}`);
   revalidatePath("/creator/dashboard");
-  await sendOrderEventEmail(orderId, "result_submitted");
   redirect(`/creator/orders/${orderId}?submitted=1`);
 }
 
@@ -225,7 +223,6 @@ export async function requestOrderRevision(formData: FormData) {
   revalidatePath(`/umkm/orders/${orderId}`);
   revalidatePath(`/creator/orders/${orderId}`);
   revalidatePath("/umkm/dashboard");
-  await sendOrderEventEmail(orderId, "revision_requested");
   redirect(`/umkm/orders/${orderId}?revision_requested=1`);
 }
 
@@ -249,6 +246,5 @@ export async function approveOrderDelivery(formData: FormData) {
   revalidatePath(`/umkm/orders/${orderId}`);
   revalidatePath(`/creator/orders/${orderId}`);
   revalidatePath("/umkm/dashboard");
-  await sendOrderEventEmail(orderId, "order_completed");
   redirect(`/umkm/orders/${orderId}?completed=1`);
 }

@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import { sendOrderEventEmail } from "@/lib/email/order-notifications";
 
 function getText(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -61,7 +60,6 @@ export async function submitOrderReviewAction(formData: FormData) {
   revalidatePath(returnPath);
   revalidatePath("/katalog");
   revalidatePath("/creator/dashboard");
-  await sendOrderEventEmail(orderId, "review_created");
   redirect(`${returnPath}?reviewed=1`);
 }
 
@@ -87,7 +85,6 @@ export async function createOrderComplaintAction(formData: FormData) {
   revalidatePath(returnPath);
   revalidatePath("/admin/complaints");
   revalidatePath("/admin/dashboard");
-  await sendOrderEventEmail(orderId, "complaint_created");
   redirect(`${returnPath}?complaint_created=1`);
 }
 

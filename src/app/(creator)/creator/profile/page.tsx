@@ -86,7 +86,7 @@ export default async function CreatorProfilePage() {
           />
           <div className="px-6 pb-8 sm:px-10">
             <div className="-mt-16 mb-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-5">
+              <div className="flex min-w-0 items-end gap-5">
                 <div
                   className="grid size-32 shrink-0 place-items-center rounded-2xl bg-white bg-cover bg-center text-4xl font-semibold text-primary ring-4 ring-background shadow-sm"
                   style={
@@ -97,16 +97,16 @@ export default async function CreatorProfilePage() {
                 >
                   {profile.avatar_url ? null : initials}
                 </div>
-                <div className="mb-2">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-bold text-foreground">
+                <div className="mb-2 min-w-0">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <h2 className="truncate text-2xl font-bold text-foreground">
                       {profile.display_name}
                     </h2>
                     {profile.is_verified ? (
                       <ShieldCheck className="size-5 text-primary" />
                     ) : null}
                   </div>
-                  <p className="mt-1 text-sm font-medium text-muted-foreground">
+                  <p className="mt-1 truncate text-sm font-medium text-muted-foreground">
                     {profile.niche ?? "Niche belum diisi"}
                   </p>
                 </div>
@@ -126,7 +126,7 @@ export default async function CreatorProfilePage() {
               <div className="space-y-8">
                 <div className="space-y-3">
                   <h3 className="font-semibold text-foreground">Tentang Saya</h3>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
                     {profile.bio ?? "Bio kreator belum diisi."}
                   </p>
                 </div>
@@ -136,7 +136,7 @@ export default async function CreatorProfilePage() {
                   {profile.skills && profile.skills.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {profile.skills.map((skill) => (
-                        <Badge key={skill} variant="outline" className="rounded-md bg-muted/40">
+                        <Badge key={skill} variant="outline" className="max-w-full truncate rounded-md bg-muted/40">
                           {skill}
                         </Badge>
                       ))}

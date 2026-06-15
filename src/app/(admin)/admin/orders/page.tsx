@@ -104,23 +104,23 @@ export default async function AdminOrdersPage({
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>
-                      <p className="font-semibold text-foreground">
+                      <p className="max-w-[220px] truncate font-semibold text-foreground">
                         {order.order_number}
                       </p>
                       <p className="mt-1 max-w-[260px] truncate text-sm text-muted-foreground">
                         {order.serviceTitle ?? "Paket jasa digital"}
                       </p>
                       {order.tierName ? (
-                        <p className="mt-1 text-xs font-medium text-primary">
+                        <p className="mt-1 max-w-[220px] truncate text-xs font-medium text-primary">
                           {order.tierName}
                         </p>
                       ) : null}
                     </TableCell>
                     <TableCell>
-                      <p className="font-medium text-foreground">
+                      <p className="max-w-[200px] truncate font-medium text-foreground">
                         {order.umkmName ?? "UMKM"}
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-1 max-w-[200px] truncate text-xs text-muted-foreground">
                         {order.creatorName ?? "Kreator"}
                       </p>
                     </TableCell>

@@ -49,7 +49,7 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
   return (
     <PageContainer>
       <div className="space-y-8">
-        <section className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
+        <section className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
           <div className="p-6 sm:p-8">
             <Button
               asChild
@@ -61,9 +61,9 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
                 Kembali
               </Link>
             </Button>
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
-              <ReceiptText className="size-4" aria-hidden="true" />
-              {data.order.order_number}
+            <p className="inline-flex max-w-full min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
+              <ReceiptText className="size-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">{data.order.order_number}</span>
             </p>
             <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               Detail pesanan admin
@@ -110,7 +110,7 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
                 <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
                   <FileText className="size-5" aria-hidden="true" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-primary">Brief campaign</p>
                   <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
                     Arahan UMKM
@@ -166,7 +166,7 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
                           </span>
                         </div>
                         {history.note ? (
-                          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-muted-foreground">
                             {history.note}
                           </p>
                         ) : null}
@@ -188,7 +188,7 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
                 <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
                   <BriefcaseBusiness className="size-5" aria-hidden="true" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-xl font-semibold tracking-tight text-foreground">
                     Ringkasan order
                   </h2>
@@ -208,7 +208,7 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
 
               <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
                 <p className="text-sm font-medium text-muted-foreground">Total order</p>
-                <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+                <p className="mt-2 truncate text-3xl font-semibold tracking-tight text-foreground">
                   {formatCurrency(Number(data.order.total_amount))}
                 </p>
               </div>
@@ -221,13 +221,13 @@ export default async function AdminOrderDetailPage({ params }: OrderPageProps) {
               <div className="mt-4 space-y-3">
                 {data.items.length > 0 ? (
                   data.items.map((item) => (
-                    <div key={item.id} className="rounded-xl border border-border/70 bg-background p-4">
-                      <p className="font-semibold text-foreground">
+                    <div key={item.id} className="min-w-0 overflow-hidden rounded-xl border border-border/70 bg-background p-4">
+                      <p className="line-clamp-2 break-words font-semibold text-foreground">
                         {item.service_title}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {item.tier_name ? (
-                          <Badge>{item.tier_name}</Badge>
+                          <Badge className="max-w-full truncate">{item.tier_name}</Badge>
                         ) : null}
                         <Badge variant="secondary">
                           {item.revision_count ?? 0} revisi
@@ -259,20 +259,20 @@ function DetailField({
   value: string;
 }) {
   return (
-    <div className={className}>
+    <div className={`min-w-0 overflow-hidden ${className ?? ""}`}>
       <p className="text-xs font-medium uppercase text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 text-sm leading-6 text-foreground">{value}</p>
+      <p className="mt-1 line-clamp-3 break-words text-sm leading-6 text-foreground">{value}</p>
     </div>
   );
 }
 
 function MoneyRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-semibold text-foreground">{formatCurrency(value)}</dd>
+    <div className="flex min-w-0 items-center justify-between gap-4">
+      <dt className="min-w-0 truncate text-muted-foreground">{label}</dt>
+      <dd className="shrink-0 font-semibold text-foreground">{formatCurrency(value)}</dd>
     </div>
   );
 }

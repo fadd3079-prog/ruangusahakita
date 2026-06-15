@@ -1517,11 +1517,13 @@ Mengirim email untuk aktivitas penting.
 
 Tahap awal:
 
-* belum perlu real
+* reset password memakai email bawaan Supabase Auth
+* notifikasi order melalui email dinonaktifkan
+* invoice dan receipt tersedia di dalam aplikasi
 
 Tahap lanjutan:
 
-* pakai Resend
+* evaluasi provider setelah flow utama stabil
 
 ### 20.3 WhatsApp Shortcut
 

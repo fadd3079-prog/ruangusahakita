@@ -17,12 +17,18 @@ export const metadata: Metadata = {
 
 type ResetPasswordPageProps = {
   searchParams?: Promise<{
+    debug?: string;
     error?: string;
   }>;
 };
 
+type ResetPasswordSearchParams = Awaited<
+  NonNullable<ResetPasswordPageProps["searchParams"]>
+>;
+
 const errorMessages = {
   password_mismatch: "Konfirmasi password belum sama.",
+  password_same: "Password baru harus berbeda dari password sebelumnya.",
   password_short: "Password minimal 8 karakter.",
   update_failed: "Password belum bisa diperbarui. Buka ulang link reset dari email.",
 } as const;
@@ -32,11 +38,17 @@ export default async function ResetPasswordPage({
 }: ResetPasswordPageProps) {
   const [user, params] = await Promise.all([
     getCurrentUser(),
-    searchParams ?? Promise.resolve({ error: undefined }),
+    searchParams ??
+      Promise.resolve<ResetPasswordSearchParams>({
+        debug: undefined,
+        error: undefined,
+      }),
   ]);
   const errorMessage = params.error
     ? errorMessages[params.error as keyof typeof errorMessages] ?? errorMessages.update_failed
     : null;
+  const debugMessage =
+    process.env.NODE_ENV === "development" && params.debug ? params.debug : null;
 
   return (
     <main className="grid min-h-svh place-items-center bg-background px-5 py-10">
@@ -66,7 +78,14 @@ export default async function ResetPasswordPage({
         {errorMessage ? (
           <Alert variant="destructive" className="mt-6">
             <AlertTitle>Password belum diperbarui</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
+            <AlertDescription>
+              {errorMessage}
+              {debugMessage ? (
+                <span className="mt-2 block text-xs opacity-80">
+                  Dev detail: {debugMessage}
+                </span>
+              ) : null}
+            </AlertDescription>
           </Alert>
         ) : null}
 

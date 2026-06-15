@@ -57,18 +57,18 @@ export function OrderFilterBar({
       aria-label="Filter status pesanan"
       className="rounded-2xl border border-border/70 bg-card p-4 shadow-[var(--shadow-soft)]"
     >
-      <form className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_180px_180px_160px_auto] lg:items-end">
-        <label className="grid gap-2">
+      <form className="grid min-w-0 gap-3 lg:grid-cols-[minmax(220px,1fr)_180px_180px_160px_auto] lg:items-end">
+        <label className="grid min-w-0 gap-2">
           <span className="text-xs font-semibold uppercase text-muted-foreground">
             Cari
           </span>
-          <div className="relative">
+          <div className="relative min-w-0">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               name="q"
               defaultValue={filters.query}
               placeholder="Nomor, layanan, atau nama"
-              className="h-11 pl-9"
+              className="h-11 min-w-0 pl-9"
             />
           </div>
         </label>
@@ -119,14 +119,14 @@ function SelectField<TValue extends string>({
   value: TValue;
 }) {
   return (
-    <label className="grid gap-2">
+    <label className="grid min-w-0 gap-2">
       <span className="text-xs font-semibold uppercase text-muted-foreground">
         {label}
       </span>
       <select
         name={name}
         defaultValue={value}
-        className="h-11 rounded-xl border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-[3px] focus:ring-ring/20"
+        className="h-11 min-w-0 w-full rounded-xl border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-[3px] focus:ring-ring/20"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

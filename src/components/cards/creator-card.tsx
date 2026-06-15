@@ -53,7 +53,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
     .slice(0, 2);
 
   return (
-    <Card className="marketplace-card group flex h-full flex-col overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
+    <Card className="marketplace-card group flex h-full min-w-0 flex-col overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
       <div
         className="relative aspect-[16/7] shrink-0 bg-muted/50 bg-cover bg-center"
         style={
@@ -87,7 +87,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
         </div>
       </div>
 
-      <CardHeader className="px-3.5 pb-1 pt-3">
+      <CardHeader className="min-w-0 px-3.5 pb-1 pt-3">
         <CardTitle className="line-clamp-1 text-base">
           {creator.displayName}
         </CardTitle>
@@ -97,7 +97,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
         />
       </CardHeader>
 
-      <CardContent className="flex flex-1 flex-col space-y-2.5 px-3.5">
+      <CardContent className="flex min-w-0 flex-1 flex-col space-y-2.5 px-3.5">
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="rounded-full text-[11px]">
             <CheckCircle2 aria-hidden="true" />
@@ -144,7 +144,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
         <div className="mt-auto grid grid-cols-2 overflow-hidden rounded-xl border border-border/70 bg-background">
           <div className="border-r border-border/70 p-2.5">
             <p className="text-xs text-muted-foreground">Mulai dari</p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
+            <p className="mt-1 truncate text-sm font-semibold text-foreground">
               <PriceText value={startingPrice} prefix="" />
             </p>
           </div>
@@ -153,7 +153,7 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
               <Trophy className="size-3.5 text-primary" aria-hidden="true" />
               Selesai
             </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
+            <p className="mt-1 truncate text-sm font-semibold text-foreground">
               {creator.completedOrdersCount} pesanan
             </p>
           </div>
@@ -163,8 +163,8 @@ export function CreatorCard({ creator, primaryService }: CreatorCardProps) {
       <CardFooter
         className={
           primaryService
-            ? "mt-auto grid gap-2 border-t border-border/70 bg-muted/25 p-2.5 sm:grid-cols-2"
-            : "mt-auto border-t border-border/70 bg-muted/25 p-2.5"
+            ? "mt-auto grid min-w-0 gap-2 border-t border-border/70 bg-muted/25 p-2.5 sm:grid-cols-2"
+            : "mt-auto min-w-0 border-t border-border/70 bg-muted/25 p-2.5"
         }
       >
         <Button

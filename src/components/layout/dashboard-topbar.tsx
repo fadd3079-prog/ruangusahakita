@@ -77,7 +77,7 @@ export function DashboardTopbar({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Button asChild variant="outline" size="icon" className="hidden rounded-full sm:inline-flex">
             <Link href="/" aria-label="Kembali ke Home">
               <Home aria-hidden="true" />
@@ -101,7 +101,7 @@ export function DashboardTopbar({
               {notificationCount > 0 ? <CartCountBadge count={notificationCount} /> : null}
             </Link>
           </Button>
-          <Badge variant="secondary" className="rounded-full">Live</Badge>
+          <Badge variant="secondary" className="hidden rounded-full lg:inline-flex">Live</Badge>
           <div className="hidden items-center gap-2 rounded-full border bg-card px-2 py-1 sm:flex">
             <div
               className="flex size-7 items-center justify-center rounded-full bg-primary bg-cover bg-center text-xs font-semibold text-primary-foreground"
@@ -119,13 +119,14 @@ export function DashboardTopbar({
           </div>
           <form action={logoutAction}>
             <SubmitButton
-              pendingLabel="Keluar..."
+              pendingLabel=""
               variant="outline"
               size="sm"
-              className="rounded-full"
+              className="size-8 rounded-full p-0 md:h-7 md:w-auto md:px-2.5"
               icon={<LogOut aria-hidden="true" />}
+              aria-label="Keluar dari akun"
             >
-              Keluar
+              <span className="hidden md:inline">Keluar</span>
             </SubmitButton>
           </form>
         </div>

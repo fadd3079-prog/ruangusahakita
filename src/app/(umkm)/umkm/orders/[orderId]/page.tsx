@@ -215,7 +215,7 @@ function SuccessNotice({ message }: { message: string }) {
 
 function OrderHeader({ data }: { data: UmkmOrderDetail }) {
   return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
       <Button asChild variant="ghost" className="-ml-2 mb-4">
         <Link href="/umkm/orders">
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -225,14 +225,14 @@ function OrderHeader({ data }: { data: UmkmOrderDetail }) {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-sm font-semibold text-primary">
-            <ReceiptText className="size-4" aria-hidden="true" />
-            {data.order.order_number}
+          <p className="flex min-w-0 items-center gap-2 text-sm font-semibold text-primary">
+            <ReceiptText className="size-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">{data.order.order_number}</span>
           </p>
           <h1 className="mt-2 line-clamp-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             {data.items[0]?.serviceTitle ?? "Paket jasa digital"}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          <p className="mt-2 line-clamp-2 break-words text-sm leading-6 text-muted-foreground">
             Kreator: {data.creatorName}
             {data.creatorCity ? `, ${data.creatorCity}` : ""}
           </p>
@@ -305,16 +305,16 @@ function ServiceSnapshot({ items }: { items: readonly UmkmOrderDetailItem[] }) {
       </h2>
       <div className="mt-4 space-y-3">
         {items.map((item) => (
-          <article key={item.id} className="rounded-xl border border-border/70 bg-background p-4">
+          <article key={item.id} className="min-w-0 overflow-hidden rounded-xl border border-border/70 bg-background p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap gap-2">
-                  {item.tierName ? <Badge className="rounded-lg">{item.tierName}</Badge> : null}
+                  {item.tierName ? <Badge className="max-w-full truncate rounded-lg">{item.tierName}</Badge> : null}
                   <Badge variant="secondary" className="rounded-lg">
                     {item.revisionCount ?? 0} revisi
                   </Badge>
                 </div>
-                <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight text-foreground">
+                <h3 className="mt-3 line-clamp-2 break-words text-lg font-semibold tracking-tight text-foreground">
                   {item.serviceTitle}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -328,7 +328,7 @@ function ServiceSnapshot({ items }: { items: readonly UmkmOrderDetailItem[] }) {
             {item.deliverables.length > 0 ? (
               <ul className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                 {item.deliverables.slice(0, 6).map((deliverable) => (
-                  <li key={deliverable} className="line-clamp-1 rounded-lg bg-muted/35 px-3 py-2">
+                  <li key={deliverable} className="line-clamp-2 break-words rounded-lg bg-muted/35 px-3 py-2">
                     {deliverable}
                   </li>
                 ))}
@@ -411,7 +411,7 @@ function PaymentPanel({ data }: { data: UmkmOrderDetail }) {
       <div className="mt-3 flex flex-wrap gap-2">
         <PaymentStatusBadge status={data.order.payment_status} />
         {data.invoice?.invoice_number ? (
-          <Badge variant="secondary" className="rounded-lg">
+          <Badge variant="secondary" className="max-w-full truncate rounded-lg">
             {data.invoice.invoice_number}
           </Badge>
         ) : null}
@@ -444,9 +444,9 @@ function OrderCostPanel({ data }: { data: UmkmOrderDetail }) {
         <MoneyRow label="Subtotal layanan" value={Number(data.order.subtotal_amount)} />
         <MoneyRow label="Add-on" value={Number(data.order.addon_amount)} />
         <MoneyRow label="Biaya admin" value={Number(data.order.admin_fee)} />
-        <div className="flex items-end justify-between gap-4 rounded-xl bg-slate-950 px-4 py-3 text-white">
-          <span className="text-sm text-white/70">Total</span>
-          <strong className="text-xl tracking-tight">
+        <div className="flex min-w-0 items-end justify-between gap-4 rounded-xl bg-slate-950 px-4 py-3 text-white">
+          <span className="min-w-0 truncate text-sm text-white/70">Total</span>
+          <strong className="shrink-0 text-xl tracking-tight">
             {formatCurrency(Number(data.order.total_amount))}
           </strong>
         </div>
@@ -497,18 +497,18 @@ function StatusTimeline({ data }: { data: UmkmOrderDetail }) {
 
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-muted/35 px-3 py-2">
+    <div className="min-w-0 overflow-hidden rounded-xl bg-muted/35 px-3 py-2">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="mt-1 line-clamp-2 text-sm font-semibold text-foreground">{value}</p>
+      <p className="mt-1 line-clamp-2 break-words text-sm font-semibold text-foreground">{value}</p>
     </div>
   );
 }
 
 function MoneyRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold text-foreground">{formatCurrency(value)}</span>
+    <div className="flex min-w-0 items-center justify-between gap-4">
+      <span className="min-w-0 truncate text-muted-foreground">{label}</span>
+      <span className="shrink-0 font-semibold text-foreground">{formatCurrency(value)}</span>
     </div>
   );
 }

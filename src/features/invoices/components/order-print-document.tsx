@@ -37,10 +37,10 @@ export function OrderPrintDocument({ data, mode }: OrderPrintDocumentProps) {
           <PrintButton label={isReceipt ? "Cetak Receipt" : "Cetak Invoice"} />
         </div>
 
-        <article className="overflow-hidden rounded-3xl border border-[#e5eaf0] bg-white shadow-[0_18px_60px_rgba(12,41,73,0.08)] print:rounded-none print:border-0 print:shadow-none">
+        <article className="min-w-0 overflow-hidden rounded-3xl border border-[#e5eaf0] bg-white shadow-[0_18px_60px_rgba(12,41,73,0.08)] print:rounded-none print:border-0 print:shadow-none">
           <header className="bg-[#0c2949] p-7 text-white print:bg-white print:text-[#06111f]">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/70 print:text-[#167163]">
                   Ruang Usaha Kita
                 </p>
@@ -51,9 +51,9 @@ export function OrderPrintDocument({ data, mode }: OrderPrintDocumentProps) {
                   Marketplace jasa digital untuk UMKM dan kreator
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 p-4 text-sm print:border-[#e5eaf0] print:bg-[#f7f9fa]">
+              <div className="min-w-0 overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-4 text-sm print:border-[#e5eaf0] print:bg-[#f7f9fa]">
                 <p className="text-white/70 print:text-[#4b5563]">Nomor dokumen</p>
-                <p className="mt-1 font-semibold">{documentNumber}</p>
+                <p className="mt-1 break-words font-semibold">{documentNumber}</p>
                 <p className="mt-3 text-white/70 print:text-[#4b5563]">Tanggal</p>
                 <p className="mt-1 font-semibold">
                   {formatDate(data.invoice?.issued_at ?? data.order.created_at)}
@@ -96,18 +96,18 @@ export function OrderPrintDocument({ data, mode }: OrderPrintDocumentProps) {
                   <ReceiptText className="size-5" aria-hidden="true" />
                 )}
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-xl font-semibold tracking-tight">
                   Rincian layanan
                 </h2>
-                <p className="text-sm text-[#4b5563]">
+                <p className="line-clamp-2 break-words text-sm text-[#4b5563]">
                   {primaryItem?.serviceTitle ?? "Paket jasa digital"}
                 </p>
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-[#e5eaf0]">
-              <table className="w-full border-collapse text-left text-sm">
+            <div className="overflow-x-auto rounded-2xl border border-[#e5eaf0]">
+              <table className="w-full min-w-[620px] border-collapse text-left text-sm">
                 <thead className="bg-[#f3f6f7] text-[#4b5563]">
                   <tr>
                     <th className="px-4 py-3 font-semibold">Layanan</th>
@@ -119,14 +119,14 @@ export function OrderPrintDocument({ data, mode }: OrderPrintDocumentProps) {
                   {data.items.map((item) => (
                     <tr key={item.id} className="border-t border-[#e5eaf0]">
                       <td className="px-4 py-4 align-top">
-                        <p className="font-semibold">{item.serviceTitle}</p>
+                        <p className="line-clamp-2 break-words font-semibold">{item.serviceTitle}</p>
                         <p className="mt-1 text-xs text-[#6b7280]">
                           Estimasi {item.estimatedDays ?? 0} hari · {item.revisionCount ?? 0} revisi
                         </p>
                         {item.addons.length > 0 ? (
                           <ul className="mt-2 space-y-1 text-xs text-[#6b7280]">
                             {item.addons.map((addon) => (
-                              <li key={addon.id}>
+                              <li key={addon.id} className="line-clamp-2 break-words">
                                 {addon.addonName} · {formatCurrency(addon.price)}
                               </li>
                             ))}
@@ -150,9 +150,9 @@ export function OrderPrintDocument({ data, mode }: OrderPrintDocumentProps) {
               <MoneyRow label="Add-on" value={Number(data.order.addon_amount)} />
               <MoneyRow label="Biaya admin" value={Number(data.order.admin_fee)} />
               <MoneyRow label="Diskon" value={Number(data.order.discount_amount) * -1} />
-              <div className="flex items-end justify-between gap-4 rounded-2xl bg-[#0c2949] px-4 py-4 text-white">
-                <span>Total</span>
-                <strong className="text-2xl tracking-tight">
+              <div className="flex min-w-0 items-end justify-between gap-4 rounded-2xl bg-[#0c2949] px-4 py-4 text-white">
+                <span className="min-w-0 truncate">Total</span>
+                <strong className="shrink-0 text-xl tracking-tight sm:text-2xl">
                   {formatCurrency(Number(data.order.total_amount))}
                 </strong>
               </div>
@@ -177,7 +177,7 @@ export function OrderPrintDocument({ data, mode }: OrderPrintDocumentProps) {
 
 function InfoBlock({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-[#e5eaf0] bg-[#f7f9fa] p-4">
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-[#e5eaf0] bg-[#f7f9fa] p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
         {label}
       </p>

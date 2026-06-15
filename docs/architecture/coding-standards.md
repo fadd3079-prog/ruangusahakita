@@ -288,8 +288,7 @@ src
     ├── helpers
     ├── security
     ├── storage
-    ├── analytics
-    └── email
+    └── analytics
 ````
 
 ## 5. Folder Responsibility

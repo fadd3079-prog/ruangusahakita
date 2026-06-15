@@ -86,8 +86,8 @@ function MetricCard({ accent, icon: Icon, label, meta, value }: MetricCardProps)
     <article
       className={
         isDark
-          ? "rounded-2xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white shadow-[var(--shadow-card)]"
-          : "rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]"
+          ? "min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] p-5 text-white shadow-[var(--shadow-card)]"
+          : "min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]"
       }
     >
       <div
@@ -107,8 +107,8 @@ function MetricCard({ accent, icon: Icon, label, meta, value }: MetricCardProps)
       <p
         className={
           isDark
-            ? "mt-2 text-3xl font-semibold tracking-tight text-white"
-            : "mt-2 text-3xl font-semibold tracking-tight text-foreground"
+            ? "mt-2 truncate text-3xl font-semibold tracking-tight text-white"
+            : "mt-2 truncate text-3xl font-semibold tracking-tight text-foreground"
         }
       >
         {value}

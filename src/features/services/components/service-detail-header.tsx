@@ -36,7 +36,7 @@ export function ServiceDetailHeader({
   return (
     <section className="border-b border-border/70 bg-background">
       <PageContainer className="grid gap-8 py-12 sm:py-14 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:py-16">
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-wrap gap-2">
             {category ? (
               <Badge variant="secondary" className="rounded-full">
@@ -49,10 +49,10 @@ export function ServiceDetailHeader({
               </Badge>
             ) : null}
           </div>
-          <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+          <h1 className="mt-5 max-w-4xl break-words text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
             {service.title}
           </h1>
-          <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
+          <p className="mt-5 max-w-3xl break-words text-base leading-7 text-muted-foreground sm:text-lg">
             {service.description}
           </p>
           <div
@@ -89,13 +89,13 @@ export function ServiceDetailHeader({
           </div>
         </div>
 
-        <aside className="marketplace-card p-5 lg:sticky lg:top-24">
+        <aside className="marketplace-card min-w-0 overflow-hidden p-5 lg:sticky lg:top-24">
           <p className="text-sm font-medium text-muted-foreground">
             Kreator layanan
           </p>
           <Link
             href={`/kreator/${creator.id}`}
-            className="mt-3 flex items-start gap-3 rounded-2xl border border-border/70 bg-muted/35 p-3 transition-colors hover:border-primary/30"
+            className="mt-3 flex min-w-0 items-start gap-3 rounded-2xl border border-border/70 bg-muted/35 p-3 transition-colors hover:border-primary/30"
           >
             <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
               {creator.displayName
@@ -104,13 +104,13 @@ export function ServiceDetailHeader({
                 .join("")
                 .slice(0, 2)}
             </span>
-            <span>
-              <span className="block font-semibold text-foreground">
+            <span className="min-w-0">
+              <span className="block truncate font-semibold text-foreground">
                 {creator.displayName}
               </span>
-              <span className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="size-3.5 text-primary" aria-hidden="true" />
-                {creator.city}
+              <span className="mt-1 flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
+                <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                <span className="truncate">{creator.city}</span>
               </span>
             </span>
           </Link>
@@ -156,12 +156,12 @@ type MetricProps = {
 
 function Metric({ icon: Icon, label, value }: MetricProps) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-xs">
-      <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-        <Icon className="size-4 text-primary" aria-hidden="true" />
-        {label}
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-xs">
+      <p className="flex min-w-0 items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <Icon className="size-4 shrink-0 text-primary" aria-hidden="true" />
+        <span className="truncate">{label}</span>
       </p>
-      <p className="mt-2 text-sm font-semibold text-foreground">{value}</p>
+      <p className="mt-2 truncate text-sm font-semibold text-foreground">{value}</p>
     </div>
   );
 }

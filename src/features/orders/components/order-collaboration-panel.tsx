@@ -39,7 +39,7 @@ export function OrderCollaborationPanel({
   variant,
 }: OrderCollaborationPanelProps) {
   return (
-    <section className="grid gap-5">
+    <section className="grid min-w-0 gap-5">
       {variant === "umkm" ? (
         <ReviewPanel
           canReview={canReview}
@@ -76,7 +76,7 @@ function ReviewPanel({
 
   if (review) {
     return (
-      <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-950 shadow-[var(--shadow-soft)]">
+      <section className="min-w-0 overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-950 shadow-[var(--shadow-soft)]">
         <div className="flex items-start gap-3">
           <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-600 text-white">
             <Star className="size-5" aria-hidden="true" />
@@ -98,12 +98,12 @@ function ReviewPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
       <div className="flex items-start gap-3">
         <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-amber-50 text-amber-700">
           <Star className="size-5" aria-hidden="true" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
             Beri review
           </h2>
@@ -159,12 +159,12 @@ function ComplaintPanel({
   returnPath: string;
 }) {
   return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
       <div className="flex items-start gap-3">
         <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-red-50 text-red-700">
           <ShieldAlert className="size-5" aria-hidden="true" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
             Komplain order
           </h2>
@@ -179,7 +179,7 @@ function ComplaintPanel({
           {collaboration.complaints.slice(0, 3).map((complaint) => (
             <article
               key={complaint.id}
-              className="rounded-xl border border-border/70 bg-background p-4"
+              className="min-w-0 overflow-hidden rounded-xl border border-border/70 bg-background p-4"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="rounded-lg">
@@ -232,12 +232,12 @@ function MessagePanel({
   orderId: string;
 }) {
   return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)]">
       <div className="flex items-start gap-3">
         <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-700">
           <MessageCircle className="size-5" aria-hidden="true" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
             Chat order
           </h2>

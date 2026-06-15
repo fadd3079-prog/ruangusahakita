@@ -74,7 +74,7 @@ export function PaymentDetailSummary({ detail }: PaymentDetailSummaryProps) {
   const creatorName = detail.creator?.display_name ?? "Kreator";
 
   return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <p className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-800">
@@ -84,7 +84,7 @@ export function PaymentDetailSummary({ detail }: PaymentDetailSummaryProps) {
           <h1 className="mt-4 line-clamp-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             {detail.payment.payment_number}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 truncate text-sm text-muted-foreground">
             Order {detail.order.order_number}
           </p>
         </div>
@@ -107,17 +107,17 @@ export function PaymentDetailSummary({ detail }: PaymentDetailSummaryProps) {
               <h2 className="mt-1 line-clamp-2 text-lg font-semibold tracking-tight text-foreground">
                 {serviceTitle}
               </h2>
-              <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <UserRound className="size-4" aria-hidden="true" />
-                {creatorName}
+              <p className="mt-2 flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
+                <UserRound className="size-4 shrink-0" aria-hidden="true" />
+                <span className="truncate">{creatorName}</span>
               </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl bg-slate-950 p-4 text-white">
+        <div className="min-w-0 overflow-hidden rounded-xl bg-slate-950 p-4 text-white">
           <p className="text-sm text-white/70">Total pembayaran</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight">
+          <p className="mt-2 truncate text-3xl font-semibold tracking-tight">
             {formatCurrency(Number(detail.payment.amount))}
           </p>
         </div>
@@ -160,7 +160,7 @@ export function PaymentDetailSummary({ detail }: PaymentDetailSummaryProps) {
 
 export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
   return (
-    <aside className="rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)] lg:sticky lg:top-24">
+    <aside className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-[var(--shadow-soft)] lg:sticky lg:top-24">
       <div className="flex items-center gap-3">
         <div className="grid size-10 place-items-center rounded-xl bg-muted text-foreground">
           <ReceiptText className="size-5" aria-hidden="true" />
@@ -177,9 +177,9 @@ export function InvoiceSummary({ detail }: PaymentDetailSummaryProps) {
         <MoneyRow label="Subtotal layanan" value={Number(detail.order.subtotal_amount)} />
         <MoneyRow label="Add-on" value={Number(detail.order.addon_amount)} />
         <MoneyRow label="Biaya admin" value={Number(detail.order.admin_fee)} />
-        <div className="flex items-end justify-between gap-4 rounded-xl bg-muted/45 px-4 py-3">
-          <span className="text-muted-foreground">Total</span>
-          <strong className="text-xl tracking-tight text-foreground">
+        <div className="flex min-w-0 items-end justify-between gap-4 rounded-xl bg-muted/45 px-4 py-3">
+          <span className="min-w-0 truncate text-muted-foreground">Total</span>
+          <strong className="shrink-0 text-xl tracking-tight text-foreground">
             {formatCurrency(Number(detail.order.total_amount))}
           </strong>
         </div>
@@ -239,9 +239,9 @@ export function PaymentContextCard({ detail }: PaymentDetailSummaryProps) {
 
 function MoneyRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold text-foreground">{formatCurrency(value)}</span>
+    <div className="flex min-w-0 items-center justify-between gap-4">
+      <span className="min-w-0 truncate text-muted-foreground">{label}</span>
+      <span className="shrink-0 font-semibold text-foreground">{formatCurrency(value)}</span>
     </div>
   );
 }

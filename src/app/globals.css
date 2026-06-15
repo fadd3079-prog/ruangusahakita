@@ -196,7 +196,6 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     line-height: 1.5;
     text-rendering: optimizeLegibility;
-    overflow-wrap: break-word;
     overflow-x: clip;
   }
 

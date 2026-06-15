@@ -1,8 +1,15 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import {
+  getPasswordResetUrl,
+  getPasswordUpdateErrorCode,
+  isValidResetEmail,
+  requestDefaultPasswordReset,
+  type AuthErrorDetail,
+} from "@/features/auth/lib/password-reset";
+import { isDemoMode } from "@/lib/config/demo-mode";
 import { createClient } from "@/lib/supabase/server";
 
 function getText(formData: FormData, key: string) {
@@ -10,44 +17,32 @@ function getText(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-async function getOrigin() {
-  const headerStore = await headers();
-  const configuredUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "";
-  const requestOrigin = headerStore.get("origin") ?? "";
-  const isLocalRequest = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(
-    requestOrigin,
-  );
-  const siteUrl =
-    (isLocalRequest ? requestOrigin : "") ||
-    configuredUrl ||
-    requestOrigin ||
-    "http://localhost:3000";
-
-  return siteUrl.replace(/\/+$/, "");
-}
-
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function getResetErrorRedirect(error: {
-  code?: string;
-  message?: string;
-  status?: number | string;
-}) {
+function getErrorRedirect(path: string, error: AuthErrorDetail) {
   if (process.env.NODE_ENV !== "development") {
-    return "/forgot-password?error=reset_failed";
+    return path;
   }
 
   const detail = encodeURIComponent(
-    [error.code, error.status, error.message].filter(Boolean).join(" · "),
+    [error.code, error.status, error.message].filter(Boolean).join(" | "),
   );
 
-  return (
-    "/forgot-password?error=reset_failed" +
-    (detail.length > 0 ? `&debug=${detail}` : "")
-  );
+  return path + (detail.length > 0 ? `&debug=${detail}` : "");
+}
+
+function normalizeAuthError(error: unknown): AuthErrorDetail {
+  if (!error || typeof error !== "object") {
+    return { message: "Auth request failed" };
+  }
+
+  const record = error as Record<string, unknown>;
+  return {
+    code: typeof record.code === "string" ? record.code : undefined,
+    message: typeof record.message === "string" ? record.message : undefined,
+    status:
+      typeof record.status === "string" || typeof record.status === "number"
+        ? record.status
+        : undefined,
+  };
 }
 
 export async function requestPasswordResetAction(formData: FormData) {
@@ -57,18 +52,40 @@ export async function requestPasswordResetAction(formData: FormData) {
     redirect("/forgot-password?error=email_required");
   }
 
-  if (!isValidEmail(email)) {
+  if (!isValidResetEmail(email)) {
     redirect("/forgot-password?error=email_invalid");
   }
 
-  const supabase = await createClient();
-  const origin = await getOrigin();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/callback?next=/reset-password`,
-  });
+  if (isDemoMode()) {
+    redirect(
+      getErrorRedirect("/forgot-password?error=reset_failed", {
+        code: "demo_mode",
+        message: "Supabase Auth is disabled in demo mode",
+      }),
+    );
+  }
 
-  if (error) {
-    redirect(getResetErrorRedirect(error));
+  let resetError: AuthErrorDetail | null = null;
+
+  try {
+    const supabase = await createClient();
+    const result = await requestDefaultPasswordReset(
+      email,
+      supabase.auth.resetPasswordForEmail.bind(supabase.auth),
+      getPasswordResetUrl(),
+    );
+    resetError = result.error;
+  } catch (error) {
+    resetError = normalizeAuthError(error);
+  }
+
+  if (resetError) {
+    redirect(
+      getErrorRedirect(
+        "/forgot-password?error=reset_failed",
+        resetError,
+      ),
+    );
   }
 
   redirect("/forgot-password?sent=1");
@@ -86,13 +103,26 @@ export async function updatePasswordAction(formData: FormData) {
     redirect("/reset-password?error=password_mismatch");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password });
+  let updateError: AuthErrorDetail | null = null;
 
-  if (error) {
-    redirect("/reset-password?error=update_failed");
+  try {
+    const supabase = await createClient();
+    const result = await supabase.auth.updateUser({ password });
+    updateError = result.error;
+
+    if (!updateError) {
+      await supabase.auth.signOut().catch(() => undefined);
+    }
+  } catch (error) {
+    updateError = normalizeAuthError(error);
   }
 
-  await supabase.auth.signOut().catch(() => undefined);
+  if (updateError) {
+    const code = getPasswordUpdateErrorCode(updateError);
+    redirect(
+      getErrorRedirect(`/reset-password?error=${code}`, updateError),
+    );
+  }
+
   redirect("/login?password_reset=1");
 }

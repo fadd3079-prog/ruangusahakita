@@ -485,7 +485,7 @@ Tech stack utama:
 | Storage          | Supabase Storage                            |
 | Hosting          | Vercel                                      |
 | Payment          | Midtrans Sandbox / dummy payment tahap awal |
-| Email            | Resend tahap lanjutan                       |
+| Email            | Supabase Auth untuk reset password          |
 | Analytics        | PostHog tahap lanjutan                      |
 | Error Monitoring | Sentry tahap lanjutan                       |
 | State Management | Zustand                                     |
@@ -540,7 +540,7 @@ Setelah MVP selesai, pengembangan berikutnya dapat meliputi:
 5. Integrasi payment gateway sandbox.
 6. Upload hasil konten.
 7. Revisi dan review.
-8. Email notification.
+8. Evaluasi notifikasi eksternal setelah flow utama stabil.
 9. Analytics funnel.
 10. AI auto-brief dan rekomendasi kreator.
 

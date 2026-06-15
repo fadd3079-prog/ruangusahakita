@@ -183,7 +183,7 @@ export function RealtimeOrderChat({
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid min-w-0 gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs font-medium text-muted-foreground">
           {connectionState === "connected"
@@ -209,7 +209,7 @@ export function RealtimeOrderChat({
         onScroll={(event) => {
           shouldAutoScrollRef.current = isNearBottom(event.currentTarget);
         }}
-        className="max-h-[380px] space-y-3 overflow-y-auto rounded-2xl border border-border/70 bg-background p-3 sm:max-h-[420px]"
+        className="min-w-0 max-h-[380px] space-y-3 overflow-y-auto rounded-2xl border border-border/70 bg-background p-3 sm:max-h-[420px]"
       >
         {messages.length > 0 ? (
           messages.map((message) => (
@@ -222,12 +222,12 @@ export function RealtimeOrderChat({
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex min-w-0 gap-2">
         <Input
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder="Tulis pesan singkat..."
-          className="h-11"
+          className="h-11 min-w-0"
           aria-label="Pesan order"
           disabled={isPending}
         />
@@ -286,7 +286,7 @@ function MessageBubble({ message }: { message: LocalMessage }) {
   return (
     <article
       className={cn(
-        "max-w-[88%] rounded-2xl border px-4 py-3",
+        "min-w-0 max-w-[88%] rounded-2xl border px-4 py-3",
         message.isOwn
           ? "ml-auto border-primary/20 bg-primary text-primary-foreground"
           : "border-border/70 bg-card text-foreground",

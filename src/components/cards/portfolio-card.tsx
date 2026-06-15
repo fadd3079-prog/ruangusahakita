@@ -18,7 +18,7 @@ export function PortfolioCard({ portfolio, category }: PortfolioCardProps) {
   const visualUrl = portfolio.thumbnailUrl;
 
   return (
-    <Card className="marketplace-card h-full overflow-hidden p-0">
+    <Card className="marketplace-card h-full min-w-0 overflow-hidden p-0">
       <div
         className="grid aspect-video place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
         style={
@@ -27,7 +27,7 @@ export function PortfolioCard({ portfolio, category }: PortfolioCardProps) {
       >
         {visualUrl ? null : <ImageIcon className="size-10 opacity-40" />}
       </div>
-      <CardHeader className="px-4 pb-2 pt-4">
+      <CardHeader className="min-w-0 px-4 pb-2 pt-4">
         <div className="flex flex-wrap gap-2">
           {category ? (
             <Badge variant="secondary" className="rounded-full">
@@ -44,16 +44,16 @@ export function PortfolioCard({ portfolio, category }: PortfolioCardProps) {
           {portfolio.title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 px-4 pb-4">
+      <CardContent className="min-w-0 space-y-4 px-4 pb-4">
         <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
           {portfolio.description}
         </p>
         <div className="flex items-center justify-between gap-3 border-t border-border pt-4 text-sm">
-          <span className="text-muted-foreground">{portfolio.clientName}</span>
+          <span className="min-w-0 truncate text-muted-foreground">{portfolio.clientName}</span>
           {portfolio.externalUrl ? (
             <a
               href={portfolio.externalUrl}
-              className="inline-flex items-center gap-1 font-medium text-primary hover:text-primary/80"
+              className="inline-flex shrink-0 items-center gap-1 font-medium text-primary hover:text-primary/80"
               target="_blank"
               rel="noreferrer"
             >

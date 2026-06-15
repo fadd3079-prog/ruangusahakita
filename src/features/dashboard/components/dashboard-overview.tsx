@@ -62,7 +62,7 @@ export function DashboardHero({
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
             {eyebrow}
           </p>
-          <h1 className="mt-3 max-w-4xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h1 className="mt-3 max-w-4xl break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             {title}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-primary-foreground/74 sm:text-base">
@@ -99,10 +99,10 @@ export function DashboardHero({
                 key={highlight.label}
                 className="flex items-center justify-between gap-4 rounded-xl bg-white/8 px-3 py-2.5"
               >
-                <span className="text-sm text-primary-foreground/70">
+                <span className="min-w-0 truncate text-sm text-primary-foreground/70">
                   {highlight.label}
                 </span>
-                <span className="min-w-0 truncate text-base font-semibold">
+                <span className="max-w-[55%] shrink-0 truncate text-base font-semibold">
                   {highlight.value}
                 </span>
               </div>
@@ -155,7 +155,7 @@ function DashboardMetricCard({
     <Card className={cn("dashboard-surface min-w-0 overflow-hidden border-l-4", toneBorderClasses[tone])}>
       <CardContent className="space-y-3 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">
               {metric.label}
             </p>
@@ -388,12 +388,12 @@ export function DashboardQuickActions({ actions }: DashboardQuickActionsProps) {
                 <Icon className="size-5" aria-hidden="true" />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-foreground">
-                  {action.label}
-                </p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  {action.description}
-                </p>
+            <p className="truncate font-semibold text-foreground">
+              {action.label}
+            </p>
+            <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
+              {action.description}
+            </p>
               </div>
             </div>
           </Link>

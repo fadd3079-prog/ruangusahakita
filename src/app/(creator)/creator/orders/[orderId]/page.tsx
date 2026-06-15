@@ -197,7 +197,7 @@ function SuccessMessage({ message }: { message: string }) {
 
 function CreatorOrderHero({ data }: { data: CreatorOrderDetail }) {
   return (
-    <section className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
+    <section className="min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,var(--brand-navy-950),var(--brand-teal-900))] text-white shadow-[var(--shadow-card)]">
       <div className="p-6 sm:p-8">
         <Button
           asChild
@@ -210,13 +210,13 @@ function CreatorOrderHero({ data }: { data: CreatorOrderDetail }) {
           </Link>
         </Button>
 
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
-              <ReceiptText className="size-4" aria-hidden="true" />
-              {data.order.order_number}
+        <div className="grid min-w-0 gap-8 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
+          <div className="min-w-0">
+            <p className="inline-flex max-w-full min-w-0 items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
+              <ReceiptText className="size-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">{data.order.order_number}</span>
             </p>
-            <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+            <h1 className="mt-5 max-w-4xl break-words text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               {data.items[0]?.serviceTitle ?? "Paket jasa digital"}
             </h1>
             <p className="mt-5 max-w-3xl text-sm leading-6 text-white/72 sm:text-base">
@@ -229,9 +229,9 @@ function CreatorOrderHero({ data }: { data: CreatorOrderDetail }) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur">
+          <div className="min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur">
             <p className="text-sm font-medium text-white/68">Nilai order</p>
-            <p className="mt-3 text-4xl font-semibold tracking-tight text-white">
+            <p className="mt-3 truncate text-4xl font-semibold tracking-tight text-white">
               {formatCurrency(Number(data.order.total_amount))}
             </p>
             <p className="mt-3 flex items-center gap-2 text-sm text-white/68">
@@ -269,7 +269,7 @@ function CreatorBriefCard({ data }: { data: CreatorOrderDetail }) {
         <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
           <FileText className="size-5" aria-hidden="true" />
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-semibold text-primary">Arahan UMKM</p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
             Brief campaign
@@ -328,26 +328,26 @@ function CreatorScopeCard({
         {items.map((item) => (
           <article
             key={item.id}
-            className="rounded-2xl border border-border/70 bg-background p-4"
+            className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-background p-4"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 <div className="flex flex-wrap gap-2">
                   {item.tierName ? (
-                    <Badge className="rounded-lg">{item.tierName}</Badge>
+                    <Badge className="max-w-full truncate rounded-lg">{item.tierName}</Badge>
                   ) : null}
                   <Badge variant="secondary" className="rounded-lg">
                     {item.revisionCount ?? 0} revisi
                   </Badge>
                 </div>
-                <h3 className="mt-3 text-lg font-semibold tracking-tight text-foreground">
+                <h3 className="mt-3 line-clamp-2 break-words text-lg font-semibold tracking-tight text-foreground">
                   {item.serviceTitle}
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Estimasi {item.estimatedDays ?? 0} hari pengerjaan
                 </p>
               </div>
-              <p className="text-lg font-semibold tracking-tight text-foreground">
+              <p className="shrink-0 text-lg font-semibold tracking-tight text-foreground">
                 {formatCurrency(item.subtotal)}
               </p>
             </div>
@@ -355,7 +355,7 @@ function CreatorScopeCard({
             {item.deliverables.length > 0 ? (
               <ul className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                 {item.deliverables.map((deliverable) => (
-                  <li key={deliverable} className="rounded-xl bg-muted/40 px-3 py-2">
+                  <li key={deliverable} className="line-clamp-2 break-words rounded-xl bg-muted/40 px-3 py-2">
                     {deliverable}
                   </li>
                 ))}
@@ -427,7 +427,7 @@ function CreatorPaymentCard({ data }: { data: CreatorOrderDetail }) {
         <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
           <BriefcaseBusiness className="size-5" aria-hidden="true" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
             Ringkasan order
           </h2>
@@ -448,7 +448,7 @@ function CreatorPaymentCard({ data }: { data: CreatorOrderDetail }) {
 
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
         <p className="text-sm font-medium text-muted-foreground">Total order</p>
-        <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+        <p className="mt-2 truncate text-3xl font-semibold tracking-tight text-foreground">
           {formatCurrency(Number(data.order.total_amount))}
         </p>
       </div>
@@ -480,7 +480,7 @@ function CreatorTimelineCard({ data }: { data: CreatorOrderDetail }) {
                   </span>
                 </div>
                 {history.note ? (
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-muted-foreground">
                     {history.note}
                   </p>
                 ) : null}
@@ -507,20 +507,20 @@ function DetailField({
   value: string;
 }) {
   return (
-    <div className={className}>
+    <div className={`min-w-0 overflow-hidden ${className ?? ""}`}>
       <p className="text-xs font-medium uppercase text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 text-sm leading-6 text-foreground">{value}</p>
+      <p className="mt-1 line-clamp-3 break-words text-sm leading-6 text-foreground">{value}</p>
     </div>
   );
 }
 
 function MoneyRow({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-semibold text-foreground">{formatCurrency(value)}</dd>
+    <div className="flex min-w-0 items-center justify-between gap-4">
+      <dt className="min-w-0 truncate text-muted-foreground">{label}</dt>
+      <dd className="shrink-0 font-semibold text-foreground">{formatCurrency(value)}</dd>
     </div>
   );
 }

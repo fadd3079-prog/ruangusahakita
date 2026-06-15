@@ -30,7 +30,7 @@ export function ServiceCard({
   const visualUrl = service.coverImageUrl;
 
   return (
-    <Card className="marketplace-card group flex h-full flex-col overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
+    <Card className="marketplace-card group flex h-full min-w-0 flex-col overflow-hidden p-0 transition-[border-color,box-shadow] duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-marketplace)]">
       <div
         className="grid aspect-[16/9] shrink-0 place-items-center bg-muted/50 bg-cover bg-center text-muted-foreground"
         style={visualUrl ? { backgroundImage: `url("${visualUrl}")` } : undefined}
@@ -38,11 +38,11 @@ export function ServiceCard({
         {visualUrl ? null : <ImageIcon className="size-10 opacity-40" aria-hidden="true" />}
       </div>
 
-      <CardHeader className="px-4 pb-2 pt-4">
+      <CardHeader className="min-w-0 px-4 pb-2 pt-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             {category ? (
-              <Badge variant="secondary" className="mb-3 rounded-full">
+              <Badge variant="secondary" className="mb-3 max-w-full truncate rounded-full">
                 {category.name}
               </Badge>
             ) : null}
@@ -58,25 +58,25 @@ export function ServiceCard({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-1 flex-col space-y-4 px-4">
+      <CardContent className="flex min-w-0 flex-1 flex-col space-y-4 px-4">
         <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
           {service.shortDescription}
         </p>
         <div className="grid gap-2 text-sm text-muted-foreground">
-          <span className="inline-flex items-center gap-2">
-            <Clock className="size-4 text-primary" aria-hidden="true" />
-            Estimasi {service.estimatedDays} hari
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <Clock className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            <span className="truncate">Estimasi {service.estimatedDays} hari</span>
           </span>
-          <span className="inline-flex items-center gap-2">
-            <FileCheck2 className="size-4 text-primary" aria-hidden="true" />
-            {service.revisionCount} kali revisi
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <FileCheck2 className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            <span className="truncate">{service.revisionCount} kali revisi</span>
           </span>
-          <span className="inline-flex items-center gap-2">
-            <Layers3 className="size-4 text-primary" aria-hidden="true" />
-            {service.deliverables.length} output layanan digital
+          <span className="inline-flex min-w-0 items-center gap-2">
+            <Layers3 className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            <span className="truncate">{service.deliverables.length} output layanan digital</span>
           </span>
         </div>
-        <div className="mt-auto rounded-2xl border border-border/70 bg-muted/35 p-3 text-sm">
+        <div className="mt-auto min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-muted/35 p-3 text-sm">
           <PriceText value={service.basePrice} />
         </div>
       </CardContent>

@@ -13,6 +13,10 @@ import { isDemoMode } from "@/lib/config/demo-mode";
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const demoMode = isDemoMode();
+  const recoveryCode =
+    pathname === "/reset-password"
+      ? request.nextUrl.searchParams.get("code")
+      : null;
 
   if (demoMode) {
     if (
@@ -52,6 +56,28 @@ export async function proxy(request: NextRequest) {
       },
     },
   );
+
+  if (recoveryCode) {
+    let exchangeFailed = false;
+
+    try {
+      const { error } = await supabase.auth.exchangeCodeForSession(recoveryCode);
+      exchangeFailed = Boolean(error);
+    } catch {
+      exchangeFailed = true;
+    }
+
+    const redirectUrl = new URL("/reset-password", request.url);
+    if (exchangeFailed) {
+      redirectUrl.searchParams.set("error", "update_failed");
+    }
+
+    const response = NextResponse.redirect(redirectUrl);
+    supabaseResponse.cookies
+      .getAll()
+      .forEach((cookie) => response.cookies.set(cookie));
+    return response;
+  }
 
   let authState: AuthRouteState = { kind: "guest" };
 
@@ -113,6 +139,7 @@ export const config = {
     "/login",
     "/register",
     "/forgot-password",
+    "/reset-password",
     "/callback",
     "/admin/:path*",
     "/umkm/:path*",

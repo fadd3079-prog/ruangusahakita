@@ -23,24 +23,24 @@ type ServiceTierOptionsProps = {
 
 export function ServiceTierOptions({ serviceId, tiers }: ServiceTierOptionsProps) {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-3">
       {tiers.map((tier) => (
         <Card
           key={tier.id}
-          className="marketplace-card h-full"
+          className="marketplace-card h-full min-w-0 overflow-hidden"
         >
           <CardHeader className="p-5 pb-3">
-            <div className="flex items-start justify-between gap-4">
-              <div>
+            <div className="flex min-w-0 items-start justify-between gap-4">
+              <div className="min-w-0">
                 <Badge
                   variant={tier.name === "Medium" ? "default" : "secondary"}
-                  className="mb-3 rounded-full"
+                  className="mb-3 max-w-full truncate rounded-full"
                 >
                   {tier.name}
                 </Badge>
-                <CardTitle className="text-xl">{tier.name}</CardTitle>
+                <CardTitle className="line-clamp-2 break-words text-xl">{tier.name}</CardTitle>
               </div>
-              <p className="text-sm">
+              <p className="max-w-[46%] shrink-0 truncate text-sm">
                 <PriceText value={tier.price} prefix="" />
               </p>
             </div>
@@ -50,13 +50,13 @@ export function ServiceTierOptions({ serviceId, tiers }: ServiceTierOptionsProps
               {tier.description}
             </p>
             <div className="grid gap-2 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-2">
-                <Clock className="size-4 text-primary" aria-hidden="true" />
-                Estimasi {tier.estimatedDays} hari
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <Clock className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                <span className="truncate">Estimasi {tier.estimatedDays} hari</span>
               </span>
-              <span className="inline-flex items-center gap-2">
-                <FilePenLine className="size-4 text-primary" aria-hidden="true" />
-                {tier.revisionCount} kali revisi
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <FilePenLine className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                <span className="truncate">{tier.revisionCount} kali revisi</span>
               </span>
             </div>
             <ul className="space-y-2 border-t border-border pt-4">
@@ -69,7 +69,7 @@ export function ServiceTierOptions({ serviceId, tiers }: ServiceTierOptionsProps
                     className="mt-1 size-4 shrink-0 text-primary"
                     aria-hidden="true"
                   />
-                  {deliverable}
+                  <span className="min-w-0 line-clamp-2 break-words">{deliverable}</span>
                 </li>
               )) : (
                 <li className="text-sm leading-6 text-muted-foreground">
