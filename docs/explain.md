@@ -646,7 +646,46 @@ Button yang tidak memenuhi kondisi status/ownership disembunyikan atau ditolak o
 
 Tidak ditemukan horizontal document scroll pada route representatif desktop/mobile saat audit. Risiko overflow utama berasal dari data database yang sangat panjang dan sudah dipersempit melalui perbaikan lokal.
 
-## 19. Perbaikan kecil yang dilakukan
+## 19. AI Smart Matching (landing page)
+
+Section promosi fitur AI Smart Matching berada di landing page tepat setelah section Kategori Layanan. Komponen `AiSmartMatchingSection` adalah Client Component di `src/features/public/components/ai-smart-matching-section.tsx`.
+
+Fungsi saat ini adalah frontend/visual saja. Textarea prompt menerima input teks dari pengunjung, tetapi tombol "Cari Rekomendasi" hanya menampilkan toast informasi bahwa fitur akan segera tersedia. Tidak ada request ke backend atau API AI.
+
+Visual menggunakan card besar horizontal dengan background gradient brand (`#0C2949`, `#114955`, `#167163`), badge "AI Smart Matching", headline, deskripsi, textarea prompt box, tombol CTA, dan image abstract di sisi kanan desktop. Mobile menyembunyikan kolom visual agar section tetap compact.
+
+Saat AI API siap, textarea dan tombol CTA tinggal dihubungkan ke endpoint rekomendasi kreator.
+
+## 20. AI Smart Brief (checkout brief UMKM)
+
+AI Smart Brief berada di halaman checkout UMKM (`/umkm/checkout`) sebagai panel collapsible tepat di atas form brief campaign. Komponen `AiSmartBriefPanel` adalah Client Component di `src/features/briefs/components/ai-smart-brief-panel.tsx`.
+
+Saat ini fitur masih frontend/local draft generator. AI API belum dihubungkan. Fungsi utama membantu UMKM menyusun brief lebih rapi sebelum order dibuat.
+
+Panel menyediakan field terstruktur:
+
+- Tujuan campaign
+- Produk/jasa yang dipromosikan
+- Target audiens
+- Platform konten (pilihan chip)
+- Gaya komunikasi (pilihan chip)
+- Poin utama pesan
+- Referensi/catatan tambahan
+
+Tombol dan behavior:
+
+| Tombol | Fungsi |
+| --- | --- |
+| Susun Draft Brief | Membuat draft lokal berbasis template dari input yang diisi. Tidak memanggil API. Minimal tujuan campaign dan produk harus diisi. |
+| Masukkan ke Brief | Mengisi field form brief utama (`CampaignBriefForm`) dengan data dari draft. Jika brief utama sudah berisi teks, muncul konfirmasi "Timpa" atau "Batal". |
+| Reset Draft | Mengosongkan semua field AI Smart Brief dan draft preview. |
+
+Draft yang dihasilkan menggunakan format terstruktur: Tujuan Campaign, Produk/Jasa, Target Audiens, Platform Konten, Gaya Komunikasi, Pesan Utama, Arahan Konten, dan Referensi. Format ini dirancang agar mudah dibaca kreator.
+
+Integrasi ke form brief menggunakan native DOM manipulation karena `CampaignBriefForm` adalah Server Component dengan uncontrolled inputs. Saat AI API siap, fungsi `buildDraft` dapat diganti dengan panggilan ke endpoint AI tanpa mengubah struktur UI.
+
+## 21. Perbaikan kecil yang dilakukan
+
 
 - Menghapus pemecahan kata global pada `body` agar kata normal tidak pecah seperti "Nich e".
 - Menambahkan `min-w-0`, `overflow-hidden`, `truncate`, dan `line-clamp` secara lokal pada kartu Creator, layanan, portofolio, dashboard, profile header, service detail, tier, filter, dan summary pembayaran.
@@ -660,7 +699,7 @@ Tidak ditemukan horizontal document scroll pada route representatif desktop/mobi
 
 Perubahan ini hanya menyentuh layout/overflow. Business logic, database, RLS, payment production, dan migration tidak diubah.
 
-## 20. Rekomendasi next step
+## 22. Rekomendasi next step
 
 Prioritas dekat:
 

@@ -5,6 +5,7 @@ import { ArrowRight, BriefcaseBusiness, CheckCircle2, ShieldCheck } from "lucide
 import { PageContainer } from "@/components/layout/page-container";
 import { SubmitButton } from "@/components/common/submit-button";
 import { Button } from "@/components/ui/button";
+import { AiSmartBriefPanel } from "@/features/briefs/components/ai-smart-brief-panel";
 import { CampaignBriefForm } from "@/features/briefs/components/campaign-brief-form";
 import { CheckoutOrderSummary } from "@/features/checkout/components/checkout-order-summary";
 import { CheckoutStepper } from "@/features/checkout/components/checkout-stepper";
@@ -127,6 +128,7 @@ export default async function UmkmCheckoutPage({
 
           <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
             <div className="min-w-0 space-y-6">
+              <AiSmartBriefPanel />
               <CampaignBriefForm
                 brief={checkoutData.brief}
                 checkoutSelection={resolvedCheckoutSelection}
