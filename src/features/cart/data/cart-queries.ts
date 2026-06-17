@@ -6,6 +6,7 @@ import type { StorageBucket } from "@/lib/storage/buckets";
 import { createStorageSignedUrl } from "@/lib/storage/urls";
 import type { Database } from "@/lib/supabase/types";
 import type { CheckoutSelection } from "@/features/checkout/lib/checkout-source";
+import { getPlatformFeeConfig } from "@/features/admin/data/platform-settings-queries";
 
 type Tables = Database["public"]["Tables"];
 
@@ -90,7 +91,16 @@ export type CurrentCheckoutData = {
   umkm: CheckoutUmkmData | null;
 };
 
-const adminFee = 5000;
+const FALLBACK_ADMIN_FEE = 5000;
+
+async function resolveAdminFee(): Promise<number> {
+  try {
+    const config = await getPlatformFeeConfig();
+    return config.adminFeeFlat;
+  } catch {
+    return FALLBACK_ADMIN_FEE;
+  }
+}
 
 async function getCurrentUmkmProfile() {
   if (isDemoMode()) {
@@ -192,6 +202,7 @@ export async function getCurrentCart(): Promise<CurrentCart> {
     }
 
     const displayItems = await enrichCartItems(items);
+    const adminFee = await resolveAdminFee();
 
     const serviceSubtotal = displayItems.reduce(
       (total, item) => total + item.tierPrice,
@@ -382,6 +393,7 @@ async function getDirectCheckoutCart(
     return emptyCart();
   }
 
+  const adminFee = await resolveAdminFee();
   const addons = (addonResult.data ?? []).map((addon) => ({
     id: addon.id,
     name: addon.name,
