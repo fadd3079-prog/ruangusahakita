@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report
+    url: https://github.com/fadd3079-prog/ruangusahakita/security
+    about: Please avoid posting sensitive security issues publicly. Follow SECURITY.md.
