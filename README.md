@@ -1,509 +1,478 @@
-saat pindah akun/chat, kirim begini:
-
-Saya lanjut project Ruang Usaha Kita. Baca file RUANGUSAHA_HANDOFF_NEXT_ACCOUNT.md, AGENTS.md, dan folder docs. Jangan ulang dari awal. Status terakhir: prompt cart-checkout belum dieksekusi karena Codex limit. Tolong lanjut dari bagian "Prompt Lanjutan yang Belum Dieksekusi".
-
-
-
 # Ruang Usaha Kita
 
-Ruang Usaha Kita adalah website marketplace jasa digital yang menghubungkan UMKM dengan content creator atau marketer untuk kebutuhan promosi digital. Platform ini dibuat sebagai project e-commerce jasa digital, bukan toko online barang fisik.
+Ruang Usaha Kita adalah marketplace jasa digital yang menghubungkan UMKM dengan kreator, content creator, dan marketer untuk kebutuhan promosi digital. Platform ini dibangun sebagai sistem e-commerce jasa, bukan toko barang fisik.
 
-Website ini menggunakan konsep katalog kreator, paket jasa digital, brief campaign, keranjang layanan, checkout, pembayaran dummy/sandbox, status pesanan, revisi, hasil konten, review, serta dashboard untuk UMKM, creator, dan admin.
+Repositori ini sudah berada pada fase full-stack MVP yang cukup luas: autentikasi, onboarding, katalog publik, cart dan checkout brief, payment sandbox, order lifecycle, delivery dan revisi, dashboard per role, admin monitoring, analytics internal, dan integrasi Supabase.
+
+## Gambaran Singkat
+
+- Public marketplace: landing page, katalog kreator, detail kreator, detail layanan, bantuan, cara kerja
+- Auth: login, register, forgot password, reset password, callback, role redirect
+- UMKM: dashboard, cart, checkout brief, payment sandbox, order list, order detail, invoice, receipt, results, settings
+- Creator: dashboard, onboarding, profile, services CRUD, portfolio, orders, earnings, settings
+- Admin: dashboard, analytics, users, UMKM, creators, services, orders, payments, complaints, reports, settings
+- Backend flow: Supabase Auth, PostgreSQL, RLS, Server Actions, API routes, storage foundation, payment sandbox RPC
+
+## Domain Rules
+
+Gunakan istilah berikut di seluruh pengembangan:
+
+- `UMKM`
+- `kreator`
+- `content creator`
+- `marketer`
+- `paket jasa`
+- `layanan digital`
+- `brief campaign`
+- `hasil konten`
+- `revisi`
+- `status pesanan`
+- `pembayaran`
+- `invoice`
+- `portofolio`
+- `review`
+
+Jangan gunakan konsep marketplace barang fisik seperti:
+
+- `stock`
+- `inventory barang`
+- `warehouse`
+- `shipping`
+- `courier`
+- `tracking number`
+- `delivery address`
+- `packing`
+- `shipment`
+- `resi`
+- `ongkir`
+- `gudang`
+- `kurir`
+- `alamat pengiriman barang`
 
 ## Tech Stack
 
-Project ini menggunakan:
-
-- Next.js App Router
+- Next.js 16 App Router
+- React 19
 - TypeScript
 - Tailwind CSS v4
 - shadcn/ui
 - Radix UI
 - Lucide React
-- Inter Font
-- Dummy Data untuk tahap UI awal
-- Supabase untuk database/auth/storage tahap lanjut
-- Vercel untuk deployment
-- Midtrans Sandbox untuk payment gateway tahap lanjut
+- Supabase Auth, Database, Storage, Realtime
+- Sonner
+- React Hook Form + Zod
+- TanStack Table
+- Recharts
+- Zustand
+- Vercel
+
+## Status Sistem Saat Ini
+
+Kondisi repo saat ini secara garis besar:
+
+- Runtime app memakai data Supabase dan empty state jujur, bukan dummy runtime
+- Public catalog dan detail page sudah membaca data real
+- Register dan login berbasis Supabase Auth dengan role `umkm`, `creator`, dan `admin`
+- Public register tidak membuat admin
+- Dashboard per role sudah aktif
+- Creator dapat mengelola layanan, tier, add-on, dan portofolio miliknya sendiri
+- UMKM dapat menambahkan layanan ke cart, mengisi brief, membuat pesanan, dan membuka payment sandbox
+- Payment sandbox memisahkan `payment_status` dan `order_status`
+- Creator delivery, revisi, invoice, receipt, notification, dan admin analytics sudah punya fondasi route dan data layer
+
+Source of truth utama tetap kode aktual, migration Supabase, dan dokumen di `docs/`.
+
+## Struktur Utama
+
+```txt
+src/
+  app/
+    (public)/
+    (auth)/
+    (umkm)/
+    (creator)/
+    (admin)/
+    api/
+  components/
+    common/
+    dashboard/
+    layout/
+    ui/
+  features/
+    admin/
+    auth/
+    briefs/
+    cart/
+    catalog/
+    checkout/
+    creator/
+    dashboard/
+    invoices/
+    notifications/
+    onboarding/
+    orders/
+    payments/
+    public/
+    services/
+    submissions/
+    umkm/
+  lib/
+    auth/
+    config/
+    constants/
+    formatters/
+    payment/
+    storage/
+    supabase/
+    utils.ts
+scripts/
+supabase/
+  migrations/
+  query/
+docs/
+public/
+```
+
+## Route Groups
+
+- `(public)` untuk halaman publik
+- `(auth)` untuk autentikasi
+- `(umkm)` untuk area UMKM
+- `(creator)` untuk area kreator
+- `(admin)` untuk area admin
+- `api` untuk endpoint internal
+
+Contoh route penting:
+
+- `/`
+- `/katalog`
+- `/kreator/[creatorId]`
+- `/layanan/[serviceId]`
+- `/cara-kerja`
+- `/bantuan`
+- `/login`
+- `/register`
+- `/forgot-password`
+- `/reset-password`
+- `/umkm/dashboard`
+- `/creator/dashboard`
+- `/admin/dashboard`
 
 ## Prasyarat
 
-Sebelum menjalankan project, pastikan laptop sudah memiliki:
+- Node.js 20 atau lebih baru
+- npm
+- Git
+- Akun Supabase
 
-1. Git
-2. Node.js versi LTS atau versi terbaru yang stabil
-3. npm
-4. Visual Studio Code
-
-Cek versi Git:
-
-```bash
-git --version
-```
-
-Cek versi Node.js:
+Cek versi:
 
 ```bash
 node -v
-```
-
-Cek versi npm:
-
-```bash
 npm -v
+git --version
 ```
 
-Jika Node.js belum terpasang, install dari website resmi Node.js.
+## Menjalankan Secara Lokal
 
-## Cara Menjalankan Project Setelah Git Clone
-
-### 1. Clone Repository
+1. Clone repo
 
 ```bash
 git clone https://github.com/faddgraphics/ruangusahakita.git
+cd ruangusaha
 ```
 
-Masuk ke folder project:
-
-```bash
-cd ruangusahakita
-```
-
-Jika nama folder berbeda, sesuaikan dengan nama folder hasil clone.
-
-### 2. Install Dependency
-
-Jalankan:
+2. Install dependency
 
 ```bash
 npm install
 ```
 
-Tunggu sampai proses instalasi selesai. Folder `node_modules` akan otomatis dibuat setelah perintah ini berhasil.
+3. Buat `.env.local` dari `.env.example`
 
-### 3. Buat File Environment
-
-Copy file `.env.example` menjadi `.env.local`.
-
-Di Windows PowerShell:
+PowerShell:
 
 ```powershell
 Copy-Item .env.example .env.local
 ```
 
-Atau secara manual:
-
-1. Duplikat file `.env.example`
-2. Rename hasil duplikat menjadi `.env.local`
-
-Untuk tahap UI awal, sebagian value environment boleh dikosongkan jika fitur Supabase atau Midtrans belum dipakai.
-
-Contoh isi `.env.local` untuk development awal:
+4. Isi environment variable yang dibutuhkan
 
 ```env
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-
-SUPABASE_SERVICE_ROLE_KEY=
-
-NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=
-MIDTRANS_SERVER_KEY=
-MIDTRANS_CLIENT_KEY=
-MIDTRANS_IS_PRODUCTION=false
+NEXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key-here"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key-here"
+APP_DEMO_MODE=false
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-Catatan penting:
-
-- Jangan commit file `.env.local`
-- Jangan membagikan secret key ke publik
-- Variable yang mengandung secret tidak boleh memakai prefix `NEXT_PUBLIC_`
-- `NEXT_PUBLIC_` hanya untuk value yang memang boleh terbaca di browser
-
-### 4. Jalankan Development Server
+5. Jalankan development server
 
 ```bash
 npm run dev
 ```
 
-Jika berhasil, buka browser:
+6. Buka browser
 
 ```txt
 http://localhost:3000
 ```
 
-Jika port 3000 sudah dipakai, Next.js biasanya akan menawarkan port lain, misalnya:
+## Environment Variables
 
-```txt
-http://localhost:3001
+| Variable | Wajib | Keterangan |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Ya | URL project Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Ya | Public anon key untuk client dan server session-aware |
+| `SUPABASE_SERVICE_ROLE_KEY` | Ya untuk seed/admin task | Server-only key, tidak boleh masuk browser |
+| `APP_DEMO_MODE` | Opsional | Mengaktifkan mode demo read-only tertentu |
+| `NEXT_PUBLIC_APP_URL` | Ya | Base URL aplikasi untuk redirect, sitemap, dan link |
+
+Aturan:
+
+- Jangan commit `.env.local`
+- Jangan beri prefix `NEXT_PUBLIC_` pada secret
+- Jangan import admin client ke client component
+
+## Supabase Workflow
+
+Repositori ini memakai migration SQL bertahap di `supabase/migrations/`. Jangan edit migration lama yang sudah diterapkan; selalu buat migration baru jika perlu.
+
+Langkah setup database development:
+
+1. Pastikan env Supabase sudah terisi
+2. Apply migration ke project development
+
+```bash
+npx supabase db push
 ```
 
-## Script yang Tersedia
+3. Jika perlu seed data awal dari file seed SQL
 
-Project ini menggunakan beberapa script npm.
+```bash
+npx supabase db reset
+```
 
-### Menjalankan Development Server
+Gunakan reset hanya untuk local database yang memang aman dihapus.
+
+4. Untuk membuat akun creator demo real di Supabase Auth + database:
+
+```bash
+npm run seed:real-creators
+```
+
+Script ini membaca env, membuat akun `creator24@ruang.usaha` sampai `creator50@ruang.usaha`, lalu mengisi `profiles`, `creator_profiles`, `service_packages`, tier, dan data terkait.
+
+## SQL Helper
+
+Repositori ini juga menyimpan helper SQL yang berguna:
+
+- `docs/sql/set-admin-role.sql`
+- `supabase/query/admin_query.sql`
+- `supabase/query/verify_seed_creators.sql`
+- `supabase/query/cleanup_admin_analytics.sql`
+
+Gunakan file query tersebut di Supabase SQL Editor saat memang dibutuhkan.
+
+## Script NPM
 
 ```bash
 npm run dev
-```
-
-Digunakan saat coding dan melihat perubahan secara langsung di browser.
-
-### Mengecek TypeScript
-
-```bash
-npm run typecheck
-```
-
-Digunakan untuk mengecek error TypeScript tanpa menjalankan build.
-
-### Mengecek Lint
-
-```bash
-npm run lint
-```
-
-Digunakan untuk mengecek masalah penulisan kode berdasarkan ESLint.
-
-### Build Production
-
-```bash
 npm run build
+npm run start
+npm run lint
+npm run test
+npm run typecheck
+npm run check
+npm run seed:real-creators
 ```
 
-Digunakan untuk memastikan project bisa dibuild sebelum deploy.
+Arti script:
 
-### Menjalankan Semua Pengecekan
+- `dev`: menjalankan Next.js dev server
+- `build`: production build
+- `start`: menjalankan hasil build
+- `lint`: menjalankan ESLint
+- `test`: menjalankan Vitest
+- `typecheck`: menjalankan TypeScript tanpa emit
+- `check`: `typecheck + lint + build`
+- `seed:real-creators`: membuat akun creator real untuk katalog dan login test
+
+## Role dan Akses
+
+### Guest
+
+- Bisa membuka halaman publik
+- Tidak bisa membuka dashboard
+
+### UMKM
+
+- Redirect utama: `/umkm/dashboard`
+- Bisa mengelola cart, checkout, brief, order, hasil, payment, receipt, settings
+
+### Creator
+
+- Redirect utama: `/creator/dashboard`
+- Bisa mengelola profile, services, portfolio, orders, earnings, settings
+
+### Admin
+
+- Redirect utama: `/admin/dashboard`
+- Bisa membuka dashboard monitoring, analytics, users, creators, services, orders, payments, complaints, reports, settings
+
+## Feature Map Ringkas
+
+### Public
+
+- Landing page marketplace
+- Catalog search, filter, sort
+- Creator detail
+- Service detail
+- Bantuan dan cara kerja
+
+### Auth
+
+- Register role `umkm` dan `creator`
+- Login role-aware
+- Forgot password
+- Reset password
+- Auth callback
+
+### UMKM
+
+- Dashboard overview
+- Cart
+- Checkout brief
+- Direct checkout
+- Payment sandbox
+- Order list dan detail
+- Invoice dan receipt print-friendly
+- Results
+- Settings
+
+### Creator
+
+- Dashboard overview
+- Onboarding
+- Profile management
+- Services CRUD
+- Portfolio management
+- Orders
+- Earnings
+- Settings
+
+### Admin
+
+- Dashboard command center
+- Analytics internal
+- User monitoring
+- Creator moderation
+- Service monitoring
+- Order monitoring
+- Payment monitoring
+- Complaint handling
+- Reports dan export
+- Platform settings
+
+## Arsitektur Penting
+
+Beberapa aturan yang perlu dijaga:
+
+- Default ke Server Components
+- Pakai Client Components hanya untuk interaksi yang memang perlu
+- Gunakan alias import `@/*`
+- `src/lib/utils.ts` tetap file, jangan dibuat folder `src/lib/utils`
+- Jangan ubah `src/components/ui/*` kecuali ada isu kompatibilitas yang jelas
+- Hindari `any`
+- Pisahkan `payment_status` dan `order_status`
+- Jangan percaya data sensitif dari client
+- Gunakan server action, route handler, atau RPC untuk operasi sensitif
+
+## Validasi Sebelum Push
+
+Minimal jalankan:
 
 ```bash
 npm run check
 ```
 
-Script ini menjalankan:
+Jika menyentuh database atau seed:
 
 ```bash
-npm run typecheck && npm run lint && npm run build
+npx supabase db push
+npm run seed:real-creators
 ```
 
-Sebelum push atau membuat pull request, disarankan menjalankan:
+Jika menyentuh search/filter, auth, order, payment, atau dashboard, lakukan juga QA manual pada route terkait.
 
-```bash
-npm run check
-```
+## Testing
 
-## Struktur Folder Penting
+Tool testing yang sudah ada:
 
-Struktur utama project:
+- TypeScript
+- ESLint
+- Vitest
+- React Testing Library
+- Playwright
 
-```txt
-src
-├── app
-│   ├── (public)
-│   ├── (auth)
-│   ├── (umkm)
-│   ├── (creator)
-│   ├── (admin)
-│   └── api
-├── components
-│   ├── ui
-│   ├── layout
-│   ├── common
-│   ├── cards
-│   └── dashboard
-├── features
-├── lib
-│   ├── dummy
-│   ├── constants
-│   ├── formatters
-│   └── utils.ts
-├── stores
-└── types
-```
+Dokumen testing ada di:
 
-Penjelasan singkat:
-
-- `src/app` berisi routing Next.js App Router
-- `src/components/ui` berisi komponen shadcn/ui
-- `src/components/layout` berisi header, footer, dashboard shell, sidebar, dan layout component
-- `src/components/common` berisi komponen kecil yang digunakan lintas halaman
-- `src/components/cards` berisi komponen card seperti creator card, service card, dan order card
-- `src/features` berisi komponen atau logic berdasarkan fitur
-- `src/lib/dummy` berisi data dummy untuk tahap UI awal
-- `src/lib/constants` berisi data konstan seperti navigasi, status, dan fee
-- `src/lib/formatters` berisi helper format currency dan tanggal
-- `docs` berisi dokumentasi arsitektur, produk, prompt, dan UI/UX
-- `public/logo` berisi logo project
-
-## Route Utama
-
-Beberapa route utama yang dapat dicek:
-
-```txt
-/
- /katalog
- /cara-kerja
- /bantuan
- /login
- /register
- /forgot-password
- /umkm/dashboard
- /umkm/cart
- /umkm/checkout
- /creator/dashboard
- /admin/dashboard
-```
-
-Catatan:
-
-Beberapa route mungkin masih berupa placeholder sesuai tahap pengerjaan.
-
-## Konsep Project
-
-Project ini adalah marketplace jasa digital.
-
-Gunakan istilah:
-
-- UMKM
-- kreator
-- paket jasa
-- layanan digital
-- brief campaign
-- hasil konten
-- revisi
-- status pesanan
-- pembayaran
-- invoice
-- portofolio
-- review
-
-Jangan gunakan istilah toko barang fisik seperti:
-
-- stok
-- gudang
-- ongkir
-- kurir
-- resi
-- packing
-- shipping
-- alamat pengiriman barang
-
-## Aturan Coding
-
-Aturan utama:
-
-1. Gunakan TypeScript dengan type yang jelas
-2. Hindari penggunaan `any`
-3. Gunakan import alias `@/*`
-4. Gunakan Server Components secara default
-5. Gunakan Client Components hanya jika butuh interaksi
-6. Jangan mengubah file `src/components/ui/*` kecuali benar-benar perlu
-7. Jangan membuat folder `src/lib/utils` karena sudah ada file `src/lib/utils.ts`
-8. Jangan commit `.env.local`
-9. Jangan hardcode API key atau secret
-10. Jalankan `npm run check` sebelum push
-
-Contoh import yang benar:
-
-```ts
-import { Button } from "@/components/ui/button"
-import { PageContainer } from "@/components/layout/page-container"
-import { dummyCreators } from "@/lib/dummy"
-```
-
-Hindari import relatif terlalu panjang:
-
-```ts
-import { Button } from "../../../../components/ui/button"
-```
-
-## Workflow Tim
-
-### Sebelum Mulai Coding
-
-Ambil update terbaru:
-
-```bash
-git pull origin main
-```
-
-Install dependency jika ada perubahan package:
-
-```bash
-npm install
-```
-
-Jalankan project:
-
-```bash
-npm run dev
-```
-
-### Membuat Branch Baru
-
-Disarankan tidak langsung coding di `main`.
-
-Contoh membuat branch fitur:
-
-```bash
-git switch -c feature/cart-checkout
-```
-
-Contoh nama branch:
-
-```txt
-feature/homepage
-feature/catalog-page
-feature/cart-checkout
-feature/payment-dummy
-fix/navbar-mobile
-docs/update-readme
-```
-
-### Setelah Selesai Coding
-
-Cek project:
-
-```bash
-npm run check
-```
-
-Cek perubahan:
-
-```bash
-git status
-git diff --stat
-```
-
-Commit:
-
-```bash
-git add .
-git commit -m "feat: build cart and checkout pages"
-```
-
-Push branch:
-
-```bash
-git push origin feature/cart-checkout
-```
-
-## Commit Message
-
-Gunakan format sederhana:
-
-```txt
-type: message
-```
-
-Contoh:
-
-```bash
-git commit -m "feat: build public homepage"
-git commit -m "fix: correct catalog card spacing"
-git commit -m "docs: update readme"
-git commit -m "style: adjust global design tokens"
-git commit -m "chore: add dummy data"
-```
-
-Jenis commit:
-
-- `feat` untuk fitur baru
-- `fix` untuk perbaikan bug
-- `docs` untuk dokumentasi
-- `style` untuk perubahan tampilan/styling
-- `refactor` untuk perapian struktur kode
-- `chore` untuk maintenance
-- `test` untuk testing
-
-## Environment dan Secret
-
-File yang boleh dishare:
-
-```txt
-.env.example
-```
-
-File yang tidak boleh dishare/commit:
-
-```txt
-.env.local
-.env
-```
-
-Jika membutuhkan Supabase atau Midtrans, minta value environment ke anggota yang bertanggung jawab. Jangan menaruh secret key langsung di kode.
-
-## Supabase
-
-Supabase disiapkan untuk tahap lanjut sebagai:
-
-- database
-- authentication
-- storage
-- row level security
-
-Untuk tahap UI awal, project dapat berjalan menggunakan dummy data tanpa Supabase.
-
-Jika Supabase sudah mulai dipakai, pastikan file `.env.local` berisi:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-```
-
-Catatan:
-
-- `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` boleh digunakan di client
-- `SUPABASE_SERVICE_ROLE_KEY` hanya boleh digunakan di server
-- Jangan pernah expose service role key ke browser
-
-## Payment Gateway
-
-Payment gateway belum digunakan untuk transaksi real pada tahap awal.
-
-Tahapan payment:
-
-1. Dummy payment
-2. Server dummy payment
-3. Midtrans Sandbox
-4. Midtrans production jika project benar-benar digunakan untuk transaksi nyata
-
-Untuk tahap UI atau demo, gunakan dummy payment atau sandbox. Jangan menggunakan payment production sebelum seluruh flow aman.
+- `docs/architecture/testing-strategy.md`
+- `docs/architecture/auth-smoke-test.md`
 
 ## Deployment
 
-Project direncanakan deploy ke Vercel.
+Deployment utama memakai Vercel. Panduan detail ada di `docs/architecture/deployment.md`.
 
-Sebelum deploy, pastikan:
+Checklist minimum sebelum deploy:
 
 ```bash
 npm run check
 ```
 
-Jika deploy manual via Vercel:
+Pastikan juga:
 
-1. Push project ke GitHub
-2. Import repository ke Vercel
-3. Pilih framework Next.js
-4. Masukkan environment variable jika diperlukan
-5. Deploy
+- env Vercel terisi benar
+- redirect auth Supabase sesuai domain
+- webhook/payment sandbox mengarah ke URL yang tepat
 
-Untuk tahap awal, preview deployment Vercel sudah cukup untuk demo.
+## Email dan Reset Password
+
+Flow forgot password memakai Supabase Auth. Redirect yang perlu diizinkan dijelaskan di:
+
+- `docs/architecture/email-notifications.md`
+
+Route reset saat ini:
+
+- `/forgot-password`
+- `/callback?next=/reset-password`
+- `/reset-password`
+
+## Dokumen Penting
+
+Mulai dari file ini jika ingin memahami repo lebih dalam:
+
+- `AGENTS.md`
+- `docs/architecture/overview.md`
+- `docs/architecture/route-map.md`
+- `docs/architecture/data-model.md`
+- `docs/architecture/roles-permissions.md`
+- `docs/architecture/order-flow.md`
+- `docs/architecture/payment-flow.md`
+- `docs/architecture/storage-policy.md`
+- `docs/architecture/supabase-setup.md`
+- `docs/architecture/testing-strategy.md`
+- `docs/architecture/deployment.md`
+- `docs/architecture/email-notifications.md`
+- `docs/architecture/implementation-roadmap.md`
+- `docs/product/feature-list.md`
+- `docs/product/mvp-scope.md`
+- `docs/uiux/design-system.md`
+- `docs/uiux/fiverr-reference.md`
 
 ## Troubleshooting
 
-### 1. `npm install` gagal
-
-Coba hapus `node_modules` dan `package-lock.json`, lalu install ulang:
-
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-Di Windows PowerShell:
+### `npm install` gagal
 
 ```powershell
 Remove-Item -Recurse -Force node_modules
@@ -511,56 +480,46 @@ Remove-Item package-lock.json
 npm install
 ```
 
-Gunakan ini hanya jika benar-benar perlu.
+Gunakan hanya jika memang perlu.
 
-### 2. Port 3000 sudah dipakai
-
-Jalankan di port lain:
+### Port 3000 dipakai
 
 ```bash
 npm run dev -- -p 3001
 ```
 
-Buka:
+### Build gagal saat fetch font Google
 
-```txt
-http://localhost:3001
-```
+Project memakai `next/font` untuk Inter. Jika koneksi ke Google Fonts bermasalah saat build, ulangi build saat koneksi stabil atau siapkan strategi self-hosted font.
 
-### 3. Build gagal karena environment
+### Redirect auth atau reset password gagal
 
-Pastikan `.env.local` sudah dibuat dari `.env.example`.
+Periksa:
 
-```powershell
-Copy-Item .env.example .env.local
-```
+- `NEXT_PUBLIC_APP_URL`
+- allowlist redirect di Supabase Auth
+- session callback route `/callback`
 
-### 4. Error import `@/*`
+### Dashboard atau catalog tidak menampilkan data
 
-Pastikan `tsconfig.json` memiliki path alias yang benar.
+Periksa:
 
-### 5. Halaman 404
+- migration sudah ter-apply
+- RLS policy sesuai
+- account status aktif
+- seed creator atau data layanan memang tersedia
 
-Cek apakah file `page.tsx` sudah ada di route yang sesuai.
+## Workflow Pengembangan
 
-Contoh:
-
-```txt
-src/app/(public)/katalog/page.tsx
-```
-
-### 6. Perubahan tidak muncul
-
-Restart development server:
+Contoh workflow harian:
 
 ```bash
-Ctrl + C
+git pull origin main
+npm install
 npm run dev
 ```
 
-## Checklist Sebelum Push
-
-Sebelum push, cek:
+Sebelum commit:
 
 ```bash
 npm run check
@@ -568,31 +527,20 @@ git status
 git diff --stat
 ```
 
-Pastikan:
-
-- tidak ada `.env.local`
-- tidak ada `node_modules`
-- tidak ada `.next`
-- tidak ada secret key
-- tidak ada istilah toko barang fisik
-- build berhasil
-
-## Catatan untuk Tim
-
-Baca file berikut sebelum mengerjakan fitur besar:
+Contoh branch:
 
 ```txt
-AGENTS.md
-docs/architecture/coding-standards.md
-docs/architecture/implementation-roadmap.md
-docs/product/feature-list.md
-docs/product/dummy-data.md
-docs/prompts/codex-guidelines.md
-docs/RUANGUSAHA_HANDOFF_NEXT_ACCOUNT.md
+feature/creator-services
+feature/payment-sandbox
+fix/auth-redirect
+docs/update-readme
 ```
 
-Jika menggunakan AI/Codex, jangan minta semua fitur dibuat sekaligus. Kerjakan bertahap per fitur kecil agar kode tetap aman dan mudah dicek.
+## Catatan Penting
 
-## Status Project
-
-Project masih dalam tahap pengembangan. Sebagian fitur menggunakan dummy data dan placeholder. Integrasi real seperti Supabase, auth, storage, Midtrans Sandbox, dan deployment production dilakukan bertahap setelah UI flow utama stabil.
+- Jangan hidupkan kembali dummy runtime
+- Jangan membuka RLS longgar demi UI terlihat jalan
+- Jangan pakai admin client untuk user biasa
+- Jangan expose secret
+- Jangan mengubah domain model menjadi toko barang fisik
+- Untuk pekerjaan besar, baca `AGENTS.md` dan dokumen `docs/` dulu sebelum menulis kode
