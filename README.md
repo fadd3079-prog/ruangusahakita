@@ -1,280 +1,104 @@
 # Ruang Usaha Kita
 
-Ruang Usaha Kita is an open-source full-stack marketplace project for UMKM digital services. The platform connects UMKM with creators, content creators, and marketers for digital promotion needs through service packages, campaign briefs, checkout, sandbox payment, order management, revision flow, file delivery, reviews, and role-based dashboards.
+Ruang Usaha Kita is an open-source full-stack marketplace MVP for UMKM digital services. The platform connects UMKM with creators, content creators, and marketers through service packages, campaign briefs, checkout, sandbox payment, order management, revision flow, file delivery, reviews, and role-based dashboards.
 
-This repository is maintained as a practical and educational case study for building a service-based marketplace with modern web technologies, clear domain rules, Supabase integration, and a real application structure.
-
-Ruang Usaha Kita is not designed as a physical goods store. The domain focuses on digital services, creative work, campaign briefs, content delivery, and service revisions.
+This repository is maintained as an educational and practical OSS case study for building a service-based marketplace with Next.js, Supabase, strong domain rules, and real application structure.
 
 ## Project Status
 
-Ruang Usaha Kita is currently in an early-stage full-stack MVP phase.
+Ruang Usaha Kita is actively maintained as an early-stage full-stack marketplace MVP.
 
-The project already includes authentication, onboarding, public catalog, service detail pages, cart, campaign brief checkout, sandbox payment, order lifecycle, delivery and revision flow, dashboard per role, admin monitoring, internal analytics foundation, and Supabase integration.
+The current repository already includes:
 
-Current maintenance focus:
+- Supabase Auth integration
+- role-aware onboarding and dashboard redirect
+- public catalog and service discovery flow
+- cart and checkout brief flow
+- sandbox payment flow
+- order lifecycle foundation
+- creator delivery and revision flow
+- role-based dashboards for UMKM, creator, and admin
+- admin monitoring and analytics foundation
 
-* Stabilizing the core marketplace flow
-* Improving frontend performance and loading speed
-* Reviewing Supabase RLS, authentication, and storage security
-* Improving documentation and setup guide
-* Preparing stronger test coverage
-* Cleaning unused code and improving maintainability
+The project is stable enough for MVP review and contributor onboarding, but it should not be described as production-ready commerce infrastructure.
 
-This project is still under active development. Some flows may change as the marketplace model becomes more stable.
+## Why This Project Exists
 
-## Table of Contents
+Ruang Usaha Kita focuses on a service-commerce workflow for UMKM promotion needs.
 
-* [Project Overview](#project-overview)
-* [Core Concept](#core-concept)
-* [Main Features](#main-features)
-* [User Roles](#user-roles)
-* [Tech Stack](#tech-stack)
-* [Project Structure](#project-structure)
-* [Route Groups](#route-groups)
-* [Getting Started](#getting-started)
-* [Environment Variables](#environment-variables)
-* [Supabase Workflow](#supabase-workflow)
-* [Available Scripts](#available-scripts)
-* [Architecture Notes](#architecture-notes)
-* [Domain Rules](#domain-rules)
-* [Testing](#testing)
-* [Deployment](#deployment)
-* [Troubleshooting](#troubleshooting)
-* [Development Workflow](#development-workflow)
-* [Roadmap](#roadmap)
-* [License](#license)
+Instead of selling physical products, the platform is designed around:
 
-## Project Overview
+- service packages
+- campaign briefs
+- creative delivery
+- revision handling
+- payment tracking
+- reviews
+- role-based operations
 
-Ruang Usaha Kita is built as a marketplace for digital service transactions between UMKM and creators.
+The domain is intentionally not modeled as a warehouse, shipping, or inventory system.
 
-The platform helps UMKM find digital service providers, choose service packages, submit campaign briefs, complete sandbox payment, track order progress, request revisions, receive final files, and review completed work.
-
-On the creator side, the platform provides profile management, service package management, portfolio showcase, order handling, delivery submission, and earning overview.
-
-On the admin side, the platform provides monitoring tools for users, creators, services, orders, payments, complaints, reports, and basic analytics.
-
-## Core Concept
-
-The project models a service-commerce workflow.
-
-Instead of buying physical products, users order creative digital services such as:
-
-* Social media content
-* Design services
-* Copywriting
-* Digital marketing support
-* Campaign material
-* Promotional content
-* Creator-based service packages
-
-A typical UMKM flow:
-
-1. UMKM opens the marketplace.
-2. UMKM browses creators or service packages.
-3. UMKM reviews service details.
-4. UMKM adds a service to cart or starts direct checkout.
-5. UMKM fills a campaign brief.
-6. UMKM completes sandbox payment.
-7. Creator receives and works on the order.
-8. Creator submits delivery files.
-9. UMKM reviews the result.
-10. UMKM can approve the delivery or request revision.
-11. Completed orders can receive reviews.
-
-## Main Features
-
-### Public Marketplace
-
-* Landing page
-* Creator catalog
-* Creator detail page
-* Service detail page
-* Marketplace search and filter foundation
-* How it works page
-* Help page
-* Public-facing service discovery flow
-
-### Authentication
-
-* Login
-* Register
-* Forgot password
-* Reset password
-* Supabase Auth callback
-* Role-aware redirect
-* Public registration for `umkm` and `creator`
-* Admin role is not created from public registration
-
-### UMKM Area
-
-* UMKM dashboard
-* Cart
-* Checkout brief
-* Direct checkout
-* Campaign brief submission
-* Payment sandbox flow
-* Order list
-* Order detail
-* Invoice page
-* Receipt page
-* Result and delivery review
-* Revision request flow
-* Settings page
-
-### Creator Area
-
-* Creator dashboard
-* Creator onboarding
-* Creator profile management
-* Service package CRUD
-* Service tier and add-on foundation
-* Portfolio management
-* Incoming order management
-* Delivery submission
-* Revision handling
-* Earnings overview
-* Creator settings
-
-### Admin Area
-
-* Admin dashboard
-* Internal analytics foundation
-* User monitoring
-* UMKM monitoring
-* Creator monitoring
-* Service monitoring
-* Order monitoring
-* Payment monitoring
-* Complaint and report handling
-* Platform settings foundation
-
-### Backend and Data Layer
-
-* Supabase Auth
-* PostgreSQL database
-* Row Level Security
-* Server Actions
-* API routes
-* Supabase Storage foundation
-* Payment sandbox RPC
-* Role-based access model
-* Order and payment status separation
-
-## User Roles
-
-### Guest
-
-Guest users can:
-
-* Access public pages
-* Browse marketplace information
-* View catalog and service information
-* Open login and registration pages
-
-Guest users cannot access dashboards or protected order data.
+## Core User Flows
 
 ### UMKM
 
-UMKM users can:
-
-* Access UMKM dashboard
-* Browse creators and services
-* Add services to cart
-* Fill campaign briefs
-* Create orders
-* Open sandbox payment flow
-* Track order progress
-* View invoices and receipts
-* Review submitted results
-* Request revisions
-* Manage account settings
-
-Default redirect:
-
-```txt
-/umkm/dashboard
-```
+1. Browse creators and services
+2. Compare packages
+3. Add a service to cart or start direct checkout
+4. Fill a campaign brief
+5. Complete sandbox payment
+6. Track order progress
+7. Review delivered files
+8. Request revision or approve completion
+9. Leave a review
 
 ### Creator
 
-Creator users can:
-
-* Access creator dashboard
-* Complete onboarding
-* Manage creator profile
-* Create and update service packages
-* Manage portfolio items
-* Review incoming orders
-* Submit delivery files
-* Handle revision requests
-* View earnings overview
-* Manage account settings
-
-Default redirect:
-
-```txt
-/creator/dashboard
-```
+1. Complete onboarding
+2. Manage profile and service packages
+3. Receive and process incoming orders
+4. Submit delivery files
+5. Respond to revision requests
+6. Monitor basic earnings and order activity
 
 ### Admin
 
-Admin users can:
-
-* Access admin dashboard
-* Monitor users, UMKM, creators, services, orders, and payments
-* Review complaints and reports
-* Access internal analytics foundation
-* Manage platform-level settings
-
-Default redirect:
-
-```txt
-/admin/dashboard
-```
+1. Monitor marketplace activity
+2. Review users, creators, services, orders, and payments
+3. Inspect complaints and reports
+4. Review analytics and platform settings foundation
 
 ## Tech Stack
 
-### Frontend
+### Application
 
-* Next.js 16 App Router
-* React 19
-* TypeScript
-* Tailwind CSS v4
-* shadcn/ui
-* Radix UI
-* Lucide React
-* Sonner
-* React Hook Form
-* Zod
-* TanStack Table
-* Recharts
-* Zustand
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- shadcn/ui
+- Radix UI
+- Lucide React
+- Sonner
+- React Hook Form
+- Zod
+- Zustand
+- Recharts
+- TanStack Table
 
-### Backend and Database
+### Backend and Infrastructure
 
-* Supabase Auth
-* Supabase PostgreSQL
-* Supabase Row Level Security
-* Supabase Storage
-* Supabase Realtime foundation
-* Server Actions
-* Route Handlers
-* SQL migrations
-* RPC-based backend flow for selected operations
+- Supabase Auth
+- Supabase PostgreSQL
+- Supabase Row Level Security
+- Supabase Storage
+- Supabase Realtime foundation
+- Server Actions
+- Route Handlers
+- SQL migrations and RPC-based backend flow
+- Vercel
 
-### Tooling and Deployment
-
-* npm
-* ESLint
-* TypeScript
-* Vitest
-* React Testing Library
-* Playwright foundation
-* Vercel
-
-## Project Structure
+## Repository Structure
 
 ```txt
 src/
@@ -322,53 +146,48 @@ supabase/
   migrations/
   query/
 docs/
+tests/
 public/
 ```
 
 ## Route Groups
 
-This project uses route groups to separate public pages, authentication pages, and protected dashboards.
-
-```txt
-(public)   public marketplace pages
-(auth)     authentication pages
-(umkm)     UMKM dashboard area
-(creator)  creator dashboard area
-(admin)    admin dashboard area
-api        internal API routes
-```
+- `(public)` public marketplace pages
+- `(auth)` authentication pages
+- `(umkm)` UMKM dashboard area
+- `(creator)` creator dashboard area
+- `(admin)` admin dashboard area
+- `api` internal API routes
 
 Important routes:
 
 ```txt
 /
- /katalog
- /kreator/[creatorId]
- /layanan/[serviceId]
- /cara-kerja
- /bantuan
- /login
- /register
- /forgot-password
- /reset-password
- /umkm/dashboard
- /creator/dashboard
- /admin/dashboard
+/katalog
+/kreator/[creatorId]
+/layanan/[serviceId]
+/cara-kerja
+/bantuan
+/login
+/register
+/forgot-password
+/reset-password
+/umkm/dashboard
+/creator/dashboard
+/admin/dashboard
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-Make sure you have:
+- Node.js 20 or newer
+- npm
+- Git
+- Supabase account
+- Supabase CLI if you want to run migrations locally
 
-* Node.js 20 or newer
-* npm
-* Git
-* Supabase account
-* Supabase CLI, if you want to manage database migrations locally
-
-Check installed versions:
+Check versions:
 
 ```bash
 node -v
@@ -389,9 +208,7 @@ cd ruangusahakita
 npm install
 ```
 
-### Create Environment File
-
-Create `.env.local` from `.env.example`.
+### Create Local Environment File
 
 PowerShell:
 
@@ -399,15 +216,13 @@ PowerShell:
 Copy-Item .env.example .env.local
 ```
 
-Or create it manually:
+Unix shell:
 
 ```bash
 cp .env.example .env.local
 ```
 
-### Configure Environment Variables
-
-Fill the required environment values:
+### Required Environment Variables
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
@@ -417,7 +232,7 @@ APP_DEMO_MODE=false
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-### Run Development Server
+### Start Development Server
 
 ```bash
 npm run dev
@@ -431,59 +246,44 @@ http://localhost:3000
 
 ## Environment Variables
 
-| Variable                        | Required                         | Description                                                     |
-| ------------------------------- | -------------------------------- | --------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Yes                              | Supabase project URL                                            |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes                              | Public anon key for client and session-aware server usage       |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Required for seed or admin tasks | Server-only key. Never expose it to the browser                 |
-| `APP_DEMO_MODE`                 | Optional                         | Enables selected read-only demo behavior                        |
-| `NEXT_PUBLIC_APP_URL`           | Yes                              | Application base URL for redirects, sitemap, and internal links |
+| Variable | Required | Description |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Public anon key for browser and session-aware server usage |
+| `SUPABASE_SERVICE_ROLE_KEY` | Only for server-only admin tasks and seed scripts | Secret server key, never expose to the browser |
+| `APP_DEMO_MODE` | Optional | Enables selected read-only demo behavior |
+| `NEXT_PUBLIC_APP_URL` | Yes | Base URL for redirects, sitemap, auth, and generated links |
 
-Environment rules:
+Rules:
 
-* Do not commit `.env.local`
-* Do not expose service role key to the client
-* Do not add `NEXT_PUBLIC_` prefix to private secrets
-* Do not import admin Supabase client into client components
-* Keep production and local environment values separated
+- Do not commit `.env.local`
+- Do not expose service role credentials
+- Do not prefix private secrets with `NEXT_PUBLIC_`
+- Do not import admin Supabase clients into browser-facing code
 
 ## Supabase Workflow
 
-This repository uses SQL migrations stored in:
+Database changes are tracked in:
 
 ```txt
 supabase/migrations/
 ```
 
-Do not edit old migrations that have already been applied. Create a new migration for new database changes.
+Do not edit old migrations that may already be applied. Create a new migration for each new schema, RLS, or RPC change.
 
-### Apply Migrations
+Apply migrations:
 
 ```bash
 npx supabase db push
 ```
 
-### Reset Local Database
-
-Use this only for local development databases that are safe to reset.
+Reset local database only when safe:
 
 ```bash
 npx supabase db reset
 ```
 
-### Seed Real Creator Demo Accounts
-
-The project includes a script for creating creator demo accounts and related marketplace data.
-
-```bash
-npm run seed:real-creators
-```
-
-This script reads environment variables and creates demo creator accounts, creator profiles, service packages, tiers, and related data.
-
-## SQL Helper Files
-
-Useful SQL helper files are stored in:
+Useful helper SQL files:
 
 ```txt
 docs/sql/set-admin-role.sql
@@ -492,7 +292,15 @@ supabase/query/verify_seed_creators.sql
 supabase/query/cleanup_admin_analytics.sql
 ```
 
-Use them carefully in Supabase SQL Editor when needed.
+## Demo Creator Seed
+
+The repository includes a real seed script for creator marketplace data:
+
+```bash
+npm run seed:real-creators
+```
+
+This script uses the Supabase Admin API and current schema to create creator auth accounts, profiles, service packages, tiers, and related marketplace data for local or staging review.
 
 ## Available Scripts
 
@@ -507,183 +315,111 @@ npm run check
 npm run seed:real-creators
 ```
 
-Script description:
-
-| Script                       | Description                                        |
-| ---------------------------- | -------------------------------------------------- |
-| `npm run dev`                | Run Next.js development server                     |
-| `npm run build`              | Build the application for production               |
-| `npm run start`              | Run the production build                           |
-| `npm run lint`               | Run ESLint                                         |
-| `npm run test`               | Run Vitest                                         |
-| `npm run typecheck`          | Run TypeScript check without emitting files        |
-| `npm run check`              | Run typecheck, lint, and build                     |
-| `npm run seed:real-creators` | Seed creator accounts and related marketplace data |
-
-## Architecture Notes
-
-Important rules in this project:
-
-* Default to Server Components.
-* Use Client Components only when the UI needs browser-side interaction.
-* Use import alias `@/*`.
-* Keep `src/lib/utils.ts` as a file, not a `src/lib/utils/` folder.
-* Do not modify `src/components/ui/*` unless there is a clear compatibility reason.
-* Avoid `any` unless there is a justified migration or integration edge case.
-* Keep `payment_status` and `order_status` separated.
-* Do not trust sensitive data from the client.
-* Use Server Actions, Route Handlers, or RPC for sensitive operations.
-* Keep role-based behavior explicit and traceable.
-* Do not weaken RLS only to make the UI look functional.
-* Do not use admin client for regular user operations.
+| Script | Description |
+| --- | --- |
+| `npm run dev` | Start development server |
+| `npm run build` | Create production build |
+| `npm run start` | Run the production build |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run Vitest |
+| `npm run typecheck` | Run TypeScript checks without emitting files |
+| `npm run check` | Run `typecheck`, `lint`, and `build` |
+| `npm run seed:real-creators` | Seed creator accounts and marketplace service data |
 
 ## Domain Rules
 
-Ruang Usaha Kita uses a digital service marketplace model.
-
 Use these terms consistently:
 
-* `UMKM`
-* `kreator`
-* `content creator`
-* `marketer`
-* `paket jasa`
-* `layanan digital`
-* `brief campaign`
-* `hasil konten`
-* `revisi`
-* `status pesanan`
-* `pembayaran`
-* `invoice`
-* `portofolio`
-* `review`
+- `UMKM`
+- `kreator`
+- `content creator`
+- `marketer`
+- `paket jasa`
+- `layanan digital`
+- `brief campaign`
+- `hasil konten`
+- `revisi`
+- `status pesanan`
+- `pembayaran`
+- `invoice`
+- `portofolio`
+- `review`
 
-Avoid physical goods marketplace concepts such as:
+Avoid physical-goods language such as:
 
-* `stock`
-* `inventory barang`
-* `warehouse`
-* `shipping`
-* `courier`
-* `tracking number`
-* `delivery address`
-* `packing`
-* `shipment`
-* `resi`
-* `ongkir`
-* `gudang`
-* `kurir`
-* `alamat pengiriman barang`
+- `stock`
+- `warehouse`
+- `shipping`
+- `courier`
+- `tracking number`
+- `delivery address`
+- `packing`
+- `shipment`
+- `resi`
+- `ongkir`
+- `gudang`
+- `kurir`
 
-The product domain should remain focused on creative services, campaign work, content delivery, and revision flow.
+## Architecture Guardrails
 
-## Feature Map
+- Default to Server Components
+- Use Client Components only for real client-side interaction
+- Use `@/*` imports
+- Keep `src/lib/utils.ts` as a file, not a folder
+- Do not modify `src/components/ui/*` casually
+- Keep `payment_status` and `order_status` separate
+- Do not trust sensitive state transitions from the client
+- Use server-side validation for auth, payment, order, delivery, and storage operations
+- Do not weaken RLS just to make a page appear functional
 
-### Public
+## Community Files
 
-* Landing page
-* Catalog search foundation
-* Catalog filter and sort foundation
-* Creator detail page
-* Service detail page
-* Help page
-* How it works page
+Repository maintenance files:
 
-### Auth
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- [`SECURITY.md`](./SECURITY.md)
+- [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
+- [`SUPPORT.md`](./SUPPORT.md)
+- [`CHANGELOG.md`](./CHANGELOG.md)
+- [`LICENSE`](./LICENSE)
 
-* Register as UMKM or creator
-* Login with role-aware redirect
-* Forgot password
-* Reset password
-* Auth callback
+GitHub community support:
 
-### UMKM
+- Issue templates in `.github/ISSUE_TEMPLATE/`
+- Pull request template in `.github/PULL_REQUEST_TEMPLATE.md`
+- CI workflow in `.github/workflows/ci.yml`
+- Dependabot config in `.github/dependabot.yml`
 
-* Dashboard overview
-* Cart
-* Checkout brief
-* Direct checkout
-* Payment sandbox
-* Order list
-* Order detail
-* Invoice page
-* Receipt page
-* Results page
-* Revision request
-* Settings
+## Validation Before Opening a Pull Request
 
-### Creator
-
-* Dashboard overview
-* Onboarding
-* Profile management
-* Service package management
-* Portfolio management
-* Order handling
-* Delivery submission
-* Revision handling
-* Earnings overview
-* Settings
-
-### Admin
-
-* Dashboard command center
-* Internal analytics
-* User monitoring
-* UMKM monitoring
-* Creator monitoring
-* Service monitoring
-* Order monitoring
-* Payment monitoring
-* Complaint handling
-* Reports and export foundation
-* Platform settings
-
-## Validation Before Push
-
-Run the main check command before pushing changes:
+Run:
 
 ```bash
 npm run check
 ```
 
-If you modify database schema, migrations, seed logic, or Supabase policies, also check the relevant Supabase workflow:
+If your change affects tests:
 
 ```bash
-npx supabase db push
-npm run seed:real-creators
+npm run test
 ```
 
-If you modify search, filter, auth, order, payment, dashboard, delivery, or revision flow, also perform manual QA on related routes.
+If your change affects schema, RLS, or seed behavior, also verify the relevant local Supabase workflow.
 
 ## Testing
 
-Testing tools included or prepared in this repository:
+Testing tools already present in the repository:
 
-* TypeScript
-* ESLint
-* Vitest
-* React Testing Library
-* Playwright foundation
+- TypeScript
+- ESLint
+- Vitest
+- React Testing Library
+- Playwright
 
-Related documentation:
+Related docs:
 
-```txt
-docs/architecture/testing-strategy.md
-docs/architecture/auth-smoke-test.md
-```
-
-Testing priorities:
-
-* Auth and role redirect
-* Creator catalog and service detail
-* Cart and checkout brief
-* Order creation
-* Payment sandbox flow
-* Delivery submission
-* Revision request and approval flow
-* Admin monitoring pages
-* RLS-sensitive user access
+- `docs/architecture/testing-strategy.md`
+- `docs/architecture/auth-smoke-test.md`
 
 ## Deployment
 
@@ -695,27 +431,21 @@ Before deployment:
 npm run check
 ```
 
-Deployment checklist:
+Check these items:
 
-* Vercel environment variables are configured correctly
-* Supabase Auth redirect URLs match the deployed domain
-* Supabase policies are not relaxed for production
-* Payment sandbox URLs point to the correct deployment
-* No secret values are committed to the repository
-* Public pages can load without demo-only assumptions
-* Protected routes redirect correctly based on user role
+- Vercel environment variables are correct
+- Supabase Auth redirect URLs match the deployment URL
+- No secret values are committed
+- Payment sandbox routes point to the correct deployment
+- Protected dashboards redirect correctly by role
 
-Detailed deployment documentation:
+Detailed deployment guide:
 
-```txt
-docs/architecture/deployment.md
-```
+- `docs/architecture/deployment.md`
 
 ## Email and Reset Password
 
-Forgot password and reset password flow use Supabase Auth.
-
-Important routes:
+Forgot-password flow uses Supabase Auth with:
 
 ```txt
 /forgot-password
@@ -723,42 +453,29 @@ Important routes:
 /reset-password
 ```
 
-Related documentation:
+See:
 
-```txt
-docs/architecture/email-notifications.md
-```
+- `docs/architecture/email-notifications.md`
 
-Check these items if reset password does not work:
+## Useful Documentation
 
-* `NEXT_PUBLIC_APP_URL`
-* Supabase Auth redirect allowlist
-* Callback route behavior
-* Email template redirect target
+Recommended reading order:
 
-## Important Documentation
-
-Start from these files to understand the project more deeply:
-
-```txt
-AGENTS.md
-docs/architecture/overview.md
-docs/architecture/route-map.md
-docs/architecture/data-model.md
-docs/architecture/roles-permissions.md
-docs/architecture/order-flow.md
-docs/architecture/payment-flow.md
-docs/architecture/storage-policy.md
-docs/architecture/supabase-setup.md
-docs/architecture/testing-strategy.md
-docs/architecture/deployment.md
-docs/architecture/email-notifications.md
-docs/architecture/implementation-roadmap.md
-docs/product/feature-list.md
-docs/product/mvp-scope.md
-docs/uiux/design-system.md
-docs/uiux/fiverr-reference.md
-```
+- `AGENTS.md`
+- `docs/architecture/overview.md`
+- `docs/architecture/route-map.md`
+- `docs/architecture/data-model.md`
+- `docs/architecture/roles-permissions.md`
+- `docs/architecture/order-flow.md`
+- `docs/architecture/payment-flow.md`
+- `docs/architecture/storage-policy.md`
+- `docs/architecture/supabase-setup.md`
+- `docs/architecture/testing-strategy.md`
+- `docs/architecture/deployment.md`
+- `docs/product/feature-list.md`
+- `docs/product/mvp-scope.md`
+- `docs/uiux/design-system.md`
+- `docs/uiux/fiverr-reference.md`
 
 ## Troubleshooting
 
@@ -772,7 +489,7 @@ Remove-Item package-lock.json
 npm install
 ```
 
-Use this only when dependency installation is broken and you understand the effect.
+Use this only when dependency installation is genuinely broken.
 
 ### Port 3000 is already in use
 
@@ -780,48 +497,32 @@ Use this only when dependency installation is broken and you understand the effe
 npm run dev -- -p 3001
 ```
 
-Then open:
-
-```txt
-http://localhost:3001
-```
-
 ### Build fails when fetching Google Fonts
 
-The project may use `next/font` for font loading. If the build fails because of Google Fonts network access, retry with a stable connection or prepare a self-hosted font strategy.
+If a build environment cannot fetch Google Fonts for `next/font`, retry in a stable network or switch to a self-hosted font strategy during deployment hardening.
 
-### Auth redirect or reset password fails
-
-Check:
-
-* `NEXT_PUBLIC_APP_URL`
-* Supabase Auth redirect allowlist
-* `/callback` route
-* Email template redirect URL
-
-### Dashboard or catalog does not show data
+### Reset password flow does not work
 
 Check:
 
-* Database migrations have been applied
-* RLS policies allow the correct role access
-* Account status is active
-* Creator seed data exists
-* Service packages are published or available for the current view
+- `NEXT_PUBLIC_APP_URL`
+- Supabase Auth redirect allowlist
+- `/callback` route
+- email redirect target
 
-### Payment sandbox does not update order state
+### Catalog or dashboard data does not appear
 
 Check:
 
-* Payment RPC or route handler
-* `payment_status`
-* `order_status`
-* Related order record
-* User role and ownership access
+- Migrations are applied
+- RLS policies allow the intended role
+- Account status is active
+- Seeded creator and service data exists
+- Service or profile visibility flags match the current view
 
 ## Development Workflow
 
-Recommended daily workflow:
+Typical local loop:
 
 ```bash
 git pull origin main
@@ -841,119 +542,12 @@ Example branch names:
 
 ```txt
 feature/creator-services
-feature/payment-sandbox
-feature/order-revision-flow
 fix/auth-redirect
-fix/rls-policy
-docs/update-readme
-perf/optimize-bundle-size
+perf/catalog-loading
+docs/repository-maintenance
+test/order-flow
 ```
-
-Example commit style:
-
-```txt
-feat: add creator service management
-fix: correct auth redirect for creator users
-docs: update Supabase setup guide
-perf: optimize catalog image loading
-test: add order flow tests
-```
-
-## Roadmap
-
-### Short Term
-
-* Improve frontend performance and bundle size
-* Review heavy client components
-* Optimize images and static assets
-* Improve setup and deployment documentation
-* Add more tests for order, payment, delivery, and revision flow
-
-### Mid Term
-
-* Strengthen Supabase RLS and storage policy review
-* Improve admin monitoring experience
-* Improve creator service management UX
-* Improve UMKM order tracking UX
-* Add clearer error handling and empty states
-* Improve accessibility and responsive behavior
-
-### Long Term
-
-* Add stronger marketplace analytics
-* Improve notification flow
-* Prepare better release workflow
-* Expand automated testing coverage
-* Improve documentation for contributors
-* Harden production security assumptions
-
-## Performance Notes
-
-This project uses Next.js and React, but performance still depends on implementation details.
-
-Current optimization focus:
-
-* Reducing unnecessary client-side JavaScript
-* Reviewing bundle size
-* Optimizing images and static assets
-* Lazy loading heavy sections when appropriate
-* Reviewing data fetching strategy
-* Improving loading states and perceived performance
-* Testing pages on lower-end devices and slower networks
-
-## Security Notes
-
-Security-sensitive areas:
-
-* Supabase RLS policies
-* Authentication callback
-* Role-based dashboard access
-* Admin-only operations
-* Private file delivery
-* Payment sandbox status update
-* Service role usage
-* Storage bucket access
-
-Rules:
-
-* Never expose service role key
-* Never use admin client in client components
-* Never trust user role from client input only
-* Do not bypass RLS for regular user flows
-* Keep order, payment, delivery, and revision access scoped to the correct user
-
-## Contributing
-
-Contributions are welcome through issues, documentation improvements, bug reports, and pull requests.
-
-Recommended contribution flow:
-
-1. Fork the repository.
-2. Create a new branch.
-3. Make a focused change.
-4. Run checks before submitting.
-5. Open a pull request with a clear explanation.
-
-```bash
-npm run check
-```
-
-Areas that are useful for contribution:
-
-* Documentation
-* Testing
-* UI/UX polish
-* Accessibility
-* Performance
-* Supabase RLS review
-* Marketplace flow improvements
-
-## Maintainer
-
-Maintained by Mufaddhol.
-
-This project is part of a learning-focused open-source workflow around full-stack development, UI/UX, digital service platforms, and UMKM marketplace systems.
 
 ## License
 
-This project is licensed under the MIT License.
+This project is released under the MIT License.

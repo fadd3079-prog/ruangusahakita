@@ -1,49 +1,54 @@
 ---
 name: Feature request
-about: Suggest a new feature or improvement
+about: Suggest a product, developer experience, or repository improvement
 title: "feat: "
-labels: enhancement
-assignees: ""
+labels: ["enhancement"]
+assignees: []
 ---
 
 ## Summary
 
-Describe the feature or improvement.
+Describe the requested feature or improvement.
 
 ## Problem
 
-What problem does this solve?
+What problem does this solve in the current repository or marketplace flow?
 
-## Proposed Solution
+## Proposed Outcome
 
-Explain the expected behavior or implementation idea.
+Describe the expected user or maintainer outcome.
 
 ## Affected Role
 
-- Guest
-- UMKM
-- Creator
-- Admin
-- Maintainer
+- [ ] Guest
+- [ ] UMKM
+- [ ] Creator
+- [ ] Admin
+- [ ] Maintainer
 
 ## Affected Area
 
-- Public marketplace
-- Auth
-- UMKM dashboard
-- Creator dashboard
-- Admin dashboard
-- Service package
-- Campaign brief
-- Checkout
-- Payment
-- Order
-- Delivery
-- Revision
-- Review
-- Documentation
-- Other
+- [ ] Public marketplace
+- [ ] Auth
+- [ ] UMKM dashboard
+- [ ] Creator dashboard
+- [ ] Admin dashboard
+- [ ] Service packages
+- [ ] Campaign brief
+- [ ] Cart or checkout
+- [ ] Payment sandbox
+- [ ] Order flow
+- [ ] Delivery and revision flow
+- [ ] Supabase RLS
+- [ ] Storage
+- [ ] Documentation
+- [ ] Performance
+- [ ] Repository maintenance
 
-## Additional Notes
+## Non-Goals
 
-Add screenshots, references, or design notes if useful.
+Describe what this request should not change, if relevant.
+
+## Additional Context
+
+References, screenshots, UX notes, or technical constraints.

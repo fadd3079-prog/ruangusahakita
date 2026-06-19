@@ -1,46 +1,36 @@
 # Changelog
 
-All notable changes to Ruang Usaha Kita will be documented in this file.
+All notable repository-level changes are documented here.
 
-This project follows a simple release format:
+This changelog follows a lightweight format inspired by Keep a Changelog. Repository maintenance, contributor workflow, and release-facing documentation updates belong here alongside meaningful project milestones.
 
-```txt
-vMAJOR.MINOR.PATCH
-```
+## [Unreleased]
+
+### Changed
+
+- Repository maintenance documentation is being refined for public OSS review
 
 ## [v0.2.0] - 2026-06-19
 
 ### Added
 
-* Public repository maintenance update
-* Professional project README
-* MIT License
-* Performance optimization issue
-* Repository topics and public project description
-* Initial open-source maintenance structure
+- Public maintainer-facing repository files
+- GitHub issue templates, pull request template, CI workflow, and Dependabot configuration
+- Repository-level governance and support documentation
 
 ### Changed
 
-* Repository moved to the main developer account
-* Project positioning clarified as an open-source UMKM digital service marketplace case study
-* Documentation updated to explain project scope, role access, Supabase workflow, testing, deployment, and security-sensitive areas
+- README repositioned the project as an early-stage full-stack marketplace MVP for UMKM digital services
+- Repository references aligned to `https://github.com/fadd3079-prog/ruangusahakita`
+- Documentation clarified setup, Supabase workflow, testing, and security-sensitive areas
 
-### Notes
-
-This version represents the current public OSS baseline. The project is still early-stage and actively maintained.
-
-## [v0.1.0] - Previous Release
+## [v0.1.0]
 
 ### Added
 
-* Initial full-stack MVP foundation
-* Public marketplace pages
-* Authentication flow
-* UMKM dashboard
-* Creator dashboard
-* Admin dashboard
-* Cart and checkout brief flow
-* Payment sandbox foundation
-* Order lifecycle foundation
-* Delivery and revision flow foundation
-* Supabase integration
+- Initial marketplace MVP foundation
+- Public marketplace pages
+- Authentication and role-aware routing
+- UMKM, creator, and admin dashboard foundations
+- Cart, checkout brief, payment sandbox, order lifecycle, delivery, and revision flows
+- Supabase integration and migration baseline

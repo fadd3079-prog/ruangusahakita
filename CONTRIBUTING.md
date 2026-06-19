@@ -1,149 +1,132 @@
-# CONTRIBUTING.md
-
 # Contributing to Ruang Usaha Kita
 
-Thank you for your interest in contributing to Ruang Usaha Kita.
+Thank you for contributing to Ruang Usaha Kita.
 
-Ruang Usaha Kita is an open-source full-stack marketplace project for UMKM digital services. The project is still early-stage, but it already has a structured domain model, role-based dashboards, Supabase integration, payment sandbox, order lifecycle, delivery flow, and revision workflow.
+Ruang Usaha Kita is an early-stage open-source full-stack marketplace MVP for UMKM digital services. The repository already includes authentication, role-based dashboards, Supabase integration, cart and checkout brief flow, payment sandbox, order lifecycle, delivery, revision, and admin monitoring. Contributions should strengthen the project without blurring its service-marketplace domain.
 
-Contributions are welcome, especially in documentation, testing, accessibility, performance, UI/UX polish, and security review.
+## Before You Start
 
-## Before Contributing
+Read these files first:
 
-Please read the main `README.md` first to understand:
+- `README.md`
+- `AGENTS.md`
+- `docs/architecture/overview.md`
+- `docs/architecture/route-map.md`
+- `docs/architecture/data-model.md`
+- `docs/architecture/roles-permissions.md`
+- `docs/architecture/order-flow.md`
+- `docs/architecture/payment-flow.md`
 
-* Project scope
-* Domain rules
-* User roles
-* Environment setup
-* Supabase workflow
-* Testing and deployment notes
+This project is a marketplace for digital services, not physical goods. Please avoid introducing physical-commerce concepts such as stock, warehouse, shipping, courier, tracking number, or delivery address.
 
-This project is a digital service marketplace, not a physical goods marketplace. Avoid introducing physical-commerce concepts such as stock, warehouse, courier, shipping, tracking number, or delivery address.
+## Good Contribution Areas
 
-## Contribution Areas
+- Documentation clarity
+- Setup and deployment guides
+- Tests for auth, catalog, checkout, payment sandbox, orders, delivery, and revision flow
+- Accessibility improvements
+- Performance improvements
+- Error, loading, and empty-state polish
+- Supabase RLS review
+- Storage safety review
+- Maintainer tooling and repository maintenance
 
-Useful contribution areas include:
+## Changes That Need Extra Care
 
-* Documentation improvements
-* Bug reports
-* UI/UX improvements
-* Accessibility improvements
-* Performance optimization
-* Supabase RLS review
-* Storage policy review
-* Authentication and role access review
-* Test coverage for order, payment, delivery, and revision flow
-* Refactoring for maintainability
+Open a focused pull request and explain the impact clearly if you touch:
 
-## Development Setup
+- Authentication and role redirect
+- Supabase RLS or ownership checks
+- Storage access rules
+- Payment sandbox flow
+- Order, delivery, or revision status transitions
+- Admin-only behavior
+- Seed scripts or SQL helper files
 
-Clone the repository:
+Do not weaken security assumptions just to make a page render.
+
+## Local Setup
 
 ```bash
 git clone https://github.com/fadd3079-prog/ruangusahakita.git
 cd ruangusahakita
-```
-
-Install dependencies:
-
-```bash
 npm install
 ```
 
-Create environment file:
+Create local environment file:
 
-```bash
-cp .env.example .env.local
+```powershell
+Copy-Item .env.example .env.local
 ```
 
-Run the development server:
+Run development server:
 
 ```bash
 npm run dev
 ```
 
-Before opening a pull request, run:
+## Development Rules
+
+- Keep changes scoped
+- Prefer small pull requests over mixed changes
+- Use `@/*` imports
+- Do not create `src/lib/utils/`; keep `src/lib/utils.ts`
+- Do not modify `src/components/ui/*` unless the change is truly necessary
+- Do not commit `.env.local`, credentials, or screenshots containing secrets
+- Do not edit old Supabase migrations that may already be applied
+
+## Verification
+
+Run before opening a pull request:
 
 ```bash
 npm run check
 ```
 
-If you modify tests, also run:
+If you changed tests:
 
 ```bash
 npm run test
 ```
 
-## Branch Naming
+If you changed database-related files, also verify the relevant local Supabase workflow.
 
-Use clear branch names:
+## Pull Request Expectations
+
+A strong pull request should include:
+
+- A clear summary
+- The reason for the change
+- Affected area or role
+- Screenshots for UI changes
+- Manual verification notes
+- Environment or migration notes if relevant
+- Any known limitations
+
+Please keep documentation changes, UI polish, and backend changes separated unless they are tightly connected.
+
+## Branch and Commit Style
+
+Example branch names:
 
 ```txt
 feature/creator-services
-feature/order-revision-flow
 fix/auth-redirect
-fix/rls-policy
-docs/update-readme
-perf/optimize-bundle-size
+perf/catalog-loading
+docs/repository-maintenance
 test/order-flow
 ```
 
-## Commit Style
-
-Use short and specific commit messages:
+Example commit messages:
 
 ```txt
-feat: add creator service management
-fix: correct auth redirect for creator users
-docs: update Supabase setup guide
-perf: optimize catalog image loading
-test: add order flow tests
-chore: update dependencies
+feat: improve creator service management
+fix: correct UMKM checkout redirect
+perf: reduce catalog image cost
+docs: refresh repository maintenance docs
+test: add payment sandbox coverage
 ```
 
-## Pull Request Guidelines
+## Communication
 
-A good pull request should include:
-
-* Clear summary of the change
-* Reason for the change
-* Screenshots for UI changes
-* Testing notes
-* Any migration or environment changes
-* Known limitations, if any
-
-Avoid large mixed changes. Prefer small and focused pull requests.
-
-## Security-Sensitive Changes
-
-Be careful when changing:
-
-* Supabase RLS policies
-* Authentication callback
-* Role-based dashboard access
-* Storage bucket policies
-* Payment sandbox logic
-* Order ownership checks
-* Admin-only actions
-* Service role usage
-
-Do not weaken RLS just to make the UI work. Fix the access logic properly.
-
-## Maintainer Note
-
-This project is maintained as a learning-focused open-source project. Contributions should improve clarity, safety, maintainability, or real product behavior.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+If you are unsure whether a change affects domain rules, security, or role access, open an issue or draft pull request first. It is better to align early than to submit a large correction later.

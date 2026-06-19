@@ -1,38 +1,44 @@
 ---
 name: Performance issue
-about: Track slow pages, heavy bundles, or loading problems
+about: Report slow pages, expensive flows, large bundles, or resource-heavy behavior
 title: "perf: "
-labels: performance
-assignees: ""
+labels: ["performance"]
+assignees: []
 ---
 
 ## Summary
 
 Describe the performance problem.
 
-## Affected Page or Flow
+## Affected Area
 
-Example:
+- [ ] Landing page
+- [ ] Public catalog
+- [ ] Creator detail
+- [ ] Service detail
+- [ ] Auth
+- [ ] UMKM dashboard
+- [ ] Creator dashboard
+- [ ] Admin dashboard
+- [ ] Cart
+- [ ] Checkout brief
+- [ ] Payment sandbox
+- [ ] Order detail
+- [ ] Delivery and revision flow
+- [ ] Analytics
+- [ ] Documentation or CI
 
-- Landing page
-- Catalog
-- Service detail
-- UMKM dashboard
-- Creator dashboard
-- Admin dashboard
-- Checkout
-- Order detail
+## What Feels Slow
 
-## What Feels Slow?
-
-- Initial page load
-- Navigation
-- Image loading
-- Client-side interaction
-- Dashboard data loading
-- Large bundle size
-- Mobile performance
-- Slow network performance
+- [ ] Initial page load
+- [ ] Navigation
+- [ ] Search, filter, or sort
+- [ ] Image loading
+- [ ] Data loading
+- [ ] Client-side interaction
+- [ ] Mobile performance
+- [ ] Build or CI time
+- [ ] Other
 
 ## How to Reproduce
 
@@ -44,17 +50,18 @@ Example:
 
 If available, include:
 
-- Lighthouse score
-- DevTools performance result
+- Device
+- Browser
+- Network condition
+- Lighthouse result
+- DevTools result
 - Bundle analysis
-- Network waterfall
-- Device used
-- Connection condition
+- Route or screen recording
 
 ## Expected Improvement
 
-Describe the desired performance outcome.
+What would “fixed” look like?
 
-## Notes
+## Additional Notes
 
-Add technical assumptions or possible causes if known.
+Add any hypotheses, regressions, or related commits if known.

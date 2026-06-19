@@ -1,32 +1,44 @@
 # Support
 
-Ruang Usaha Kita is an early-stage open-source project maintained as a practical and educational full-stack marketplace case study.
+Ruang Usaha Kita is an early-stage open-source marketplace MVP. Support is best-effort and focused on helping contributors and evaluators understand the repository, setup, and intended architecture.
 
-## Getting Help
+## Before Opening a Support Request
 
-Before asking for help, please check:
+Check these first:
 
-* `README.md`
-* `docs/architecture/overview.md`
-* `docs/architecture/supabase-setup.md`
-* `docs/architecture/deployment.md`
-* Existing GitHub issues
+- `README.md`
+- `CONTRIBUTING.md`
+- `SECURITY.md`
+- `docs/architecture/overview.md`
+- `docs/architecture/supabase-setup.md`
+- `docs/architecture/deployment.md`
+- Existing GitHub issues and pull requests
+
+## Use the Right Channel
+
+- Bug or broken behavior: open a bug report
+- Feature or product idea: open a feature request
+- Performance problem: open a performance issue
+- Security concern: follow `SECURITY.md`
+- Documentation gap: open an issue or pull request
 
 ## Good Support Request
 
-A good support request should include:
+Please include:
 
-* What you are trying to do
-* What you expected to happen
-* What actually happened
-* Error message or screenshot
-* Your environment, such as Node.js version and operating system
-* Steps you already tried
+- What you are trying to do
+- The affected role or area
+- What you expected
+- What actually happened
+- Error message or screenshot, if relevant
+- Your environment: OS, Node.js version, npm version, browser
+- Steps already attempted
 
-## Not Covered
+## What This Repository Does Not Promise
 
-This project does not provide production deployment support, commercial support, or guaranteed response time.
+- Production deployment support for third-party environments
+- Commercial support
+- Guaranteed response time
+- Migration recovery for databases the maintainer cannot inspect
 
-## Security Issues
-
-Do not post sensitive security issues publicly. Follow `SECURITY.md` instead.
+Focused, reproducible requests are much easier to help with than broad “it does not work” reports.

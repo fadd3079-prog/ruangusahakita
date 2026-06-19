@@ -1,5 +1,8 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
+  - name: Support and setup help
+    url: https://github.com/fadd3079-prog/ruangusahakita/blob/main/SUPPORT.md
+    about: Use the support guide for setup, environment, and contributor questions.
   - name: Security report
     url: https://github.com/fadd3079-prog/ruangusahakita/security
-    about: Please avoid posting sensitive security issues publicly. Follow SECURITY.md.
+    about: Do not post sensitive vulnerabilities publicly.

@@ -1,31 +1,43 @@
 # Code of Conduct
 
-## Our Standard
+## Purpose
 
-Ruang Usaha Kita is maintained as an educational and practical open-source project. Contributors, users, and maintainers are expected to communicate with respect and focus on improving the project.
+Ruang Usaha Kita is maintained as an open-source, learning-oriented full-stack marketplace project. The repository should remain welcoming to contributors with different backgrounds and experience levels.
 
-Good participation includes:
+## Expected Behavior
 
-* Giving clear and constructive feedback
-* Respecting different levels of experience
-* Keeping discussion focused on the project
-* Explaining technical decisions with evidence
-* Being open to correction
-* Avoiding personal attacks
+Contributors and maintainers are expected to:
 
-Unacceptable behavior includes:
+- Give constructive and technically grounded feedback
+- Respect people with different levels of experience
+- Keep discussions relevant to the repository
+- Explain tradeoffs without personal attacks
+- Accept correction and new information in good faith
+- Help keep the project safe for collaboration
 
-* Harassment or intimidation
-* Insults or personal attacks
-* Discriminatory language
-* Repeated off-topic disruption
-* Publishing private information without permission
-* Abusive behavior in issues, pull requests, or discussions
+## Unacceptable Behavior
 
-## Enforcement
-
-The maintainer may remove comments, close issues, reject pull requests, or block users who violate this code of conduct.
+- Harassment, intimidation, or threats
+- Personal attacks or repeated hostility
+- Discriminatory or demeaning language
+- Deliberate disruption of issues or pull requests
+- Publishing private information without permission
+- Repeated bad-faith behavior after moderation
 
 ## Scope
 
-This code of conduct applies to this repository, issues, pull requests, discussions, and project-related communication.
+This code of conduct applies to:
+
+- Issues
+- Pull requests
+- Discussions
+- Review comments
+- Other repository-related communication
+
+## Enforcement
+
+The maintainer may edit or remove comments, close threads, reject pull requests, or block participation when behavior harms the project or its contributors.
+
+## Reporting
+
+If you experience conduct problems, contact the repository maintainer through the repository owner account and include enough context to review the situation. Sensitive reports should not be escalated through public argument threads.

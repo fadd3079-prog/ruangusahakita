@@ -1,9 +1,9 @@
 ---
 name: Bug report
-about: Report a bug or broken behavior in Ruang Usaha Kita
+about: Report broken behavior in the marketplace, dashboards, auth flow, or infrastructure
 title: "bug: "
-labels: bug
-assignees: ""
+labels: ["bug"]
+assignees: []
 ---
 
 ## Summary
@@ -12,20 +12,29 @@ Describe the bug clearly.
 
 ## Affected Area
 
-- Public marketplace
-- Auth
-- UMKM dashboard
-- Creator dashboard
-- Admin dashboard
-- Cart
-- Checkout brief
-- Payment sandbox
-- Order flow
-- Delivery or revision flow
-- Supabase RLS
-- Storage
-- Documentation
-- Other
+- [ ] Public marketplace
+- [ ] Auth
+- [ ] UMKM dashboard
+- [ ] Creator dashboard
+- [ ] Admin dashboard
+- [ ] Cart
+- [ ] Checkout brief
+- [ ] Payment sandbox
+- [ ] Order flow
+- [ ] Delivery and revision flow
+- [ ] Supabase RLS
+- [ ] Storage
+- [ ] Documentation
+- [ ] Performance
+- [ ] Other
+
+## Affected Role
+
+- [ ] Guest
+- [ ] UMKM
+- [ ] Creator
+- [ ] Admin
+- [ ] Maintainer only
 
 ## Steps to Reproduce
 
@@ -41,9 +50,9 @@ What should happen?
 
 What happened instead?
 
-## Screenshots or Logs
+## Evidence
 
-Add screenshots, console logs, terminal logs, or network errors if useful.
+Add screenshots, logs, console output, network errors, or database context if useful.
 
 ## Environment
 
@@ -53,6 +62,6 @@ Add screenshots, console logs, terminal logs, or network errors if useful.
 - npm version:
 - Branch or commit:
 
-## Additional Notes
+## Additional Context
 
-Add any other context here.
+Add anything else that helps reproduce or understand the issue.

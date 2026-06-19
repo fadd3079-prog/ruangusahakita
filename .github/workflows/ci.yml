@@ -1,17 +1,26 @@
 name: CI
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  check:
-    name: Typecheck, lint, test, and build
+  quality:
+    name: Quality Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
@@ -19,6 +28,7 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: dummy-service-role-key
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       APP_DEMO_MODE: false
+      NEXT_TELEMETRY_DISABLED: 1
 
     steps:
       - name: Checkout repository
@@ -40,7 +50,7 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm run test -- --run
+        run: npm run test
 
       - name: Build
         run: npm run build
