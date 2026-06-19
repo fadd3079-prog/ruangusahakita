@@ -6,9 +6,42 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AdminMutationResult = Promise<{
+  error: {
+    message: string;
+  } | null;
+}>;
+
+type PlatformSettingsMutationBuilder = {
+  upsert: (
+    values: {
+      key: string;
+      updated_at: string;
+      updated_by: string;
+      value: Json;
+    },
+    options: {
+      onConflict: string;
+    },
+  ) => AdminMutationResult;
+};
+
+type ActivityLogsMutationBuilder = {
+  insert: (values: {
+    action: string;
+    actor_id: string;
+    entity_type: string;
+    metadata: Json;
+  }) => AdminMutationResult;
+};
+
+type UntypedAdminClient = {
+  from(table: "activity_logs"): ActivityLogsMutationBuilder;
+  from(table: "platform_settings"): PlatformSettingsMutationBuilder;
+};
+
 function untypedAdmin() {
-  return createAdminClient() as any;
+  return createAdminClient() as unknown as UntypedAdminClient;
 }
 
 type SettingUpdate = {

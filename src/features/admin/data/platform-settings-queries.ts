@@ -6,15 +6,6 @@ import { isDemoMode } from "@/lib/config/demo-mode";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/types";
 
-/**
- * Returns an untyped Supabase admin client for tables not included
- * in the generated Database type (platform_settings, activity_logs).
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function untypedAdmin() {
-  return createAdminClient() as any;
-}
-
 export type PlatformSettingRow = {
   description: string | null;
   key: string;
@@ -59,6 +50,41 @@ type RawProfileRow = {
   full_name: string;
   id: string;
 };
+
+type QueryResult<T> = Promise<{
+  data: T[] | null;
+  error: {
+    message: string;
+  } | null;
+}>;
+
+type PlatformSettingsSelectBuilder = {
+  select: (columns: "key, value") => QueryResult<RawSettingRow>;
+};
+
+type ActivityLogsSelectBuilder = {
+  select: (columns: "id, actor_id, action, metadata, created_at") => {
+    eq: (column: "entity_type", value: "platform_settings") => {
+      order: (
+        column: "created_at",
+        options: {
+          ascending: false;
+        },
+      ) => {
+        limit: (count: 50) => QueryResult<RawAuditRow>;
+      };
+    };
+  };
+};
+
+type UntypedAdminClient = {
+  from(table: "activity_logs"): ActivityLogsSelectBuilder;
+  from(table: "platform_settings"): PlatformSettingsSelectBuilder;
+};
+
+function untypedAdmin() {
+  return createAdminClient() as unknown as UntypedAdminClient;
+}
 
 function toNumber(json: Json | undefined, field: string, fallback: number): number {
   if (json && typeof json === "object" && !Array.isArray(json)) {
@@ -139,7 +165,7 @@ export async function getAllPlatformSettings(): Promise<PlatformSettingsMap> {
   try {
     const { data, error } = await untypedAdmin()
       .from("platform_settings")
-      .select("key, value") as { data: RawSettingRow[] | null; error: { message: string } | null };
+      .select("key, value");
 
     if (error || !data || data.length === 0) {
       return { ...DEFAULT_SETTINGS };
@@ -220,7 +246,7 @@ export async function getSettingsAuditLog(): Promise<SettingsAuditEntry[]> {
       .select("id, actor_id, action, metadata, created_at")
       .eq("entity_type", "platform_settings")
       .order("created_at", { ascending: false })
-      .limit(50) as { data: RawAuditRow[] | null; error: { message: string } | null };
+      .limit(50);
 
     if (error || !data) {
       return [];

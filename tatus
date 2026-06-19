@@ -1,0 +1,27 @@
+warning: in the working copy of '.github/ISSUE_TEMPLATE/bug_report.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/ISSUE_TEMPLATE/config.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/ISSUE_TEMPLATE/feature_request.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/ISSUE_TEMPLATE/performance_issue.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/PULL_REQUEST_TEMPLATE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/dependabot.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.github/workflows/ci.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CHANGELOG.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CODE_OF_CONDUCT.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CONTRIBUTING.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'SECURITY.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'SUPPORT.md', LF will be replaced by CRLF the next time Git touches it
+ .github/ISSUE_TEMPLATE/bug_report.md        |  51 [32m+[m[31m-[m
+ .github/ISSUE_TEMPLATE/config.yml           |   7 [32m+[m[31m-[m
+ .github/ISSUE_TEMPLATE/feature_request.md   |  67 [32m+[m[31m-[m
+ .github/ISSUE_TEMPLATE/performance_issue.md |  75 [32m++[m[31m-[m
+ .github/PULL_REQUEST_TEMPLATE.md            |  69 [32m+[m[31m-[m
+ .github/dependabot.yml                      |   2 [32m+[m
+ .github/workflows/ci.yml                    |  20 [32m+[m[31m-[m
+ CHANGELOG.md                                |  50 [32m+[m[31m-[m
+ CODE_OF_CONDUCT.md                          |  50 [32m+[m[31m-[m
+ CONTRIBUTING.md                             | 179 [32m+++[m[31m---[m
+ README.md                                   | 932 [32m++++++++[m[31m--------------------[m
+ SECURITY.md                                 |  99 [32m+[m[31m--[m
+ SUPPORT.md                                  |  52 [32m+[m[31m-[m
+ 13 files changed, 655 insertions(+), 998 deletions(-)
