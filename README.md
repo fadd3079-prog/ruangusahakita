@@ -1,5 +1,8 @@
 # Ruang Usaha Kita
 
+[![CI](https://github.com/fadd3079-prog/ruangusahakita/actions/workflows/ci.yml/badge.svg)](https://github.com/fadd3079-prog/ruangusahakita/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
 Ruang Usaha Kita is an open-source full-stack marketplace MVP for UMKM digital services. The platform connects UMKM with creators, content creators, and marketers through service packages, campaign briefs, checkout, sandbox payment, order management, revision flow, file delivery, reviews, and role-based dashboards.
 
 This repository is maintained as an educational and practical OSS case study for building a service-based marketplace with Next.js, Supabase, strong domain rules, and real application structure.
@@ -391,6 +394,8 @@ Repository maintenance files:
 - [`docs/ACCESSIBILITY.md`](./docs/ACCESSIBILITY.md)
 - [`docs/ISSUE_TRIAGE.md`](./docs/ISSUE_TRIAGE.md)
 - [`docs/ISSUE_BACKLOG.md`](./docs/ISSUE_BACKLOG.md)
+- [`docs/GITHUB_SETTINGS.md`](./docs/GITHUB_SETTINGS.md)
+- [`docs/GITHUB_OPS_COMMANDS.md`](./docs/GITHUB_OPS_COMMANDS.md)
 - [`docs/ARCHITECTURE_SUMMARY.md`](./docs/ARCHITECTURE_SUMMARY.md)
 - [`docs/ROADMAP.md`](./docs/ROADMAP.md)
 
