@@ -3,8 +3,3 @@ contact_links:
   - name: Support and setup help
     url: https://github.com/fadd3079-prog/ruangusahakita/blob/main/SUPPORT.md
     about: Use the support guide for setup, environment, and contributor questions.
-blank_issues_enabled: true
-contact_links:
-  - name: Support and setup help
-    url: https://github.com/fadd3079-prog/ruangusahakita/blob/main/SUPPORT.md
-    about: Use the support guide for setup, environment, and contributor questions.

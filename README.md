@@ -382,6 +382,17 @@ Repository maintenance files:
 - [`SUPPORT.md`](./SUPPORT.md)
 - [`CHANGELOG.md`](./CHANGELOG.md)
 - [`LICENSE`](./LICENSE)
+- [`docs/PROJECT_GOVERNANCE.md`](./docs/PROJECT_GOVERNANCE.md)
+- [`docs/MAINTENANCE.md`](./docs/MAINTENANCE.md)
+- [`docs/RELEASE_PROCESS.md`](./docs/RELEASE_PROCESS.md)
+- [`docs/SECURITY_CHECKLIST.md`](./docs/SECURITY_CHECKLIST.md)
+- [`docs/TESTING.md`](./docs/TESTING.md)
+- [`docs/PERFORMANCE.md`](./docs/PERFORMANCE.md)
+- [`docs/ACCESSIBILITY.md`](./docs/ACCESSIBILITY.md)
+- [`docs/ISSUE_TRIAGE.md`](./docs/ISSUE_TRIAGE.md)
+- [`docs/ISSUE_BACKLOG.md`](./docs/ISSUE_BACKLOG.md)
+- [`docs/ARCHITECTURE_SUMMARY.md`](./docs/ARCHITECTURE_SUMMARY.md)
+- [`docs/ROADMAP.md`](./docs/ROADMAP.md)
 
 GitHub community support:
 
@@ -469,8 +480,18 @@ Recommended reading order:
 - `docs/architecture/order-flow.md`
 - `docs/architecture/payment-flow.md`
 - `docs/architecture/storage-policy.md`
+- `docs/ARCHITECTURE_SUMMARY.md`
+- `docs/PROJECT_GOVERNANCE.md`
+- `docs/ROADMAP.md`
+- `docs/adr/0001-use-nextjs-and-supabase.md`
+- `docs/adr/0002-service-marketplace-domain-model.md`
+- `docs/adr/0003-separate-payment-status-and-order-status.md`
 - `docs/architecture/supabase-setup.md`
 - `docs/architecture/testing-strategy.md`
+- `docs/TESTING.md`
+- `docs/PERFORMANCE.md`
+- `docs/ACCESSIBILITY.md`
+- `docs/ISSUE_TRIAGE.md`
 - `docs/architecture/deployment.md`
 - `docs/product/feature-list.md`
 - `docs/product/mvp-scope.md`
