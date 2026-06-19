@@ -21,6 +21,7 @@ Review regularly:
 - `.github/workflows/ci.yml`
 - `.github/dependabot.yml`
 - `docs/architecture/*`
+- `supabase/query/rls_security_review.sql`
 
 ## Before Merging
 
@@ -38,6 +39,8 @@ Review regularly:
 - Confirm naming stays sequential and descriptive
 - Confirm README or docs need not claim behavior that is not yet applied
 - Review ownership and role assumptions before merge
+- Run or inspect `supabase/query/rls_security_review.sql` against a safe development database
+- Confirm any public or `anon` access is intentional and limited to public marketplace data
 
 ## For Documentation Changes
 
